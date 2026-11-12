@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#09090f">
+<title>Ög — Social</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#09090f;color:white;
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ padding-bottom:85px;
+}
+header{
+ height:65px;padding:0 20px;
+ display:flex;align-items:center;justify-content:space-between;
+ border-bottom:1px solid #242430;
+ position:sticky;top:0;background:#09090f;z-index:5;
+}
+.logo{font-size:32px;font-weight:900;letter-spacing:-2px}
+.icon{background:none;border:0;color:white;font-size:23px}
+.stories{
+ display:flex;gap:16px;overflow-x:auto;padding:17px;
+ border-bottom:1px solid #242430;
+}
+.story{text-align:center;min-width:60px;font-size:11px;color:#bbb}
+.avatar{
+ width:55px;height:55px;border-radius:50%;
+ display:grid;place-items:center;font-size:25px;
+ background:linear-gradient(135deg,#713cff,#d946ef);
+ border:2px solid #a78bfa;margin:auto auto 6px;
+}
+main{max-width:600px;margin:auto}
+.post{padding:17px 16px;border-bottom:1px solid #242430}
+.posthead{display:flex;align-items:center;gap:10px}
+.posthead .avatar{margin:0;width:42px;height:42px;font-size:20px}
+.username{font-weight:700}
+.time{color:#888;font-size:12px;margin-top:3px}
+.posttext{font-size:15px;line-height:1.5;margin:14px 0}
+.postimage{
+ width:100%;min-height:180px;border-radius:15px;
+ display:grid;place-items:center;font-size:55px;
+ background:linear-gradient(135deg,#24114d,#713cff,#16162b);
+}
+.actions{display:flex;gap:22px;padding-top:13px}
+.action{border:0;background:none;color:#ddd;font-size:14px}
+.liked{color:#ff548b}
+nav{
+ position:fixed;bottom:0;left:0;right:0;height:70px;
+ background:#101019;border-top:1px solid #292936;
+ display:flex;justify-content:space-around;align-items:center;
+ z-index:10;
+}
+nav button{
+ background:none;border:0;color:#aaa;font-size:23px;
+ display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+nav small{font-size:10px}
+nav button.active{color:#a78bfa}
+.modal{
+ display:none;position:fixed;inset:0;background:#000b;
+ z-index:20;align-items:center;justify-content:center;padding:18px;
+}
+.modalbox{
+ background:#171722;border:1px solid #343447;
+ border-radius:20px;padding:20px;width:100%;max-width:420px;
+}
+textarea{
+ width:100%;height:120px;background:#252532;color:white;
+ border:1px solid #44445a;border-radius:12px;
+ padding:12px;resize:none;font:inherit;
+}
+.primary{
+ width:100%;padding:14px;background:#7948ed;color:white;
+ border:0;border-radius:12px;font-weight:700;margin-top:12px;
+}
+.secondary{background:none;border:0;color:#aaa;padding:12px}
+.section{display:none;padding:20px}
+.section.active{display:block}
+#feed.active{display:block}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">Ög<span style="color:#9872ff">.</span></div>
+ <div>
+  <button class="icon" onclick="showTab('explore')">⌕</button>
+  <button class="icon" onclick="showTab('notifications')">♡</button>
+ </div>
+</header>
+
+<main>
+<div id="feed" class="active">
+ <div class="stories">
+  <div class="story"><div class="avatar">＋</div>Tu historia</div>
+  <div class="story"><div class="avatar">🌙</div>luna</div>
+  <div class="story"><div class="avatar">🎧</div>alex</div>
+  <div class="story"><div class="avatar">🌸</div>sakura</div>
+  <div class="story"><div class="avatar">⚡</div>max</div>
+ </div>
+
+ <div id="posts">
+  <article class="post">
+   <div class="posthead">
+    <div class="avatar">🌙</div>
+    <div><div class="username">luna</div><div class="time">Hace 5 minutos</div></div>
+   </div>
+   <p class="posttext">Bienvenidos a Ög ✨ Un nuevo espacio para compartir momentos.</p>
+   <div class="postimage">🌌</div>
+   <div class="actions">
+    <button class="action" onclick="like(this)">♡ Me gusta</button>
+    <button class="action" onclick="comment()">♧ Comentar</button>
+    <button class="action">↗ Compartir</button>
+   </div>
+  </article>
+ </div>
+</div>
+
+<div id="explore" class="section">
+ <h2>Explorar</h2>
+ <p>Descubre nuevas publicaciones y personas en Ög.</p>
+ <input id="search" placeholder="Buscar..." oninput="searchUsers()"
+ style="width:100%;padding:14px;border-radius:12px;background:#20202c;color:white;border:1px solid #444">
+ <p id="searchresult"></p>
+</div>
+
+<div id="create" class="section">
+ <h2>Crear publicación</h2>
+ <textarea id="newpost" placeholder="¿Qué quieres compartir?"></textarea>
+ <button class="primary" onclick="publish()">Publicar</button>
+</div>
+
+<div id="notifications" class="section">
+ <h2>Notificaciones</h2>
+ <p>Tu actividad aparecerá aquí.</p>
+</div>
+
+<div id="profile" class="section">
+ <div style="text-align:center">
+  <div class="avatar" style="width:85px;height:85px;font-size:35px">👤</div>
+  <h2>Mi perfil</h2>
+  <p style="color:#aaa">@usuario_og</p>
+  <p>Bienvenido a mi espacio en Ög.</p>
+  <p>0 seguidores · 0 seguidos</p>
+ </div>
+</div>
+</main>
+
+<nav>
+ <button class="active" onclick="showTab('feed',this)">⌂<small>Inicio</small></button>
+ <button onclick="showTab('explore',this)">⌕<small>Explorar</small></button>
+ <button onclick="showTab('create',this)">⊕<small>Crear</small></button>
+ <button onclick="showTab('notifications',this)">♡<small>Actividad</small></button>
+ <button onclick="showTab('profile',this)">◉<small>Perfil</small></button>
+</nav>
+
+<script>
+function showTab(id,btn){
+ document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+ if(btn)btn.classList.add('active');
+ else{
+  const buttons=[...document.querySelectorAll('nav button')];
+  const index=['feed','explore','create','notifications','profile'].indexOf(id);
+  buttons[index].classList.add('active');
+ }
+}
+
+function like(btn){
+ btn.classList.toggle('liked');
+ btn.textContent=btn.classList.contains('liked')?'♥ Me gusta':'♡ Me gusta';
+}
+
+function comment(){
+ alert('Los comentarios estarán disponibles en la próxima actualización.');
+}
+
+function publish(){
+ const input=document.getElementById('newpost');
+ const value=input.value.trim();
+ if(!value)return alert('Escribe algo primero.');
+ const post=document.createElement('article');
+ post.className='post';
+ const head=document.createElement('div');
+ head.className='posthead';
+ head.innerHTML='<div class="avatar">👤</div><div><div class="username">Tú</div><div class="time">Ahora</div></div>';
+ const content=document.createElement('p');
+ content.className='posttext';
+ content.textContent=value;
+ const actions=document.createElement('div');
+ actions.className='actions';
+ const button=document.createElement('button');
+ button.className='action';
+ button.textContent='♡ Me gusta';
+ button.onclick=()=>like(button);
+ actions.appendChild(button);
+ post.append(head,content,actions);
+ document.getElementById('posts').prepend(post);
+ input.value='';
+ showTab('feed');
+}
+
+function searchUsers(){
+ const value=document.getElementById('search').value.trim();
+ document.getElementById('searchresult').textContent=
+ value?'Todavía estamos preparando la búsqueda de usuarios.':'';
+}
+</script>
+</body>
+</html>
