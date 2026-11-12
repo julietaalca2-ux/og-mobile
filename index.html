@@ -25,11 +25,10 @@ header{
 .stories{display:flex;gap:16px;overflow-x:auto;padding:17px;border-bottom:1px solid #242430}
 .story{text-align:center;min-width:60px;font-size:11px;color:#bbb}
 .avatar{
- width:55px;height:55px;border-radius:50%;display:grid;
- place-items:center;font-size:25px;
+ width:55px;height:55px;border-radius:50%;
+ display:grid;place-items:center;font-size:25px;
  background:linear-gradient(135deg,#713cff,#d946ef);
- border:2px solid #a78bfa;margin:auto auto 6px;
- overflow:hidden;
+ border:2px solid #a78bfa;margin:auto auto 6px;overflow:hidden;
 }
 .avatar img{width:100%;height:100%;object-fit:cover}
 main{max-width:600px;margin:auto}
@@ -45,8 +44,8 @@ main{max-width:600px;margin:auto}
 nav{
  position:fixed;bottom:0;left:0;right:0;height:70px;
  background:#101019;border-top:1px solid #292936;
- display:flex;justify-content:space-around;align-items:center;z-index:10;
- padding-bottom:env(safe-area-inset-bottom);
+ display:flex;justify-content:space-around;align-items:center;
+ z-index:10;padding-bottom:env(safe-area-inset-bottom);
 }
 nav button{
  background:none;border:0;color:#aaa;font-size:23px;
@@ -68,13 +67,15 @@ textarea{height:120px;resize:vertical}
  border:0;border-radius:12px;font-weight:700;margin-top:12px;
 }
 .secondary{background:#252532;border:1px solid #44445a;color:white;padding:12px;border-radius:10px}
-.smallbtn{background:none;border:1px solid #555;color:#c4aaff;border-radius:20px;padding:7px 12px}
 .status{font-size:13px;color:#b9a2ff;margin:12px 0;overflow-wrap:anywhere}
 .muted{color:#999;font-size:13px}
 .profilebox{text-align:center;padding:15px 0}
 .profilebox .avatar{width:85px;height:85px;font-size:35px}
 .postimage{width:100%;border-radius:15px;margin-top:10px}
-#posts:empty:after{content:"Todavía no hay publicaciones. ¡Sé el primero!";display:block;text-align:center;color:#888;padding:45px 15px}
+#posts:empty:after{
+ content:"Todavía no hay publicaciones. ¡Sé el primero!";
+ display:block;text-align:center;color:#888;padding:45px 15px
+}
 </style>
 </head>
 
@@ -115,7 +116,7 @@ textarea{height:120px;resize:vertical}
 
 <div id="notifications" class="section">
  <h2>Actividad</h2>
- <p class="muted">Próximamente podrás consultar aquí tus notificaciones.</p>
+ <p class="muted">Tu actividad aparecerá aquí.</p>
 </div>
 
 <div id="profile" class="section">
@@ -129,7 +130,7 @@ textarea{height:120px;resize:vertical}
 
  <div id="authbox">
   <h3>Tu cuenta Ög</h3>
-  <input class="field" id="authusername" placeholder="Nombre de usuario (para registrarte)">
+  <input class="field" id="authusername" placeholder="Usuario para registrarte">
   <input class="field" id="authemail" type="email" placeholder="Correo electrónico" autocomplete="email">
   <input class="field" id="authpassword" type="password" placeholder="Contraseña" autocomplete="current-password">
   <button class="primary" onclick="signUp()">Crear cuenta</button>
@@ -160,21 +161,19 @@ textarea{height:120px;resize:vertical}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const SUPABASE_URL = "https://axxafvggyetnnaumqefi.supabase.co";
-const SUPABASE_KEY = "sb_publishable_O4wRZft0LCo3DYiCWT4iqg_E5_c8B2A";
+const SUPABASE_URL="https://axxafvggyetnnaumqefi.supabase.co";
+const SUPABASE_KEY="sb_publishable_O4wRZft0LCo3DYiCWT4iqg_E5_c8B2A";
 
-const db = window.supabase.createClient(
- SUPABASE_URL,
- SUPABASE_KEY
-);
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let currentUser = null;
-let myProfile = null;
+let currentUser=null;
+let myProfile=null;
 
 function showTab(id,btn){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
  document.getElementById(id).classList.add('active');
  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+
  if(btn)btn.classList.add('active');
  else{
   const index=['feed','explore','create','notifications','profile'].indexOf(id);
@@ -187,50 +186,53 @@ function status(id,message){
 }
 
 function avatar(profile){
- if(profile && profile.avatar_url){
+ if(profile?.avatar_url){
   const img=document.createElement('img');
   img.src=profile.avatar_url;
-  img.alt="Avatar";
+  img.alt='Avatar';
   return img;
  }
- return document.createTextNode("👤");
+ return document.createTextNode('👤');
 }
 
+// REGISTRO
 async function signUp(){
  const email=document.getElementById('authemail').value.trim();
  const password=document.getElementById('authpassword').value;
  const username=document.getElementById('authusername').value.trim().toLowerCase();
 
- if(!email || !password || !username)
-  return status('authstatus','Completá correo, contraseña y usuario.');
+ if(!email||!password||!username)
+  return status('authstatus','Completá todos los campos.');
+
  if(!/^[a-z0-9_]{3,20}$/.test(username))
   return status('authstatus','Usuario: 3 a 20 caracteres, letras, números o _.');
+
  if(password.length<8)
   return status('authstatus','La contraseña debe tener al menos 8 caracteres.');
 
  status('authstatus','Creando cuenta...');
 
  const {data,error}=await db.auth.signUp({
-  email,password,
-  options:{data:{username}}
+  email,password,options:{data:{username}}
  });
 
  if(error)return status('authstatus',error.message);
 
  if(data.session){
-  await loadAccount(data.session.user);
+  await loadAccount(data.user);
   status('authstatus','¡Cuenta creada!');
  }else{
   status('authstatus','Cuenta creada. Revisá tu correo para confirmar el registro y después iniciá sesión.');
  }
 }
 
+// INICIAR SESIÓN
 async function signIn(){
  const email=document.getElementById('authemail').value.trim();
  const password=document.getElementById('authpassword').value;
 
- if(!email || !password)
-  return status('authstatus','Ingresá tu correo y contraseña.');
+ if(!email||!password)
+  return status('authstatus','Ingresá correo y contraseña.');
 
  status('authstatus','Iniciando sesión...');
 
@@ -241,8 +243,11 @@ async function signIn(){
  status('authstatus','Sesión iniciada correctamente.');
 }
 
+// CERRAR SESIÓN
 async function signOut(){
- await db.auth.signOut();
+ const {error}=await db.auth.signOut();
+ if(error)return alert(error.message);
+
  currentUser=null;
  myProfile=null;
  updateProfileUI();
@@ -250,6 +255,7 @@ async function signOut(){
  showTab('profile');
 }
 
+// CUENTA Y PERFIL
 async function loadAccount(user){
  currentUser=user;
 
@@ -262,7 +268,8 @@ async function loadAccount(user){
  }
 
  if(!profile){
-  let username=user.user_metadata?.username || ('usuario_'+user.id.slice(0,8));
+  const username=user.user_metadata?.username||('usuario_'+user.id.slice(0,8));
+
   const {data:created,error:createError}=await db.from('profiles')
    .insert({id:user.id,username,display_name:username})
    .select().single();
@@ -281,6 +288,7 @@ async function loadAccount(user){
 
 function updateProfileUI(){
  const logged=!!currentUser;
+
  document.getElementById('authbox').style.display=logged?'none':'block';
  document.getElementById('accountbox').style.display=logged?'block':'none';
 
@@ -293,20 +301,19 @@ function updateProfileUI(){
   return;
  }
 
- document.getElementById('myname').textContent=myProfile?.display_name || myProfile?.username || 'Mi perfil';
- document.getElementById('myusername').textContent='@'+(myProfile?.username || '');
- document.getElementById('mybio').textContent=myProfile?.bio || '';
- document.getElementById('editname').value=myProfile?.display_name || '';
- document.getElementById('editbio').value=myProfile?.bio || '';
+ document.getElementById('myname').textContent=myProfile?.display_name||myProfile?.username||'Mi perfil';
+ document.getElementById('myusername').textContent='@'+(myProfile?.username||'');
+ document.getElementById('mybio').textContent=myProfile?.bio||'';
+ document.getElementById('editname').value=myProfile?.display_name||'';
+ document.getElementById('editbio').value=myProfile?.bio||'';
 
- const el=document.getElementById('myavatar');
- el.replaceChildren(avatar(myProfile));
-
+ document.getElementById('myavatar').replaceChildren(avatar(myProfile));
  loadFollowCounts();
 }
 
 async function saveProfile(){
  if(!currentUser)return;
+
  const display_name=document.getElementById('editname').value.trim();
  const bio=document.getElementById('editbio').value.trim();
 
@@ -324,6 +331,7 @@ async function saveProfile(){
 
 async function loadFollowCounts(){
  if(!currentUser)return;
+
  const [followers,following]=await Promise.all([
   db.from('follows').select('*',{count:'exact',head:true}).eq('following_id',currentUser.id),
   db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',currentUser.id)
@@ -334,15 +342,18 @@ async function loadFollowCounts(){
 }
 
 function formatDate(date){
- return new Date(date).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'});
+ return new Date(date).toLocaleString('es-AR',{
+  dateStyle:'short',timeStyle:'short'
+ });
 }
 
+// FEED: CARGAR PUBLICACIONES SIN JOIN AUTOMÁTICO
 async function loadPosts(){
  const container=document.getElementById('posts');
  container.replaceChildren();
 
  const {data:posts,error}=await db.from('posts')
-  .select('*, profiles(username,display_name,avatar_url)')
+  .select('*')
   .order('created_at',{ascending:false})
   .limit(50);
 
@@ -351,9 +362,25 @@ async function loadPosts(){
   return;
  }
 
- if(!posts.length)return;
+ if(!posts||!posts.length)return;
+
+ const userIds=[...new Set(posts.map(p=>p.user_id))];
+
+ const {data:profiles,error:profileError}=await db.from('profiles')
+  .select('id,username,display_name,avatar_url')
+  .in('id',userIds);
+
+ if(profileError){
+  container.textContent='Error al cargar perfiles: '+profileError.message;
+  return;
+ }
+
+ const profileMap={};
+ (profiles||[]).forEach(p=>profileMap[p.id]=p);
 
  for(const post of posts){
+  const profile=profileMap[post.user_id]||{username:'usuario'};
+
   const article=document.createElement('article');
   article.className='post';
 
@@ -362,12 +389,12 @@ async function loadPosts(){
 
   const av=document.createElement('div');
   av.className='avatar';
-  av.replaceChildren(avatar(post.profiles));
+  av.replaceChildren(avatar(profile));
 
   const info=document.createElement('div');
   const name=document.createElement('div');
   name.className='username';
-  name.textContent=post.profiles?.display_name || post.profiles?.username || 'Usuario';
+  name.textContent=profile.display_name||profile.username||'Usuario';
 
   const time=document.createElement('div');
   time.className='time';
@@ -378,7 +405,7 @@ async function loadPosts(){
 
   const content=document.createElement('p');
   content.className='posttext';
-  content.textContent=post.content || '';
+  content.textContent=post.content||'';
 
   article.append(head,content);
 
@@ -403,14 +430,14 @@ async function loadPosts(){
   commentButton.textContent='♧ Comentar';
   commentButton.onclick=()=>addComment(post.id);
 
-  const countButton=document.createElement('button');
-  countButton.className='action';
-  countButton.textContent='Ver comentarios';
-  countButton.onclick=()=>viewComments(post.id);
+  const viewButton=document.createElement('button');
+  viewButton.className='action';
+  viewButton.textContent='Ver comentarios';
+  viewButton.onclick=()=>viewComments(post.id);
 
-  actions.append(likeButton,commentButton,countButton);
+  actions.append(likeButton,commentButton,viewButton);
 
-  if(currentUser && post.user_id!==currentUser.id){
+  if(currentUser&&post.user_id!==currentUser.id){
    const followButton=document.createElement('button');
    followButton.className='action';
    followButton.textContent='＋ Seguir';
@@ -422,8 +449,13 @@ async function loadPosts(){
   container.append(article);
 
   if(currentUser){
-   const {data:like}=await db.from('likes').select('user_id')
-    .eq('post_id',post.id).eq('user_id',currentUser.id).maybeSingle();
+   const {data:like,error:likeError}=await db.from('likes')
+    .select('user_id')
+    .eq('post_id',post.id)
+    .eq('user_id',currentUser.id)
+    .maybeSingle();
+
+   if(likeError)console.error(likeError);
 
    if(like){
     likeButton.classList.add('liked');
@@ -433,6 +465,7 @@ async function loadPosts(){
  }
 }
 
+// PUBLICAR
 async function publish(){
  if(!currentUser){
   alert('Iniciá sesión para publicar.');
@@ -441,6 +474,7 @@ async function publish(){
 
  const input=document.getElementById('newpost');
  const content=input.value.trim();
+
  if(!content)return alert('Escribí algo primero.');
 
  const {error}=await db.from('posts').insert({
@@ -455,6 +489,7 @@ async function publish(){
  showTab('feed');
 }
 
+// LIKES
 async function toggleLike(postId,button){
  if(!currentUser){
   alert('Iniciá sesión para dar Me gusta.');
@@ -462,27 +497,35 @@ async function toggleLike(postId,button){
  }
 
  const {data:existing,error:readError}=await db.from('likes')
-  .select('user_id').eq('post_id',postId)
-  .eq('user_id',currentUser.id).maybeSingle();
+  .select('user_id')
+  .eq('post_id',postId)
+  .eq('user_id',currentUser.id)
+  .maybeSingle();
 
  if(readError)return alert(readError.message);
 
  if(existing){
   const {error}=await db.from('likes').delete()
-   .eq('post_id',postId).eq('user_id',currentUser.id);
+   .eq('post_id',postId)
+   .eq('user_id',currentUser.id);
+
   if(error)return alert(error.message);
+
   button.classList.remove('liked');
   button.textContent='♡ Me gusta';
  }else{
   const {error}=await db.from('likes').insert({
    post_id:postId,user_id:currentUser.id
   });
+
   if(error)return alert(error.message);
+
   button.classList.add('liked');
   button.textContent='♥ Me gusta';
  }
 }
 
+// COMENTARIOS
 async function addComment(postId){
  if(!currentUser){
   alert('Iniciá sesión para comentar.');
@@ -490,7 +533,7 @@ async function addComment(postId){
  }
 
  const content=prompt('Escribí tu comentario:');
- if(!content || !content.trim())return;
+ if(!content||!content.trim())return;
 
  const {error}=await db.from('comments').insert({
   post_id:postId,
@@ -499,22 +542,38 @@ async function addComment(postId){
  });
 
  if(error)return alert('Error: '+error.message);
+
  alert('Comentario publicado.');
 }
 
+// VER COMENTARIOS SIN JOIN AUTOMÁTICO
 async function viewComments(postId){
- const {data,error}=await db.from('comments')
-  .select('content,created_at,profiles(username)')
+ const {data:comments,error}=await db.from('comments')
+  .select('id,user_id,content,created_at')
   .eq('post_id',postId)
   .order('created_at',{ascending:true});
 
  if(error)return alert(error.message);
 
- if(!data.length)return alert('Todavía no hay comentarios.');
+ if(!comments.length)return alert('Todavía no hay comentarios.');
 
- alert(data.map(c=>'@'+(c.profiles?.username||'usuario')+': '+c.content).join('\n\n'));
+ const userIds=[...new Set(comments.map(c=>c.user_id))];
+
+ const {data:profiles,error:profileError}=await db.from('profiles')
+  .select('id,username')
+  .in('id',userIds);
+
+ if(profileError)return alert(profileError.message);
+
+ const profileMap={};
+ (profiles||[]).forEach(p=>profileMap[p.id]=p);
+
+ alert(comments.map(c=>
+  '@'+(profileMap[c.user_id]?.username||'usuario')+': '+c.content
+ ).join('\n\n'));
 }
 
+// SEGUIR USUARIOS
 async function followUser(userId,button){
  if(!currentUser){
   alert('Iniciá sesión para seguir usuarios.');
@@ -533,13 +592,15 @@ async function followUser(userId,button){
 
  button.textContent='✓ Siguiendo';
  button.disabled=true;
- loadFollowCounts();
+ await loadFollowCounts();
 }
 
+// BUSCAR USUARIOS
 let searchTimer;
 
 async function searchUsers(){
  clearTimeout(searchTimer);
+
  const value=document.getElementById('search').value.trim();
  const result=document.getElementById('searchresult');
  result.replaceChildren();
@@ -580,8 +641,10 @@ async function searchUsers(){
  },350);
 }
 
+// INICIO Y SESIÓN
 db.auth.onAuthStateChange((event,session)=>{
  if(event==='INITIAL_SESSION')return;
+
  setTimeout(async()=>{
   if(session?.user){
    await loadAccount(session.user);
@@ -596,10 +659,12 @@ db.auth.onAuthStateChange((event,session)=>{
 
 async function init(){
  const {data,error}=await db.auth.getSession();
+
  if(error){
   status('authstatus',error.message);
   return;
  }
+
  if(data.session){
   await loadAccount(data.session.user);
  }else{
