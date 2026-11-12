@@ -43,6 +43,7 @@ header{
  border-radius:50%;padding:2.5px;
  background:#27272a;
 }
+/* Aro de colores estilo Instagram si tiene historia */
 .story.has-story .story-avatar-container{
  background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);
 }
@@ -65,11 +66,12 @@ main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active {padding: 0 !important;}
 
-/* CÁMARA A PANTALLA COMPLETA CON ZOOM Y UI ESTILO INSTAGRAM */
+/* CÁMARA A PANTALLA COMPLETA CON ZOOM Y UI INSTAGRAM */
 #cameraModal{
  position:fixed;inset:0;background:#000;z-index:400;
  display:none;flex-direction:column;justify-content:space-between;
  -webkit-transform:translateZ(0);transform:translateZ(0);
+ touch-action:none; /* Permite controlar gestos de zoom táctil */
 }
 #cameraModal.active{display:flex}
 
@@ -83,6 +85,7 @@ main > div.active {display: block !important;}
 .camera-video-fullscreen{
  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#000;
  -webkit-transform:translateZ(0);transform:translateZ(0);
+ transition: transform 0.1s ease-out;
 }
 #capturedImagePreview{z-index:2}
 
@@ -95,7 +98,7 @@ main > div.active {display: block !important;}
  width:100%;max-width:430px;margin:0 auto;
 }
 
-/* Botón de captura más compacto y estilizado */
+/* Botón de captura optimizado y compacto */
 .capture-btn-wrapper{
  display:flex;flex-direction:column;align-items:center;gap:6px;
 }
@@ -292,7 +295,7 @@ textarea{height:120px;resize:none}
  </div>
  <div id="header-profile-icons" style="display:none;align-items:center;gap:4px">
   <button class="icon" onclick="toggleSettingsDrawer()" aria-label="Configuración">
-   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
  </div>
 </header>
@@ -315,7 +318,7 @@ textarea{height:120px;resize:none}
  <div id="posts"></div>
 </div>
 
-<!-- CÁMARA A PANTALLA COMPLETA CON ZOOM Y ESTILO INSTAGRAM -->
+<!-- CÁMARA A PANTALLA COMPLETA CON ZOOM TÁCTIL Y MODOS -->
 <div id="cameraModal">
  <video id="cameraVideo" class="camera-video-fullscreen" autoplay playsinline muted webkit-playsinline></video>
  <img id="capturedImagePreview" class="camera-video-fullscreen" style="display:none" alt="Vista previa">
@@ -589,6 +592,7 @@ let myActiveStory=null;
 let mediaStream=null;
 let capturedBlob=null;
 let currentFacingMode = 'user';
+let currentZoom = 1; // Control de zoom táctil
 
 const isHighEndDevice = navigator.hardwareConcurrency ? navigator.hardwareConcurrency > 4 : true;
 
@@ -799,6 +803,7 @@ async function loadStoriesData(){
  const fragment = document.createDocumentFragment();
 
  const myStoryDiv = document.createElement('div');
+ // Si hay historia activa, aplica la clase que muestra el aro degradado de colores
  myStoryDiv.className = myActiveStory ? 'story has-story' : 'story';
  myStoryDiv.id = 'mystorybtn';
  myStoryDiv.onclick = handleStoryClick;
@@ -811,7 +816,7 @@ async function loadStoriesData(){
  myInner.className = 'story-avatar-inner';
  myInner.id = 'mystoryavatar';
  
- // Si hay historia activa muestra la historia, sino muestra la foto de perfil sin fondo extraño
+ // Si hay historia muestra la imagen de la historia; sino muestra la foto de perfil real limpia
  if(myActiveStory){
   const img = document.createElement('img');
   img.src = myActiveStory.image_url;
@@ -914,12 +919,15 @@ async function handleStoryClick(){
 }
 
 /* ========================================================
-   CÁMARA OPTIMIZADA CON ZOOM NATIVO Y MODOS
+   CÁMARA OPTIMIZADA CON ZOOM TÁCTIL NATIVO (PINCH-TO-ZOOM)
    ======================================================== */
 async function openCameraModal(){
  capturedBlob = null;
+ currentZoom = 1;
+ const videoElem = document.getElementById('cameraVideo');
+ videoElem.style.transform = 'scale(1)';
  document.getElementById('capturedImagePreview').style.display = 'none';
- document.getElementById('cameraVideo').style.display = 'block';
+ videoElem.style.display = 'block';
  document.getElementById('captureBtn').style.display = 'block';
  document.getElementById('publishStoryBtn').style.display = 'none';
  document.getElementById('cameraModal').classList.add('active');
@@ -938,8 +946,7 @@ async function startCameraStream(){
   const videoConstraints = isHighEndDevice ? {
    facingMode: currentFacingMode,
    width: { ideal: 1080 },
-   height: { ideal: 1920 },
-   zoom: true // Petición de zoom por defecto del dispositivo
+   height: { ideal: 1920 }
   } : {
    facingMode: currentFacingMode,
    width: { ideal: 720 },
@@ -956,7 +963,6 @@ async function startCameraStream(){
   await videoElem.play().catch(e => console.warn("Demora en reproducción:", e));
  }catch(err){
   console.error('Error al inicializar cámara:', err);
-  // Reintento sin constraint de zoom estricto por compatibilidad
   try {
    mediaStream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: currentFacingMode },
@@ -972,8 +978,41 @@ async function startCameraStream(){
  }
 }
 
+// Soporte para zoom táctil fluido (Pellizcar pantalla en móviles)
+let initialPinchDistance = 0;
+const cameraModalEl = document.getElementById('cameraModal');
+
+cameraModalEl.addEventListener('touchstart', e => {
+ if(e.touches.length === 2){
+  initialPinchDistance = Math.hypot(
+   e.touches[0].clientX - e.touches[1].clientX,
+   e.touches[0].clientY - e.touches[1].clientY
+  );
+ }
+}, {passive: true});
+
+cameraModalEl.addEventListener('touchmove', e => {
+ if(e.touches.length === 2 && initialPinchDistance > 0){
+  const currentDistance = Math.hypot(
+   e.touches[0].clientX - e.touches[1].clientX,
+   e.touches[0].clientY - e.touches[1].clientY
+  );
+  const zoomFactor = currentDistance / initialPinchDistance;
+  currentZoom = Math.min(Math.max(1, currentZoom * (zoomFactor > 1 ? 1.02 : 0.98)), 4);
+  
+  const videoElem = document.getElementById('cameraVideo');
+  videoElem.style.transform = `scale(${currentZoom})`;
+ }
+}, {passive: true});
+
+cameraModalEl.addEventListener('touchend', e => {
+ if(e.touches.length < 2) initialPinchDistance = 0;
+}, {passive: true});
+
 async function switchCamera(){
  currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+ currentZoom = 1;
+ document.getElementById('cameraVideo').style.transform = 'scale(1)';
  await startCameraStream();
 }
 
