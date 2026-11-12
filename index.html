@@ -28,12 +28,15 @@ header{
 
 .stories{display:flex;gap:14px;overflow-x:auto;padding:12px 16px;border-bottom:1px solid #18181b;background:#000;scrollbar-width:none}
 .stories::-webkit-scrollbar{display:none}
-.story{text-align:center;min-width:64px;font-size:11px;color:#a1a1aa;flex-shrink:0}
+.story{text-align:center;min-width:64px;font-size:11px;color:#a1a1aa;flex-shrink:0;cursor:pointer}
 .avatar{
  width:56px;height:56px;border-radius:50%;
  display:grid;place-items:center;font-size:22px;
  background:linear-gradient(135deg,#3b82f6,#6366f1,#a855f7);
  padding:2px;margin:auto auto 6px;overflow:hidden;
+}
+.story.has-story .avatar{
+ background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);
 }
 .avatar-inner{
  width:100%;height:100%;border-radius:50%;background:#18181b;
@@ -54,6 +57,17 @@ main > div.active {
  padding: 0 !important;
 }
 
+/* VISOR DE HISTORIAS A PANTALLA COMPLETA */
+#storyViewer{
+ position:fixed;inset:0;background:#000;z-index:300;
+ display:none;flex-direction:column;justify-content:space-between;
+ padding:20px 16px;
+}
+#storyViewer.active{display:flex}
+.story-top-bar{display:flex;align-items:center;justify-content:space-between;color:#fff}
+.story-content-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;margin:12px 0}
+.story-content-area img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
+
 /* ESTILO DE PUBLICACIONES TIPO INSTAGRAM */
 .post{background:#000;border-bottom:1px solid #18181b;margin-bottom:8px}
 .posthead{display:flex;align-items:center;gap:12px;padding:12px 16px}
@@ -67,7 +81,6 @@ main > div.active {
 .post-action-btn.liked svg{fill:#ef4444;stroke:#ef4444}
 .likes-count{font-size:13px;font-weight:600;color:#fff;padding:0 16px 6px 16px}
 
-/* SECCIÓN DE COMENTARIOS INCRUSTADOS Y CAJA OCULTA */
 .post-comments-section{padding:0 16px 12px 16px;font-size:13px}
 .comment-item{margin-bottom:4px;line-height:1.35;overflow-wrap:anywhere}
 .comment-user{font-weight:600;color:#fff;margin-right:6px}
@@ -154,7 +167,7 @@ textarea{height:120px;resize:none}
 .ig-grid-item{aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid #18181b}
 .ig-grid-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
-/* MENÚ LATERAL CONFIGURACIÓN TIPO INSTAGRAM */
+/* MENÚ LATERAL CONFIGURACIÓN */
 .settings-overlay{
  position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
  z-index:200;display:none;opacity:0;transition:opacity 0.2s ease;
@@ -218,9 +231,24 @@ textarea{height:120px;resize:none}
 <!-- FEED -->
 <div id="feed" class="active">
  <div class="stories">
-  <div class="story"><div class="avatar"><div class="avatar-inner">＋</div></div>Tu historia</div>
+  <div class="story" id="mystorybtn" onclick="handleStoryClick()">
+   <div class="avatar" id="mystoryavatar"><div class="avatar-inner">＋</div></div>
+   Tu historia
+  </div>
  </div>
+ <input type="file" id="storyfileinput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="uploadStory(this)">
  <div id="posts"></div>
+</div>
+
+<!-- VISOR DE HISTORIAS -->
+<div id="storyViewer" onclick="closeStoryViewer()">
+ <div class="story-top-bar">
+  <strong id="storyUsername">@usuario</strong>
+  <button class="icon" onclick="closeStoryViewer()">✕</button>
+ </div>
+ <div class="story-content-area">
+  <img id="storyImage" src="" alt="Historia">
+ </div>
 </div>
 
 <!-- EXPLORAR -->
@@ -436,6 +464,7 @@ let isFollowing=false;
 let searchTimer=null;
 let profilesCache={};
 let realtimeChannel=null;
+let myActiveStory=null;
 
 function showTab(id,btn){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
@@ -539,6 +568,8 @@ async function signOut(){
  currentUser=null;
  myProfile=null;
  viewedProfile=null;
+ myActiveStory=null;
+ updateStoryUI();
  document.getElementById('accountbox').classList.remove('open');
  updateProfileUI();
  await loadPosts();
@@ -573,18 +604,16 @@ async function loadAccount(user){
  profilesCache[user.id]=profile;
  updateProfileUI();
  await loadPosts();
+ await loadMyStory();
  setupRealtimeNotifications();
 }
 
-// CONFIGURAR ESCUCHA EN TIEMPO REAL (WEBSOCKETS)
 function setupRealtimeNotifications(){
  if(realtimeChannel) db.removeChannel(realtimeChannel);
 
  realtimeChannel=db.channel('public-notifications')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows'},payload=>{
-   if(payload.new.following_id===currentUser?.id){
-    loadActivity();
-   }
+   if(payload.new.following_id===currentUser?.id){ loadActivity(); }
   })
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'likes'},payload=>{
    loadActivity();
@@ -593,6 +622,112 @@ function setupRealtimeNotifications(){
    loadActivity();
   })
   .subscribe();
+}
+
+/* GESTIÓN DE HISTORIAS */
+async function loadMyStory(){
+ if(!currentUser)return;
+ const {data}=await db.from('stories')
+  .select('*')
+  .eq('user_id', currentUser.id)
+  .order('created_at', {ascending:false})
+  .limit(1)
+  .maybeSingle();
+
+ myActiveStory=data||null;
+ updateStoryUI();
+}
+
+function updateStoryUI(){
+ const storyWrap=document.getElementById('mystorybtn');
+ const storyAvatar=document.getElementById('mystoryavatar');
+
+ if(myActiveStory){
+  storyWrap.classList.add('has-story');
+  const inner=document.createElement('div');
+  inner.className='avatar-inner';
+  const img=document.createElement('img');
+  img.src=myActiveStory.image_url;
+  img.alt='Mi historia';
+  inner.append(img);
+  storyAvatar.replaceChildren(inner);
+ }else{
+  storyWrap.classList.remove('has-story');
+  const inner=document.createElement('div');
+  inner.className='avatar-inner';
+  inner.textContent='＋';
+  storyAvatar.replaceChildren(inner);
+ }
+}
+
+function handleStoryClick(){
+ if(!currentUser){
+  alert('Iniciá sesión para ver o subir historias.');
+  return showTab('profile');
+ }
+ if(myActiveStory){
+  // Ver historia activa
+  document.getElementById('storyUsername').textContent='@'+(myProfile?.username||'mi_historia');
+  document.getElementById('storyImage').src=myActiveStory.image_url;
+  document.getElementById('storyViewer').classList.add('active');
+ }else{
+  // Subir nueva historia
+  document.getElementById('storyfileinput').click();
+ }
+}
+
+function closeStoryViewer(){
+ document.getElementById('storyViewer').classList.remove('active');
+}
+
+async function uploadStory(input){
+ if(!currentUser)return;
+ const file=input.files?.[0];
+ if(!file)return;
+
+ const allowed=['image/jpeg','image/png','image/webp'];
+ if(!allowed.includes(file.type)){
+  alert('Formato no permitido.');
+  input.value='';
+  return;
+ }
+
+ if(file.size>5*1024*1024){
+  alert('La imagen supera los 5 MB.');
+  input.value='';
+  return;
+ }
+
+ alert('Subiendo historia...');
+
+ const extension={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
+ const path=currentUser.id+'/story-'+Date.now()+'.'+extension;
+
+ const {error:uploadError}=await db.storage.from('og-media')
+  .upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
+
+ if(uploadError){
+  alert('Error al subir historia: '+uploadError.message);
+  input.value='';
+  return;
+ }
+
+ const {data:urlData}=db.storage.from('og-media').getPublicUrl(path);
+
+ const {data,error}=await db.from('stories')
+  .insert({user_id:currentUser.id, image_url:urlData.publicUrl})
+  .select().single();
+
+ if(error){
+  alert('Error al guardar la historia.');
+  input.value='';
+  return;
+ }
+
+ myActiveStory=data;
+ updateStoryUI();
+ input.value='';
+ alert('¡Historia publicada!');
 }
 
 function updateProfileUI(){
@@ -1257,8 +1392,8 @@ db.auth.onAuthStateChange((event,session)=>{
  setTimeout(async()=>{
   if(session?.user)await loadAccount(session.user);
   else{
-   currentUser=null; myProfile=null; viewedProfile=null;
-   updateProfileUI(); await loadPosts();
+   currentUser=null; myProfile=null; viewedProfile=null; myActiveStory=null;
+   updateStoryUI(); updateProfileUI(); await loadPosts();
   }
  },0);
 });
