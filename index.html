@@ -154,6 +154,31 @@ textarea{height:120px;resize:none}
 .ig-grid-item{aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid #18181b}
 .ig-grid-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
+/* MENÚ LATERAL CONFIGURACIÓN TIPO INSTAGRAM */
+.settings-overlay{
+ position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+ z-index:200;display:none;opacity:0;transition:opacity 0.2s ease;
+}
+.settings-overlay.open{display:block;opacity:1}
+.settings-drawer{
+ position:fixed;bottom:0;left:0;right:0;background:#121214;
+ border-top-left-radius:20px;border-top-right-radius:20px;
+ border-top:1px solid #27272a;z-index:201;padding:20px 16px 40px 16px;
+ transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.1,0.9,0.2,1);
+ max-width:470px;margin:auto;
+}
+.settings-overlay.open .settings-drawer{transform:translateY(0)}
+.settings-handle{width:36px;height:4px;background:#3f3f46;border-radius:2px;margin:0 auto 20px auto}
+.settings-item{
+ display:flex;align-items:center;gap:14px;padding:14px 10px;
+ color:#fff;font-size:15px;font-weight:500;cursor:pointer;border-radius:10px;
+ transition:background 0.15s;
+}
+.settings-item:active{background:#18181b}
+.settings-item svg{width:22px;height:22px;color:#a1a1aa}
+.settings-item.danger{color:#ef4444}
+.settings-item.danger svg{color:#ef4444}
+
 .public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #18181b;cursor:pointer}
 .public-user .avatar{margin:0;width:44px;height:44px;flex-shrink:0}
 .public-user-info{min-width:0;overflow-wrap:anywhere}
@@ -173,12 +198,19 @@ textarea{height:120px;resize:none}
 
 <header>
  <div class="logo">Ög<span style="color:#3b82f6">.</span></div>
- <div style="display:flex;align-items:center;gap:4px">
+ <!-- Cabecera predeterminada (Lupa y Corazón) -->
+ <div id="header-default-icons" style="display:flex;align-items:center;gap:4px">
   <button class="icon" onclick="showTab('explore')" aria-label="Explorar">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
   </button>
   <button class="icon" onclick="showTab('notifications')" aria-label="Actividad">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+  </button>
+ </div>
+ <!-- Cabecera de Perfil (Tuerquita de Configuración) -->
+ <div id="header-profile-icons" style="display:none;align-items:center;gap:4px">
+  <button class="icon" onclick="toggleSettingsDrawer()" aria-label="Configuración">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
  </div>
 </header>
@@ -252,7 +284,7 @@ textarea{height:120px;resize:none}
 
   <div class="ig-action-buttons" id="profile-actions" style="display:none">
    <button class="secondary" onclick="toggleEditPanel()">Editar perfil</button>
-   <button class="secondary" onclick="signOut()">Cerrar sesión</button>
+   <button class="secondary" onclick="toggleSettingsDrawer()">Configuración</button>
   </div>
  </div>
 
@@ -346,6 +378,29 @@ textarea{height:120px;resize:none}
 
 </main>
 
+<!-- MENÚ LATERAL DESPLEGABLE DE CONFIGURACIÓN (ESTILO INSTAGRAM) -->
+<div id="settingsOverlay" class="settings-overlay" onclick="toggleSettingsDrawer()">
+ <div class="settings-drawer" onclick="event.stopPropagation()">
+  <div class="settings-handle"></div>
+  <div class="settings-item" onclick="toggleSettingsDrawer(); toggleEditPanel()">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+   Editar perfil
+  </div>
+  <div class="settings-item" onclick="alert('Sección de Privacidad de Ög')">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+   Configuración y privacidad
+  </div>
+  <div class="settings-item" onclick="alert('Versión 1.0.0 - Ög Social')">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+   Información de la aplicación
+  </div>
+  <div class="settings-item danger" onclick="toggleSettingsDrawer(); signOut()">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+   Cerrar sesión
+  </div>
+ </div>
+</div>
+
 <nav>
  <button class="active" onclick="showTab('feed',this)" aria-label="Inicio">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -394,9 +449,25 @@ function showTab(id,btn){
   if(index>=0)document.querySelectorAll('nav button')[index].classList.add('active');
  }
 
+ // Control de visibilidad de la barra superior según la pestaña
+ const defaultIcons=document.getElementById('header-default-icons');
+ const profileIcons=document.getElementById('header-profile-icons');
+
+ if(id==='profile'){
+  defaultIcons.style.display='none';
+  profileIcons.style.display='flex';
+ }else{
+  defaultIcons.style.display='flex';
+  profileIcons.style.display='none';
+ }
+
  if(id==='notifications')loadActivity();
  if(id==='profile' && currentUser)loadMyPostsGrid();
  window.scrollTo(0,0);
+}
+
+function toggleSettingsDrawer(){
+ document.getElementById('settingsOverlay').classList.toggle('open');
 }
 
 function toggleEditPanel(){
