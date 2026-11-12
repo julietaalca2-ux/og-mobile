@@ -26,36 +26,52 @@ header{
 .icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 .icon svg{width:24px;height:24px}
 
-.stories{display:flex;gap:14px;overflow-x:auto;padding:12px 16px;border-bottom:1px solid #18181b;background:#000;scrollbar-width:none}
+/* HISTORIAS ESTILO INSTAGRAM (Más grandes y limpias) */
+.stories{display:flex;gap:14px;overflow-x:auto;padding:14px 16px;border-bottom:1px solid #18181b;background:#000;scrollbar-width:none}
 .stories::-webkit-scrollbar{display:none}
-.story{text-align:center;min-width:64px;font-size:11px;color:#a1a1aa;flex-shrink:0;cursor:pointer}
-.avatar{
- width:56px;height:56px;border-radius:50%;
- display:grid;place-items:center;font-size:22px;
- background:linear-gradient(135deg,#3b82f6,#6366f1,#a855f7);
- padding:2px;margin:auto auto 6px;overflow:hidden;
+.story{text-align:center;min-width:72px;font-size:12px;color:#a1a1aa;flex-shrink:0;cursor:pointer}
+.story-avatar-container{
+ position:relative;width:68px;height:68px;margin:auto auto 6px;
+ border-radius:50%;padding:2.5px;
+ background:#27272a; /* Círculo gris por defecto si no hay historia */
 }
-.story.has-story .avatar{
- background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);
+.story.has-story .story-avatar-container{
+ background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af); /* Gradiente Instagram */
 }
-.avatar-inner{
+.story-avatar-inner{
  width:100%;height:100%;border-radius:50%;background:#18181b;
- display:grid;place-items:center;overflow:hidden;border:2px solid #000;
+ display:grid;place-items:center;overflow:hidden;border:2.5px solid #000;
 }
-.avatar img{width:100%;height:100%;object-fit:cover}
-main{max-width:470px;margin:auto}
+.story-avatar-inner img{width:100%;height:100%;object-fit:cover}
 
-main > div {
- display: none !important;
- padding: 16px;
- content-visibility: auto;
+/* Insignia de "+" estilo Instagram en "Tu historia" */
+.story-plus-badge{
+ position:absolute;bottom:2px;right:2px;width:20px;height:20px;
+ background:#3b82f6;color:#fff;border-radius:50%;
+ border:2px solid #000;display:grid;place-items:center;font-size:13px;font-weight:700;
+ z-index:2;
 }
-main > div.active {
- display: block !important;
+
+main{max-width:470px;margin:auto}
+main > div {display: none !important;padding: 16px;content-visibility: auto;}
+main > div.active {display: block !important;}
+#feed.active, #profile.active, #publicprofile.active {padding: 0 !important;}
+
+/* CÁMARA EN TIEMPO REAL & MODAL DE HISTORIA */
+#cameraModal{
+ position:fixed;inset:0;background:#000;z-index:400;
+ display:none;flex-direction:column;justify-content:space-between;
+ padding:20px 16px;
 }
-#feed.active, #profile.active, #publicprofile.active {
- padding: 0 !important;
+#cameraModal.active{display:flex}
+.camera-preview-area{flex:1;position:relative;border-radius:16px;overflow:hidden;background:#121214;display:grid;place-items:center}
+.camera-preview-area video, .camera-preview-area img{width:100%;height:100%;object-fit:cover}
+.camera-controls{display:flex;align-items:center;justify-content:space-around;padding:24px 0}
+.capture-btn{
+ width:72px;height:72px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,0.3);
+ cursor:pointer;transition:transform 0.1s ease;
 }
+.capture-btn:active{transform:scale(0.9)}
 
 /* VISOR DE HISTORIAS A PANTALLA COMPLETA */
 #storyViewer{
@@ -145,7 +161,7 @@ textarea{height:120px;resize:none}
 .ig-cover img{width:100%;height:100%;object-fit:cover}
 .ig-header-container{padding:0 16px 16px 16px;border-bottom:1px solid #18181b}
 .ig-top-row{display:flex;align-items:center;justify-content:space-between;margin-top:-28px;margin-bottom:12px;position:relative;z-index:2}
-.ig-avatar-wrap .avatar{width:82px;height:82px;margin:0;border:3px solid #000;background:linear-gradient(135deg,#3b82f6,#a855f7)}
+.ig-avatar-wrap .story-avatar-container{width:86px;height:86px;margin:0;border:3px solid #000;background:linear-gradient(135deg,#3b82f6,#a855f7)}
 .ig-stats{display:flex;flex:1;justify-content:space-around;padding-top:28px;text-align:center}
 .ig-stat-item{display:flex;flex-direction:column}
 .ig-stat-num{font-size:16px;font-weight:700;color:#fff}
@@ -193,13 +209,13 @@ textarea{height:120px;resize:none}
 .settings-item.danger svg{color:#ef4444}
 
 .public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #18181b;cursor:pointer}
-.public-user .avatar{margin:0;width:44px;height:44px;flex-shrink:0}
+.public-user .story-avatar-container{margin:0;width:44px;height:44px;flex-shrink:0}
 .public-user-info{min-width:0;overflow-wrap:anywhere}
 .public-user-info strong{display:block;color:#fff;font-size:14px}
 .public-user-info small{color:#71717a}
 
 .activity-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #18181b}
-.activity-item .avatar{width:42px;height:42px;min-width:42px;margin:0}
+.activity-item .story-avatar-container{width:42px;height:42px;min-width:42px;margin:0}
 .activity-info{flex:1;min-width:0;font-size:13px;line-height:1.4;color:#f4f4f5;overflow-wrap:anywhere}
 .activity-info strong{color:white}
 .activity-date{color:#71717a;font-size:11px;margin-top:3px}
@@ -232,15 +248,37 @@ textarea{height:120px;resize:none}
 <div id="feed" class="active">
  <div class="stories" id="storiescontainer">
   <div class="story" id="mystorybtn" onclick="handleStoryClick()">
-   <div class="avatar" id="mystoryavatar"><div class="avatar-inner">＋</div></div>
+   <div class="story-avatar-container" id="mystoryavatar-container">
+    <div class="story-avatar-inner" id="mystoryavatar">
+     <div style="font-size:24px">👤</div>
+    </div>
+    <div class="story-plus-badge" id="mystorybadge">+</div>
+   </div>
    Tu historia
   </div>
  </div>
- <input type="file" id="storyfileinput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="uploadStory(this)">
  <div id="posts"></div>
 </div>
 
-<!-- VISOR DE HISTORIAS -->
+<!-- CÁMARA EN TIEMPO REAL (MODAL DE HISTORIA) -->
+<div id="cameraModal">
+ <div class="story-top-bar">
+  <strong>Crear historia</strong>
+  <button class="icon" onclick="closeCameraModal()">✕</button>
+ </div>
+ <div class="camera-preview-area" id="cameraPreviewArea">
+  <video id="cameraVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>
+  <img id="capturedImagePreview" style="display:none;width:100%;height:100%;object-fit:cover" alt="Vista previa">
+ </div>
+ <div class="camera-controls">
+  <button class="secondary" onclick="document.getElementById('galleryFileInput').click()">📁 Galería</button>
+  <button class="capture-btn" id="captureBtn" onclick="takePhoto()"></button>
+  <button class="primary" id="publishStoryBtn" style="display:none;width:auto;padding:10px 20px" onclick="uploadCapturedStory()">Compartir</button>
+ </div>
+ <input type="file" id="galleryFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handleGallerySelect(this)">
+</div>
+
+<!-- VISOR DE HISTORIAS A PANTALLA COMPLETA -->
 <div id="storyViewer" onclick="closeStoryViewer()">
  <div class="story-top-bar">
   <strong id="storyUsername">@usuario</strong>
@@ -283,7 +321,9 @@ textarea{height:120px;resize:none}
  <div class="ig-header-container">
   <div class="ig-top-row">
    <div class="ig-avatar-wrap">
-    <div class="avatar" id="myavatar"><div class="avatar-inner">👤</div></div>
+    <div class="story-avatar-container" style="width:86px;height:86px">
+     <div class="story-avatar-inner" id="myavatar"><div style="font-size:28px">👤</div></div>
+    </div>
    </div>
    
    <div class="ig-stats">
@@ -365,7 +405,9 @@ textarea{height:120px;resize:none}
  <div class="ig-header-container">
   <div class="ig-top-row">
    <div class="ig-avatar-wrap">
-    <div class="avatar" id="publicavatar"><div class="avatar-inner">👤</div></div>
+    <div class="story-avatar-container" style="width:86px;height:86px">
+     <div class="story-avatar-inner" id="publicavatar"><div style="font-size:28px">👤</div></div>
+    </div>
    </div>
    
    <div class="ig-stats">
@@ -465,6 +507,8 @@ let searchTimer=null;
 let profilesCache={};
 let realtimeChannel=null;
 let myActiveStory=null;
+let mediaStream=null;
+let capturedBlob=null;
 
 function showTab(id,btn){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
@@ -505,19 +549,27 @@ function status(id,message){
  document.getElementById(id).textContent=message;
 }
 
-function avatar(profile){
- const inner=document.createElement('div');
- inner.className='avatar-inner';
+function createAvatarNode(profile, isStoryActive=false){
+ const container = document.createElement('div');
+ container.className = isStoryActive ? 'story-avatar-container' : 'story-avatar-container';
+ 
+ const inner = document.createElement('div');
+ inner.className = 'story-avatar-inner';
+ 
  if(profile?.avatar_url){
-  const img=document.createElement('img');
-  img.src=profile.avatar_url;
-  img.alt='Avatar';
-  img.loading='lazy';
+  const img = document.createElement('img');
+  img.src = profile.avatar_url;
+  img.alt = 'Avatar';
+  img.loading = 'lazy';
   inner.append(img);
  }else{
-  inner.textContent='👤';
+  const placeholder = document.createElement('div');
+  placeholder.style.fontSize = '20px';
+  placeholder.textContent = '👤';
+  inner.append(placeholder);
  }
- return inner;
+ container.append(inner);
+ return container;
 }
 
 async function signUp(){
@@ -604,7 +656,6 @@ async function loadAccount(user){
  profilesCache[user.id]=profile;
  updateProfileUI();
  
- // CARGA EN PARALELO ULTRA-RÁPIDA (Optimización de fluidez)
  await Promise.all([
   loadPosts(),
   loadStoriesData()
@@ -632,11 +683,10 @@ function setupRealtimeNotifications(){
   .subscribe();
 }
 
-/* GESTIÓN DE HISTORIAS OPTIMIZADA Y FLUIDA */
+/* CÁMARA Y HISTORIAS ESTILO INSTAGRAM */
 async function loadStoriesData(){
  if(!currentUser) return;
 
- // 1. Consultar en paralelo las historias propias y de los seguidos para reducir latencia
  const [myStoryRes, followingRes] = await Promise.all([
   db.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(1).maybeSingle(),
   db.from('follows').select('following_id').eq('follower_id', currentUser.id)
@@ -647,39 +697,61 @@ async function loadStoriesData(){
  const container = document.getElementById('storiescontainer');
  const fragment = document.createDocumentFragment();
 
- // Renderizar "Tu historia" de forma limpia
+ // 1. Tu historia (Burbuja grande con etiqueta "+" estilo Instagram)
  const myStoryDiv = document.createElement('div');
  myStoryDiv.className = myActiveStory ? 'story has-story' : 'story';
  myStoryDiv.id = 'mystorybtn';
  myStoryDiv.onclick = handleStoryClick;
 
- const myAvatarWrap = document.createElement('div');
- myAvatarWrap.className = 'avatar';
- myAvatarWrap.id = 'mystoryavatar';
- myAvatarWrap.replaceChildren(createAvatarInner(myActiveStory ? myActiveStory.image_url : null, true));
+ const myAvatarContainer = document.createElement('div');
+ myAvatarContainer.className = 'story-avatar-container';
+ myAvatarContainer.id = 'mystoryavatar-container';
+
+ const myInner = document.createElement('div');
+ myInner.className = 'story-avatar-inner';
+ myInner.id = 'mystoryavatar';
+ 
+ if(myActiveStory){
+  const img = document.createElement('img');
+  img.src = myActiveStory.image_url;
+  img.alt = 'Mi historia';
+  myInner.append(img);
+ }else{
+  const ph = document.createElement('div');
+  ph.style.fontSize = '24px';
+  ph.textContent = '👤';
+  myInner.append(ph);
+ }
+
+ const badge = document.createElement('div');
+ badge.className = 'story-plus-badge';
+ badge.id = 'mystorybadge';
+ badge.textContent = myActiveStory ? '✓' : '+';
+ badge.style.background = myActiveStory ? '#10b981' : '#3b82f6';
+
+ myAvatarContainer.append(myInner, badge);
 
  const myLabel = document.createElement('div');
  myLabel.textContent = 'Tu historia';
  myLabel.style.overflow = 'hidden';
  myLabel.style.textOverflow = 'ellipsis';
  myLabel.style.whiteSpace = 'nowrap';
- myLabel.style.width = '64px';
+ myLabel.style.width = '72px';
 
- myStoryDiv.append(myAvatarWrap, myLabel);
+ myStoryDiv.append(myAvatarContainer, myLabel);
  fragment.append(myStoryDiv);
 
+ // 2. Historias de personas seguidas
  const followingData = followingRes.data;
  if(followingData && followingData.length > 0){
   const followingIds = followingData.map(f => f.following_id);
 
-  // Obtener historias de los seguidos
   const {data: storiesData} = await db.from('stories')
    .select('user_id, image_url, created_at')
    .in('user_id', followingIds)
    .order('created_at', {ascending: false});
 
   if(storiesData && storiesData.length > 0){
-   // Filtrar usando un objeto diccionario para garantizar 1 sola aparición por usuario (cero duplicados)
    const uniqueStories = {};
    storiesData.forEach(s => {
     if(!uniqueStories[s.user_id]) uniqueStories[s.user_id] = s;
@@ -691,7 +763,6 @@ async function loadStoriesData(){
     (profiles || []).forEach(p => profilesCache[p.id] = p);
    }
 
-   // Construir los elementos de los seguidos en memoria (DocumentFragment) antes de inyectar al DOM
    Object.values(uniqueStories).forEach(story => {
     const profile = profilesCache[story.user_id];
     if(!profile) return;
@@ -700,108 +771,120 @@ async function loadStoriesData(){
     storyDiv.className = 'story has-story';
     storyDiv.onclick = () => openUserStory(profile, story.image_url);
 
-    const av = document.createElement('div');
-    av.className = 'avatar';
-    av.replaceChildren(avatar(profile));
+    const avatarBox = createAvatarNode(profile, true);
 
     const name = document.createElement('div');
     name.style.overflow = 'hidden';
     name.style.textOverflow = 'ellipsis';
     name.style.whiteSpace = 'nowrap';
-    name.style.width = '64px';
+    name.style.width = '72px';
     name.textContent = profile.username;
 
-    storyDiv.append(av, name);
+    storyDiv.append(avatarBox, name);
     fragment.append(storyDiv);
    });
   }
  }
 
- // Inserción única al DOM para evitar parpadeos y acelerar la renderización
  container.replaceChildren(fragment);
 }
 
-function createAvatarInner(imgUrl, isSelf){
- const inner = document.createElement('div');
- inner.className = 'avatar-inner';
- if(imgUrl){
-  const img = document.createElement('img');
-  img.src = imgUrl;
-  img.alt = 'Historia';
-  inner.append(img);
- }else{
-  inner.textContent = '＋';
- }
- return inner;
-}
-
 function updateStoryUI(){
- const storyWrap = document.getElementById('mystorybtn');
- const storyAvatar = document.getElementById('mystoryavatar');
- if(!storyWrap || !storyAvatar) return;
-
- if(myActiveStory){
-  storyWrap.classList.add('has-story');
-  storyAvatar.replaceChildren(createAvatarInner(myActiveStory.image_url, true));
- }else{
-  storyWrap.classList.remove('has-story');
-  storyAvatar.replaceChildren(createAvatarInner(null, true));
- }
+ loadStoriesData();
 }
 
-function openUserStory(profile, imageUrl){
- document.getElementById('storyUsername').textContent = '@'+profile.username;
- document.getElementById('storyImage').src = imageUrl;
- document.getElementById('storyViewer').classList.add('active');
-}
-
-function handleStoryClick(){
+async function handleStoryClick(){
  if(!currentUser){
   alert('Iniciá sesión para ver o subir historias.');
   return showTab('profile');
  }
  if(myActiveStory){
+  // Ver historia activa
   document.getElementById('storyUsername').textContent = '@'+(myProfile?.username||'mi_historia');
   document.getElementById('storyImage').src = myActiveStory.image_url;
   document.getElementById('storyViewer').classList.add('active');
  }else{
-  document.getElementById('storyfileinput').click();
+  // Abrir cámara en tiempo real estilo Instagram
+  await openCameraModal();
  }
 }
 
-function closeStoryViewer(){
- document.getElementById('storyViewer').classList.remove('active');
+async function openCameraModal(){
+ capturedBlob = null;
+ document.getElementById('capturedImagePreview').style.display = 'none';
+ document.getElementById('cameraVideo').style.display = 'block';
+ document.getElementById('captureBtn').style.display = 'block';
+ document.getElementById('publishStoryBtn').style.display = 'none';
+ document.getElementById('cameraModal').classList.add('active');
+
+ try{
+  mediaStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}, audio:false});
+  document.getElementById('cameraVideo').srcObject = mediaStream;
+ }catch(err){
+  console.error('Error al acceder a la cámara:', err);
+  alert('No se pudo acceder a la cámara. Puedes seleccionar una foto de la galería.');
+  document.getElementById('galleryFileInput').click();
+  closeCameraModal();
+ }
 }
 
-async function uploadStory(input){
- if(!currentUser) return;
+function closeCameraModal(){
+ if(mediaStream){
+  mediaStream.getTracks().forEach(track=>track.stop());
+  mediaStream=null;
+ }
+ document.getElementById('cameraModal').classList.remove('active');
+}
+
+function takePhoto(){
+ const video = document.getElementById('cameraVideo');
+ const canvas = document.createElement('canvas');
+ canvas.width = video.videoWidth || 720;
+ canvas.height = video.videoHeight || 1280;
+ const ctx = canvas.getContext('2d');
+ ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+ canvas.toBlob(blob=>{
+  capturedBlob = blob;
+  const imageUrl = URL.createObjectURL(blob);
+  
+  // Apagar cámara y mostrar vista previa para compartir
+  if(mediaStream){
+   mediaStream.getTracks().forEach(track=>track.stop());
+   mediaStream=null;
+  }
+
+  const preview = document.getElementById('capturedImagePreview');
+  preview.src = imageUrl;
+  preview.style.display = 'block';
+  video.style.display = 'none';
+  document.getElementById('captureBtn').style.display = 'none';
+  document.getElementById('publishStoryBtn').style.display = 'block';
+ }, 'image/jpeg', 0.85);
+}
+
+async function handleGallerySelect(input){
  const file = input.files?.[0];
  if(!file) return;
+ capturedBlob = file;
 
- const allowed = ['image/jpeg','image/png','image/webp'];
- if(!allowed.includes(file.type)){
-  alert('Formato no permitido.');
-  input.value='';
-  return;
- }
+ closeCameraModal();
+ await uploadCapturedStory();
+ input.value = '';
+}
 
- if(file.size > 5*1024*1024){
-  alert('La imagen supera los 5 MB.');
-  input.value='';
-  return;
- }
+async function uploadCapturedStory(){
+ if(!currentUser || !capturedBlob) return;
 
  alert('Subiendo historia...');
 
- const extension = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
- const path = currentUser.id+'/story-'+Date.now()+'.'+extension;
+ const path = currentUser.id+'/story-'+Date.now()+'.jpg';
 
  const {error:uploadError} = await db.storage.from('og-media')
-  .upload(path, file, {cacheControl:'3600', upsert:false, contentType:file.type});
+  .upload(path, capturedBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
 
  if(uploadError){
   alert('Error al subir historia: '+uploadError.message);
-  input.value='';
   return;
  }
 
@@ -813,14 +896,23 @@ async function uploadStory(input){
 
  if(error){
   alert('Error al guardar la historia.');
-  input.value='';
   return;
  }
 
  myActiveStory = data;
- input.value='';
- await loadStoriesData(); // Refrescar carrusel de inmediato de forma fluida
- alert('¡Historia publicada!');
+ closeCameraModal();
+ await loadStoriesData();
+ alert('¡Historia publicada con éxito!');
+}
+
+function openUserStory(profile, imageUrl){
+ document.getElementById('storyUsername').textContent = '@'+profile.username;
+ document.getElementById('storyImage').src = imageUrl;
+ document.getElementById('storyViewer').classList.add('active');
+}
+
+function closeStoryViewer(){
+ document.getElementById('storyViewer').classList.remove('active');
 }
 
 function updateProfileUI(){
@@ -837,7 +929,7 @@ function updateProfileUI(){
   document.getElementById('mypostscount').textContent='0';
   document.getElementById('myfollowerscount').textContent='0';
   document.getElementById('myfollowingcount').textContent='0';
-  document.getElementById('myavatar').replaceChildren(avatar(null));
+  document.getElementById('myavatar').replaceChildren();
   document.getElementById('mycover').replaceChildren();
   return;
  }
@@ -847,7 +939,20 @@ function updateProfileUI(){
  document.getElementById('mybio').textContent=myProfile?.bio||'';
  document.getElementById('editname').value=myProfile?.display_name||'';
  document.getElementById('editbio').value=myProfile?.bio||'';
- document.getElementById('myavatar').replaceChildren(avatar(myProfile));
+
+ const myAvatarBox = document.getElementById('myavatar');
+ myAvatarBox.replaceChildren();
+ if(myProfile?.avatar_url){
+  const img = document.createElement('img');
+  img.src = myProfile.avatar_url;
+  img.alt = 'Avatar';
+  myAvatarBox.append(img);
+ }else{
+  const ph = document.createElement('div');
+  ph.style.fontSize = '28px';
+  ph.textContent = '👤';
+  myAvatarBox.append(ph);
+ }
 
  const cover=document.getElementById('mycover');
  cover.replaceChildren();
@@ -1041,9 +1146,7 @@ async function loadActivity(){
    const item=document.createElement('div');
    item.className='activity-item';
 
-   const av=document.createElement('div');
-   av.className='avatar';
-   av.replaceChildren(avatar(profile));
+   const av=createAvatarNode(profile, false);
 
    const info=document.createElement('div');
    info.className='activity-info';
@@ -1119,9 +1222,7 @@ async function loadPosts(){
   const head=document.createElement('div');
   head.className='posthead';
 
-  const av=document.createElement('div');
-  av.className='avatar';
-  av.replaceChildren(avatar(profile));
+  const av=createAvatarNode(profile, false);
   av.style.cursor='pointer';
   av.onclick=()=>openPublicProfile(post.user_id);
 
@@ -1369,7 +1470,7 @@ async function openPublicProfile(userId){
  document.getElementById('publicname').textContent=profile.display_name||profile.username||'Usuario';
  document.getElementById('publicusername').textContent='@'+profile.username;
  document.getElementById('publicbio').textContent=profile.bio||'';
- document.getElementById('publicavatar').replaceChildren(avatar(profile));
+ document.getElementById('publicavatar').replaceChildren(createAvatarNode(profile).firstChild);
 
  const cover=document.getElementById('publiccover');
  cover.replaceChildren();
@@ -1463,9 +1564,7 @@ async function searchUsers(){
    profilesCache[profile.id]=profile;
    const item=document.createElement('div');
    item.className='public-user';
-   const av=document.createElement('div');
-   av.className='avatar';
-   av.replaceChildren(avatar(profile));
+   const av=createAvatarNode(profile, false);
    const info=document.createElement('div');
    info.className='public-user-info';
    const name=document.createElement('strong');
