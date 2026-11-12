@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09090f">
+<title>Ög — Perfil</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#09090f;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:20px;border-bottom:1px solid #292933}
+.logo{font-size:25px;font-weight:800}
+main{max-width:650px;margin:auto;padding:15px 15px 110px}
+.cover{height:155px;background:#201a30;border-radius:15px;overflow:hidden}
+.cover img{width:100%;height:100%;object-fit:cover}
+.top{display:flex;align-items:flex-end;gap:14px;margin-top:-38px;padding:0 12px}
+.avatar{width:92px;height:92px;border:4px solid #09090f;border-radius:50%;object-fit:cover;background:#292432}
+.details{padding:12px 5px}
+.name{font-size:21px;font-weight:800}
+.username{color:#aaa;font-size:14px;margin-top:4px}
+.bio{font-size:14px;color:#ddd;margin-top:12px;line-height:1.5}
+.stats{display:flex;gap:25px;margin-top:18px;padding:14px 0;border-top:1px solid #292933;border-bottom:1px solid #292933}
+.stat{text-align:center;font-size:13px;color:#aaa}
+.stat strong{display:block;color:white;font-size:17px;margin-bottom:3px}
+.actions{margin:16px 0}
+button{border:0;border-radius:11px;background:#8060d8;color:white;padding:12px 22px;font-weight:700;cursor:pointer}
+button.following{background:#24212e;border:1px solid #514a61}
+button:disabled{opacity:.5}
+.postsTitle{font-weight:800;margin:24px 0 14px}
+.posts{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.post{aspect-ratio:1;background:#191720;overflow:hidden}
+.post img{width:100%;height:100%;object-fit:cover}
+.postText{padding:8px;font-size:12px;overflow:hidden}
+.empty{color:#999;text-align:center;padding:25px;font-size:14px}
+#status{font-size:13px;color:#c3a8ff;margin:12px 0}
+nav{position:fixed;bottom:0;left:0;right:0;background:#101017;border-top:1px solid #292933;display:flex;justify-content:space-around;padding:13px 5px calc(13px + env(safe-area-inset-bottom));z-index:10}
+nav a{color:#aaa;text-decoration:none;font-size:12px;text-align:center}
+nav span{display:block;font-size:21px;margin-bottom:4px}
+</style>
+</head>
+<body>
+<header><div class="logo">Ög</div></header>
+
+<main>
+<div class="cover"><img id="cover" alt="Portada" style="display:none"></div>
+
+<div class="top">
+<img id="avatar" class="avatar" alt="Foto de perfil">
+<div class="details">
+<div class="name" id="name">Cargando...</div>
+<div class="username" id="username"></div>
+</div>
+</div>
+
+<div class="bio" id="bio"></div>
+
+<div class="stats">
+<div class="stat"><strong id="postCount">0</strong>Publicaciones</div>
+<div class="stat"><strong id="followers">0</strong>Seguidores</div>
+<div class="stat"><strong id="following">0</strong>Seguidos</div>
+</div>
+
+<div class="actions">
+<button id="followButton" style="display:none">Seguir</button>
+</div>
+
+<div id="status"></div>
+<div class="postsTitle">Publicaciones</div>
+<div id="posts" class="posts"><div class="empty">Cargando publicaciones...</div></div>
+</main>
+
+<nav>
+<a href="/index.html"><span>⌂</span>Inicio</a>
+<a href="/explorar.html"><span>⌕</span>Explorar</a>
+<a href="/crear.html"><span>＋</span>Crear</a>
+<a href="/actividad.html"><span>♡</span>Actividad</a>
+<a href="/perfil.html"><span>◉</span>Perfil</a>
+</nav>
+
+<script>
+const SUPABASE_URL="https://axxafvggyetnnaumqefi.supabase.co";
+const SUPABASE_KEY="sb_publishable_O4wRZft0LCo3DYiCWT4iqg_E5_c8B2A";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const targetId=params.get("id");
+
+let currentUser=null;
+let targetProfile=null;
+let isFollowing=false;
+
+function escapeHTML(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function status(message){$("status").textContent=message;}
+
+async function loadCounts(){
+ const [followers,following,posts]=await Promise.all([
+  db.from("follows").select("*",{count:"exact",head:true}).eq("following_id",targetId),
+  db.from("follows").select("*",{count:"exact",head:true}).eq("follower_id",targetId),
+  db.from("posts").select("*",{count:"exact",head:true}).eq("user_id",targetId)
+ ]);
+
+ $("followers").textContent=followers.count??0;
+ $("following").textContent=following.count??0;
+ $("postCount").textContent=posts.count??0;
+}
+
+async function updateFollowButton(){
+ const button=$("followButton");
+
+ if(!currentUser||currentUser.id===targetId){
+  button.style.display="none";
+  return;
+ }
+
+ const {data,error}=await db.from("follows")
+  .select("follower_id")
+  .eq("follower_id",currentUser.id)
+  .eq("following_id",targetId)
+  .maybeSingle();
+
+ if(error)throw error;
+
+ isFollowing=!!data;
+ button.textContent=isFollowing?"Siguiendo":"Seguir";
+ button.classList.toggle("following",isFollowing);
+ button.style.display="inline-block";
+}
+
+async function toggleFollow(){
+ const button=$("followButton");
+ button.disabled=true;
+ status("");
+
+ try{
+  if(isFollowing){
+   const {error}=await db.from("follows")
+    .delete()
+    .eq("follower_id",currentUser.id)
+    .eq("following_id",targetId);
+   if(error)throw error;
+  }else{
+   const {error}=await db.from("follows").insert({
+    follower_id:currentUser.id,
+    following_id:targetId
+   });
+   if(error)throw error;
+  }
+
+  await updateFollowButton();
+  await loadCounts();
+  status(isFollowing?"Ahora seguís a este usuario.":"Dejaste de seguir a este usuario.");
+ }catch(error){
+  console.error(error);
+  status("No se pudo actualizar el seguimiento: "+error.message);
+ }finally{
+  button.disabled=false;
+ }
+}
+
+async function loadPosts(){
+ const {data,error}=await db.from("posts")
+  .select("*")
+  .eq("user_id",targetId)
+  .order("created_at",{ascending:false});
+
+ if(error)throw error;
+
+ if(!data?.length){
+  $("posts").innerHTML='<div class="empty" style="grid-column:1/4">Este usuario todavía no publicó nada.</div>';
+  return;
+ }
+
+ $("posts").innerHTML=data.map(post=>{
+  if(post.image_url){
+   return `<div class="post"><img src="${escapeHTML(post.image_url)}" alt="Publicación"></div>`;
+  }
+  return `<div class="post postText">${escapeHTML(post.content||"")}</div>`;
+ }).join("");
+}
+
+async function init(){
+ if(!targetId){
+  status("No se indicó qué perfil querés visitar.");
+  return;
+ }
+
+ const {data:auth,error:authError}=await db.auth.getUser();
+ if(authError)throw authError;
+ currentUser=auth.user;
+
+ const {data:profile,error}=await db.from("profiles")
+  .select("*").eq("id",targetId).maybeSingle();
+
+ if(error)throw error;
+
+ if(!profile){
+  status("Este usuario no existe o no está disponible.");
+  $("name").textContent="Perfil no encontrado";
+  $("posts").innerHTML="";
+  return;
+ }
+
+ targetProfile=profile;
+
+ $("name").textContent=profile.full_name||profile.username||"Usuario";
+ $("username").textContent=profile.username?"@"+profile.username:"";
+ $("bio").textContent=profile.bio||"";
+ $("avatar").src=profile.avatar_url||"";
+ $("cover").src=profile.cover_url||"";
+ $("cover").style.display=profile.cover_url?"block":"none";
+
+ await Promise.all([
+  loadCounts(),
+  loadPosts(),
+  updateFollowButton()
+ ]);
+}
+
+$("followButton").addEventListener("click",toggleFollow);
+
+init().catch(error=>{
+ console.error(error);
+ status("No se pudo cargar el perfil: "+error.message);
+});
+</script>
+</body>
+</html>
