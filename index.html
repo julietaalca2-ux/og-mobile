@@ -190,7 +190,7 @@ textarea,.field{
  outline:none;transition:border-color 0.2s;
 }
 textarea:focus,.field:focus{border-color:#3b82f6}
-textarea{height:120px;resize:none}
+textarea{height:100px;resize:none}
 .primary{
  width:100%;padding:10px 14px;background:#3b82f6;color:white;
  border:0;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;
@@ -283,7 +283,6 @@ textarea{height:120px;resize:none}
 .settings-row-title{font-size:14px;font-weight:500;color:#fff;margin:0}
 .settings-row-desc{font-size:12px;color:#71717a;margin:2px 0 0 0}
 
-/* Switch estilo iOS / Dark Mode */
 .toggle-switch{
  position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;
 }
@@ -328,7 +327,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
  <div id="header-profile-icons" style="display:none;align-items:center;gap:4px">
   <button class="icon" onclick="toggleSettingsDrawer()" aria-label="Configuración">
-   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
  </div>
 </header>
@@ -362,7 +361,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
    </button>
    
-   <!-- Barra deslizante de Zoom (Slider) -->
    <div class="camera-zoom-container">
     <span class="camera-zoom-label">🔍</span>
     <input type="range" id="zoomRangeInput" min="1" max="4" step="0.1" value="1" oninput="adjustZoom(this.value)">
@@ -407,12 +405,23 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div id="searchresult" style="margin-top:15px"></div>
 </div>
 
-<!-- CREAR -->
+<!-- CREAR PUBLICACIÓN CON IMAGEN Y TÍTULO -->
 <div id="create" class="section">
  <h2 style="margin-top:0">Crear publicación</h2>
- <textarea id="newpost" placeholder="¿Qué quieres compartir con la comunidad? (puedes usar emojis 😊🔥)"></textarea>
+ <p class="muted">Añade una foto, título con emojis y compártela.</p>
+
+ <!-- Vista previa de imagen seleccionada para post -->
+ <div id="postImagePreviewContainer" style="display:none;margin-bottom:12px;position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1/1;background:#121214">
+  <img id="postImagePreviewImg" style="width:100%;height:100%;object-fit:cover" alt="Previsualización">
+  <button class="secondary" style="position:absolute;top:8px;right:8px;padding:4px 10px;font-size:12px;background:rgba(0,0,0,0.7)" onclick="removePostImage()">Quitar</button>
+ </div>
+
+ <button class="secondary" style="width:100%;margin-bottom:12px" onclick="document.getElementById('postImageFileInput').click()">📷 Seleccionar imagen de publicación</button>
+ <input type="file" id="postImageFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handlePostImageSelect(this)">
+
+ <textarea id="newpost" placeholder="Escribe un título o descripción (puedes usar emojis 🔥✨)..."></textarea>
  <button class="primary" style="margin-top:12px" onclick="publish()">Publicar</button>
- <p class="muted" style="margin-top:10px">Tu publicación será visible instantáneamente.</p>
+ <p id="publishStatus" class="status"></p>
 </div>
 
 <!-- ACTIVIDAD -->
@@ -510,7 +519,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <strong style="font-size:15px">Configuración y privacidad</strong>
  </div>
 
- <!-- Seguridad y Cuenta -->
  <div class="settings-group">
   <h4 class="settings-group-title">Seguridad y contraseña</h4>
   <div class="settings-row">
@@ -524,7 +532,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <p id="passwordStatus" class="status"></p>
  </div>
 
- <!-- Privacidad -->
  <div class="settings-group">
   <h4 class="settings-group-title">Privacidad de la cuenta</h4>
   <div class="settings-row">
@@ -549,7 +556,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   </div>
  </div>
 
- <!-- Notificaciones -->
  <div class="settings-group">
   <h4 class="settings-group-title">Notificaciones</h4>
   <div class="settings-row">
@@ -574,13 +580,12 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   </div>
  </div>
 
- <!-- Información técnica -->
  <div class="settings-group" style="border-bottom:none">
   <h4 class="settings-group-title">Información de la aplicación</h4>
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.2.0 (Build Optimizado)</p>
+    <p class="settings-row-desc">1.3.0 (Multimedia Optimizado)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -708,10 +713,10 @@ let realtimeChannel=null;
 let myActiveStory=null;
 let mediaStream=null;
 let capturedBlob=null;
+let postImageBlob = null; // Almacena la imagen seleccionada para el post
 let currentFacingMode = 'user';
 let currentZoom = 1;
 
-// GESTOS TIPO INSTAGRAM (Deslizar a la derecha para abrir cámara)
 let touchStartX = 0;
 let touchEndX = 0;
 
@@ -767,9 +772,6 @@ function toggleEditPanel(){
  document.getElementById('accountbox').classList.toggle('open');
 }
 
-/* ========================================================
-   FUNCIONES DE CONFIGURACIÓN, SEGURIDAD Y PRIVACIDAD
-   ======================================================== */
 function openSettingsPage(){
  if(!currentUser){
   alert('Iniciá sesión para acceder a la configuración.');
@@ -1133,7 +1135,7 @@ async function switchCamera(){
  currentZoom = 1;
  document.getElementById('zoomRangeInput').value = 1;
  document.getElementById('zoomValueText').textContent = '1x';
- document.getElementById('cameraVideo').style.transform = 'scale(1)';
+ document.getElementById('cameraVideo').style.transform = `scale(1)`;
  await startCameraStream();
 }
 
@@ -1198,6 +1200,24 @@ async function handleGallerySelect(input){
   mediaStream=null;
  }
  input.value = '';
+}
+
+// Selección de imagen para nueva publicación con título/emojis
+function handlePostImageSelect(input){
+ const file = input.files?.[0];
+ if(!file) return;
+ postImageBlob = file;
+
+ const imageUrl = URL.createObjectURL(file);
+ document.getElementById('postImagePreviewImg').src = imageUrl;
+ document.getElementById('postImagePreviewContainer').style.display = 'block';
+ input.value = '';
+}
+
+function removePostImage(){
+ postImageBlob = null;
+ document.getElementById('postImagePreviewContainer').style.display = 'none';
+ document.getElementById('postImagePreviewImg').src = '';
 }
 
 async function uploadCapturedStory(){
@@ -1733,6 +1753,7 @@ async function showAllCommentsModal(postId){
  alert(comments.map(c=>'@'+(profilesCache[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
 }
 
+/* PUBLICAR CON SOPORTE DE IMAGEN Y TEXTO/EMOJIS */
 async function publish(){
  if(!currentUser){
   alert('Iniciá sesión para publicar.');
@@ -1741,15 +1762,43 @@ async function publish(){
 
  const input=document.getElementById('newpost');
  const content=input.value.trim();
- if(!content)return alert('Escribí algo primero.');
+ if(!content && !postImageBlob)return alert('Escribí un título o agregá una imagen.');
 
- const {error}=await db.from('posts').insert({user_id:currentUser.id,content});
- if(error)return alert('Error al publicar: '+error.message);
+ status('publishStatus','Publicando...');
+
+ let imageUrl = null;
+
+ if(postImageBlob){
+  const path = currentUser.id+'/post-'+Date.now()+'.jpg';
+  const {error:uploadError} = await db.storage.from('og-media')
+   .upload(path, postImageBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
+
+  if(uploadError){
+   status('publishStatus','Error al subir imagen.');
+   return;
+  }
+  const {data:urlData} = db.storage.from('og-media').getPublicUrl(path);
+  imageUrl = urlData.publicUrl;
+ }
+
+ const {error}=await db.from('posts').insert({
+  user_id: currentUser.id,
+  content: content,
+  image_url: imageUrl
+ });
+
+ if(error){
+  status('publishStatus','Error al publicar: '+error.message);
+  return;
+ }
 
  input.value='';
+ removePostImage();
+ status('publishStatus','¡Publicado con éxito!');
+ 
  await loadPosts();
  await loadMyPostsGrid();
- showTab('feed');
+ setTimeout(()=>showTab('feed'), 500);
 }
 
 async function toggleLike(postId,button, countDiv){
