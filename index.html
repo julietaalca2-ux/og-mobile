@@ -54,16 +54,29 @@ main > div.active {
  padding: 0 !important;
 }
 
+/* ESTILO DE PUBLICACIONES TIPO INSTAGRAM */
 .post{background:#000;border-bottom:1px solid #18181b;margin-bottom:8px}
 .posthead{display:flex;align-items:center;gap:12px;padding:12px 16px}
 .posthead .avatar{width:36px;height:36px;font-size:16px;margin:0;flex-shrink:0}
 .username{font-weight:600;font-size:14px;color:#fff}
 .time{color:#71717a;font-size:11px;margin-top:1px}
-.posttext{font-size:14px;line-height:1.45;padding:0 16px 10px 16px;white-space:pre-wrap;overflow-wrap:anywhere;color:#e4e4e7}
-.actions{display:flex;gap:16px;padding:8px 16px 12px 16px;align-items:center}
-.action{border:0;background:none;color:#f4f4f5;font-size:14px;font-weight:500;padding:4px 0;cursor:pointer;display:flex;align-items:center;gap:6px}
-.action:disabled{opacity:.5}
-.liked{color:#ef4444 !important}
+.posttext{font-size:14px;line-height:1.45;padding:0 16px 8px 16px;white-space:pre-wrap;overflow-wrap:anywhere;color:#e4e4e7}
+.post-actions{display:flex;gap:16px;padding:8px 16px 6px 16px;align-items:center}
+.post-action-btn{border:0;background:none;color:#f4f4f5;font-size:22px;cursor:pointer;padding:0;display:flex;align-items:center}
+.post-action-btn svg{width:24px;height:24px}
+.post-action-btn.liked svg{fill:#ef4444;stroke:#ef4444}
+.likes-count{font-size:13px;font-weight:600;color:#fff;padding:0 16px 6px 16px}
+
+/* SECCIÓN DE COMENTARIOS INCRUSTADOS */
+.post-comments-section{padding:0 16px 12px 16px;font-size:13px}
+.comment-item{margin-bottom:4px;line-height:1.35;overflow-wrap:anywhere}
+.comment-user{font-weight:600;color:#fff;margin-right:6px}
+.comment-text{color:#d4d4d8}
+.view-more-comments{color:#71717a;background:none;border:0;padding:0;font-size:13px;cursor:pointer;margin-top:4px}
+.comment-input-box{display:flex;align-items:center;border-top:1px solid #18181b;padding:8px 16px}
+.comment-input{flex:1;background:none;border:0;color:#fff;font-size:13px;outline:none}
+.comment-input::placeholder{color:#71717a}
+.comment-send-btn{background:none;border:0;color:#3b82f6;font-weight:600;font-size:13px;cursor:pointer;padding:4px}
 
 /* Navegación Inferior */
 nav{
@@ -112,67 +125,32 @@ textarea{height:120px;resize:none}
  display:block;text-align:center;color:#71717a;padding:60px 20px;font-size:14px;
 }
 
-/* NUEVO DISEÑO PERFIL ESTILO INSTAGRAM */
-.ig-cover{
- width:100%;height:110px;
- background:linear-gradient(135deg,#1e1b4b,#312e81,#09090b);
- overflow:hidden;position:relative;
-}
+/* PERFIL Y ESTILOS */
+.ig-cover{width:100%;height:110px;background:linear-gradient(135deg,#1e1b4b,#312e81,#09090b);overflow:hidden;position:relative}
 .ig-cover img{width:100%;height:100%;object-fit:cover}
 .ig-header-container{padding:0 16px 16px 16px;border-bottom:1px solid #18181b}
-.ig-top-row{
- display:flex;align-items:center;justify-content:space-between;
- margin-top:-28px;margin-bottom:12px;position:relative;z-index:2;
-}
-.ig-avatar-wrap .avatar{
- width:82px;height:82px;margin:0;border:3px solid #000;
- background:linear-gradient(135deg,#3b82f6,#a855f7);
-}
-.ig-stats{
- display:flex;flex:1;justify-content:space-around;
- padding-top:28px;text-align:center;
-}
+.ig-top-row{display:flex;align-items:center;justify-content:space-between;margin-top:-28px;margin-bottom:12px;position:relative;z-index:2}
+.ig-avatar-wrap .avatar{width:82px;height:82px;margin:0;border:3px solid #000;background:linear-gradient(135deg,#3b82f6,#a855f7)}
+.ig-stats{display:flex;flex:1;justify-content:space-around;padding-top:28px;text-align:center}
 .ig-stat-item{display:flex;flex-direction:column}
 .ig-stat-num{font-size:16px;font-weight:700;color:#fff}
 .ig-stat-label{font-size:12px;color:#a1a1aa;margin-top:2px}
-
 .ig-bio-section{text-align:left;margin-bottom:14px}
 .ig-display-name{font-size:15px;font-weight:700;color:#fff;margin:0}
 .ig-username-tag{font-size:13px;color:#71717a;margin:2px 0 6px 0}
 .ig-bio-text{font-size:14px;line-height:1.4;color:#e4e4e7;margin:0;white-space:pre-wrap}
-
 .ig-action-buttons{display:flex;gap:8px}
 .ig-action-buttons button{flex:1}
-
-/* Modal / Panel desplegable de edición */
-.ig-edit-panel{
- background:#121214;border-bottom:1px solid #27272a;
- padding:16px;display:none;
-}
+.ig-edit-panel{background:#121214;border-bottom:1px solid #27272a;padding:16px;display:none}
 .ig-edit-panel.open{display:block}
 .upload-actions{display:flex;gap:8px;margin:10px 0}
 .upload-actions button{flex:1}
 .hidden-file{display:none}
-
-/* Cuadrícula de publicaciones en Perfil (Grid 3x3) */
-.ig-grid-tabs{
- display:flex;justify-content:center;border-bottom:1px solid #18181b;
-}
-.ig-grid-tab{
- flex:1;padding:12px;text-align:center;color:#fff;
- border-bottom:1.5px solid #fff;font-size:12px;font-weight:600;letter-spacing:0.5px;
-}
-.ig-posts-grid{
- display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
-}
-.ig-grid-item{
- aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;
- display:flex;align-items:center;justify-content:center;padding:8px;
- text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid #18181b;
-}
-.ig-grid-item img{
- position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-}
+.ig-grid-tabs{display:flex;justify-content:center;border-bottom:1px solid #18181b}
+.ig-grid-tab{flex:1;padding:12px;text-align:center;color:#fff;border-bottom:1.5px solid #fff;font-size:12px;font-weight:600;letter-spacing:0.5px}
+.ig-posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.ig-grid-item{aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid #18181b}
+.ig-grid-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
 .public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #18181b;cursor:pointer}
 .public-user .avatar{margin:0;width:44px;height:44px;flex-shrink:0}
@@ -180,7 +158,6 @@ textarea{height:120px;resize:none}
 .public-user-info strong{display:block;color:#fff;font-size:14px}
 .public-user-info small{color:#71717a}
 
-/* ACTIVIDAD */
 .activity-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #18181b}
 .activity-item .avatar{width:42px;height:42px;min-width:42px;margin:0}
 .activity-info{flex:1;min-width:0;font-size:13px;line-height:1.4;color:#f4f4f5;overflow-wrap:anywhere}
@@ -241,7 +218,7 @@ textarea{height:120px;resize:none}
  </div>
 </div>
 
-<!-- MI PERFIL (ESTILO INSTAGRAM) -->
+<!-- PERFIL -->
 <div id="profile" class="section">
  <div class="ig-cover" id="mycover"></div>
  
@@ -273,14 +250,12 @@ textarea{height:120px;resize:none}
    <p class="ig-bio-text" id="mybio">Bienvenido a Ög.</p>
   </div>
 
-  <!-- Botones de acción principales (visible cuando hay sesión) -->
   <div class="ig-action-buttons" id="profile-actions" style="display:none">
    <button class="secondary" onclick="toggleEditPanel()">Editar perfil</button>
    <button class="secondary" onclick="signOut()">Cerrar sesión</button>
   </div>
  </div>
 
- <!-- Formulario de Login / Registro (visible si no hay sesión) -->
  <div id="authbox" style="padding:16px">
   <div style="background:#121214;padding:16px;border-radius:12px;border:1px solid #18181b">
    <h3 style="margin-top:0">Tu cuenta Ög</h3>
@@ -293,7 +268,6 @@ textarea{height:120px;resize:none}
   </div>
  </div>
 
- <!-- Panel desplegable de Edición de Perfil -->
  <div id="accountbox" class="ig-edit-panel">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
    <h3 style="margin:0;font-size:15px">Editar información</h3>
@@ -313,7 +287,6 @@ textarea{height:120px;resize:none}
   <p id="profilestatus" class="status"></p>
  </div>
 
- <!-- Cuadrícula de Mis Publicaciones -->
  <div id="my-grid-section" style="display:none">
   <div class="ig-grid-tabs">
    <div class="ig-grid-tab">PUBLICACIONES</div>
@@ -322,7 +295,7 @@ textarea{height:120px;resize:none}
  </div>
 </div>
 
-<!-- PERFIL PÚBLICO (ESTILO INSTAGRAM) -->
+<!-- PERFIL PÚBLICO -->
 <div id="publicprofile" class="section">
  <div style="padding:10px 16px;border-bottom:1px solid #18181b;display:flex;align-items:center;gap:12px">
   <button class="secondary" style="padding:6px 12px" onclick="showTab('explore')">← Volver</button>
@@ -455,8 +428,8 @@ async function signUp(){
  const username=document.getElementById('authusername').value.trim().toLowerCase();
 
  if(!email||!password||!username)return status('authstatus','Completá todos los campos.');
- if(!/^[a-z0-9_]{3,20}$/.test(username))return status('authstatus','Usuario: 3 a 20 caracteres, letras, números o _.');
- if(password.length<8)return status('authstatus','La contraseña debe tener al menos 8 caracteres.');
+ if(!/^[a-z0-9_]{3,20}$/.test(username))return status('authstatus','Usuario: 3 a 20 caracteres.');
+ if(password.length<8)return status('authstatus','Contraseña mínima de 8 caracteres.');
 
  status('authstatus','Creando cuenta...');
 
@@ -470,7 +443,7 @@ async function signUp(){
   await loadAccount(data.user);
   status('authstatus','¡Cuenta creada!');
  }else{
-  status('authstatus','Cuenta creada. Revisá tu correo para confirmar el registro.');
+  status('authstatus','Cuenta creada. Revisá tu correo.');
  }
 }
 
@@ -486,7 +459,7 @@ async function signIn(){
  if(error)return status('authstatus',error.message);
 
  await loadAccount(data.user);
- status('authstatus','Sesión iniciada correctamente.');
+ status('authstatus','Sesión iniciada.');
 }
 
 async function signOut(){
@@ -520,7 +493,7 @@ async function loadAccount(user){
    .select().single();
 
   if(createError){
-   status('authstatus','No se pudo crear el perfil: '+createError.message);
+   status('authstatus','No se pudo crear perfil: '+createError.message);
    return;
   }
   profile=created;
@@ -564,7 +537,7 @@ function updateProfileUI(){
  if(myProfile?.cover_url){
   const img=document.createElement('img');
   img.src=myProfile.cover_url;
-  img.alt='Portada del perfil';
+  img.alt='Portada';
   img.loading='lazy';
   cover.append(img);
  }
@@ -612,18 +585,18 @@ async function uploadImage(type,input){
 
  const allowed=['image/jpeg','image/png','image/webp'];
  if(!allowed.includes(file.type)){
-  status('profilestatus','Formato no permitido. Usá JPG, PNG o WEBP.');
+  status('profilestatus','Formato no permitido.');
   input.value='';
   return;
  }
 
  if(file.size>5*1024*1024){
-  status('profilestatus','La imagen supera el límite de 5 MB.');
+  status('profilestatus','Máximo 5 MB.');
   input.value='';
   return;
  }
 
- status('profilestatus','Subiendo imagen...');
+ status('profilestatus','Subiendo...');
 
  const extension={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
  const path=currentUser.id+'/'+type+'-'+Date.now()+'.'+extension;
@@ -632,7 +605,7 @@ async function uploadImage(type,input){
   .upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
 
  if(uploadError){
-  status('profilestatus','No se pudo subir la imagen: '+uploadError.message);
+  status('profilestatus','Error al subir: '+uploadError.message);
   input.value='';
   return;
  }
@@ -646,7 +619,7 @@ async function uploadImage(type,input){
   .select().single();
 
  if(error){
-  status('profilestatus','No se pudo guardar en el perfil: '+error.message);
+  status('profilestatus','Error al guardar.');
   input.value='';
   return;
  }
@@ -654,7 +627,7 @@ async function uploadImage(type,input){
  myProfile=data;
  profilesCache[currentUser.id]=data;
  updateProfileUI();
- status('profilestatus',type==='avatar'?'¡Foto actualizada!':'¡Portada actualizada!');
+ status('profilestatus','¡Actualizado!');
  input.value='';
 }
 
@@ -795,11 +768,12 @@ async function loadActivity(){
  }
 }
 
+// FEED CON LIKES, CONTADORES Y COMENTARIOS INCRUSTADOS
 async function loadPosts(){
  const container=document.getElementById('posts');
  
  const {data:posts,error}=await db.from('posts')
-  .select('*').order('created_at',{ascending:false}).limit(30);
+  .select('*').order('created_at',{ascending:false}).limit(20);
 
  if(error){
   container.textContent='No se pudieron cargar las publicaciones.';
@@ -867,40 +841,148 @@ async function loadPosts(){
    article.append(content);
   }
 
+  // BOTONES DE ACCIÓN (ESTILO INSTAGRAM)
   const actions=document.createElement('div');
-  actions.className='actions';
+  actions.className='post-actions';
 
-  const likeButton=document.createElement('button');
-  likeButton.className='action';
-  likeButton.innerHTML='♡ Me gusta';
-  likeButton.onclick=()=>toggleLike(post.id,likeButton);
+  const likeBtn=document.createElement('button');
+  likeBtn.className='post-action-btn';
+  likeBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+  likeBtn.onclick=()=>toggleLike(post.id, likeBtn, likesCountDiv);
 
-  const commentButton=document.createElement('button');
-  commentButton.className='action';
-  commentButton.innerHTML='💬 Comentar';
-  commentButton.onclick=()=>addComment(post.id);
-
-  const viewButton=document.createElement('button');
-  viewButton.className='action';
-  viewButton.innerHTML='Ver comentarios';
-  viewButton.onclick=()=>viewComments(post.id);
-
-  actions.append(likeButton,commentButton,viewButton);
-  article.append(actions);
+  const commentIconBtn=document.createElement('button');
+  commentIconBtn.className='post-action-btn';
+  commentIconBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 115a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
   
-  if(currentUser){
-   db.from('likes').select('user_id').eq('post_id',post.id).eq('user_id',currentUser.id).maybeSingle().then(({data:like})=>{
-    if(like){
-     likeButton.classList.add('liked');
-     likeButton.innerHTML='♥ Me gusta';
-    }
-   });
-  }
+  actions.append(likeBtn, commentIconBtn);
+  article.append(actions);
+
+  // CONTADOR DE LIKES
+  const likesCountDiv=document.createElement('div');
+  likesCountDiv.className='likes-count';
+  likesCountDiv.textContent='0 Me gusta';
+  article.append(likesCountDiv);
+
+  // CONTENEDOR DE COMENTARIOS INCRUSTADOS
+  const commentsSec=document.createElement('div');
+  commentsSec.className='post-comments-section';
+  commentsSec.id=`comments-${post.id}`;
+  article.append(commentsSec);
+
+  // INPUT PARA COMENTAR RÁPIDO
+  const commentInputBox=document.createElement('div');
+  commentInputBox.className='comment-input-box';
+  
+  const commentInput=document.createElement('input');
+  commentInput.className='comment-input';
+  commentInput.placeholder='Agrega un comentario...';
+  
+  const commentSend=document.createElement('button');
+  commentSend.className='comment-send-btn';
+  commentSend.textContent='Publicar';
+  commentSend.onclick=()=>quickComment(post.id, commentInput);
+
+  commentInputBox.append(commentInput, commentSend);
+  article.append(commentInputBox);
 
   fragment.append(article);
+
+  // CARGAR LIKES Y COMENTARIOS REALES DE SUPABASE
+  loadPostLikes(post.id, likeBtn, likesCountDiv);
+  loadPostComments(post.id, commentsSec);
  }
 
  container.replaceChildren(fragment);
+}
+
+async function loadPostLikes(postId, btn, countDiv){
+ const {count, data, error}=await db.from('likes')
+  .select('user_id',{count:'exact'})
+  .eq('post_id',postId);
+
+ if(!error){
+  countDiv.textContent=(count||0)+' Me gusta';
+  if(currentUser && data.some(l=>l.user_id===currentUser.id)){
+   btn.classList.add('liked');
+  }
+ }
+}
+
+async function loadPostComments(postId, container){
+ const {data:comments, error}=await db.from('comments')
+  .select('id, user_id, content, created_at')
+  .eq('post_id', postId)
+  .order('created_at', {ascending:true});
+
+ if(error || !comments || !comments.length) return;
+
+ const missing=[...new Set(comments.map(c=>c.user_id))].filter(id=>!profilesCache[id]);
+ if(missing.length>0){
+  const {data:newProfiles}=await db.from('profiles').select('id, username').in('id',missing);
+  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
+ }
+
+ container.replaceChildren();
+ 
+ // Mostrar máximo los últimos 2 comentarios y botón Ver más si hay más
+ const visibleComments=comments.slice(-2);
+ 
+ visibleComments.forEach(c=>{
+  const item=document.createElement('div');
+  item.className='comment-item';
+  const userSpan=document.createElement('span');
+  userSpan.className='comment-user';
+  userSpan.textContent=profilesCache[c.user_id]?.username||'usuario';
+  const textSpan=document.createElement('span');
+  textSpan.className='comment-text';
+  textSpan.textContent=c.content;
+  item.append(userSpan, textSpan);
+  container.append(item);
+ });
+
+ if(comments.length>2){
+  const viewMoreBtn=document.createElement('button');
+  viewMoreBtn.className='view-more-comments';
+  viewMoreBtn.textContent=`Ver los ${comments.length} comentarios`;
+  viewMoreBtn.onclick=()=>showAllCommentsModal(postId);
+  container.append(viewMoreBtn);
+ }
+}
+
+async function quickComment(postId, input){
+ if(!currentUser){
+  alert('Iniciá sesión para comentar.');
+  return showTab('profile');
+ }
+ const content=input.value.trim();
+ if(!content)return;
+
+ const {error}=await db.from('comments').insert({
+  post_id:postId, user_id:currentUser.id, content
+ });
+
+ if(error)return alert('Error: '+error.message);
+ input.value='';
+ const sec=document.getElementById(`comments-${postId}`);
+ if(sec) loadPostComments(postId, sec);
+}
+
+async function showAllCommentsModal(postId){
+ const {data:comments, error}=await db.from('comments')
+  .select('id, user_id, content, created_at')
+  .eq('post_id', postId)
+  .order('created_at', {ascending:true});
+
+ if(error||!comments.length)return alert('No hay comentarios.');
+
+ const userIds=[...new Set(comments.map(c=>c.user_id))];
+ const missing=[...userIds].filter(id=>!profilesCache[id]);
+ if(missing.length>0){
+  const {data:newProfiles}=await db.from('profiles').select('id, username').in('id',missing);
+  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
+ }
+
+ alert(comments.map(c=>'@'+(profilesCache[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
 }
 
 async function publish(){
@@ -922,56 +1004,25 @@ async function publish(){
  showTab('feed');
 }
 
-async function toggleLike(postId,button){
+async function toggleLike(postId,button, countDiv){
  if(!currentUser){
   alert('Iniciá sesión para dar Me gusta.');
   return showTab('profile');
  }
 
  const isLiked=button.classList.contains('liked');
+ let currentCount=parseInt(countDiv.textContent)||0;
+
  if(isLiked){
   button.classList.remove('liked');
-  button.innerHTML='♡ Me gusta';
+  currentCount=Math.max(0, currentCount-1);
   await db.from('likes').delete().eq('post_id',postId).eq('user_id',currentUser.id);
  }else{
   button.classList.add('liked');
-  button.innerHTML='♥ Me gusta';
+  currentCount+=1;
   await db.from('likes').insert({post_id:postId,user_id:currentUser.id});
  }
-}
-
-async function addComment(postId){
- if(!currentUser){
-  alert('Iniciá sesión para comentar.');
-  return showTab('profile');
- }
- const content=prompt('Escribí tu comentario:');
- if(!content||!content.trim())return;
-
- const {error}=await db.from('comments').insert({
-  post_id:postId,user_id:currentUser.id,content:content.trim()
- });
-
- if(error)return alert('Error: '+error.message);
- alert('Comentario publicado.');
-}
-
-async function viewComments(postId){
- const {data:comments,error}=await db.from('comments')
-  .select('id,user_id,content,created_at')
-  .eq('post_id',postId).order('created_at',{ascending:true});
-
- if(error)return alert(error.message);
- if(!comments.length)return alert('Todavía no hay comentarios.');
-
- const userIds=[...new Set(comments.map(c=>c.user_id))];
- const missing=[...userIds].filter(id=>!profilesCache[id]);
- if(missing.length>0){
-  const {data:newProfiles}=await db.from('profiles').select('id,username').in('id',missing);
-  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
- }
-
- alert(comments.map(c=>'@'+(profilesCache[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
+ countDiv.textContent=currentCount+' Me gusta';
 }
 
 async function openPublicProfile(userId){
