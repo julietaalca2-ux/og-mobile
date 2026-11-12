@@ -26,17 +26,24 @@ header{
 .icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 .icon svg{width:24px;height:24px}
 
-/* HISTORIAS ESTILO INSTAGRAM (Más grandes y limpias) */
-.stories{display:flex;gap:14px;overflow-x:auto;padding:14px 16px;border-bottom:1px solid #18181b;background:#000;scrollbar-width:none}
+/* HISTORIAS ESTILO INSTAGRAM (Más grandes y alineadas en fila) */
+.stories{
+ display:flex;gap:14px;overflow-x:auto;padding:14px 16px;
+ border-bottom:1px solid #18181b;background:#000;scrollbar-width:none;
+ align-items:center;
+}
 .stories::-webkit-scrollbar{display:none}
-.story{text-align:center;min-width:72px;font-size:12px;color:#a1a1aa;flex-shrink:0;cursor:pointer}
+.story{
+ text-align:center;min-width:72px;font-size:12px;color:#a1a1aa;
+ flex-shrink:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+}
 .story-avatar-container{
- position:relative;width:68px;height:68px;margin:auto auto 6px;
+ position:relative;width:68px;height:68px;margin-bottom:6px;
  border-radius:50%;padding:2.5px;
- background:#27272a; /* Círculo gris por defecto si no hay historia */
+ background:#27272a;
 }
 .story.has-story .story-avatar-container{
- background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af); /* Gradiente Instagram */
+ background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);
 }
 .story-avatar-inner{
  width:100%;height:100%;border-radius:50%;background:#18181b;
@@ -44,7 +51,7 @@ header{
 }
 .story-avatar-inner img{width:100%;height:100%;object-fit:cover}
 
-/* Insignia de "+" estilo Instagram en "Tu historia" */
+/* Insignia de "+" estilo Instagram */
 .story-plus-badge{
  position:absolute;bottom:2px;right:2px;width:20px;height:20px;
  background:#3b82f6;color:#fff;border-radius:50%;
@@ -57,7 +64,7 @@ main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active {padding: 0 !important;}
 
-/* CÁMARA EN TIEMPO REAL & MODAL DE HISTORIA */
+/* CÁMARA EN TIEMPO REAL (MODAL) */
 #cameraModal{
  position:fixed;inset:0;background:#000;z-index:400;
  display:none;flex-direction:column;justify-content:space-between;
@@ -87,7 +94,7 @@ main > div.active {display: block !important;}
 /* ESTILO DE PUBLICACIONES TIPO INSTAGRAM */
 .post{background:#000;border-bottom:1px solid #18181b;margin-bottom:8px}
 .posthead{display:flex;align-items:center;gap:12px;padding:12px 16px}
-.posthead .avatar{width:36px;height:36px;font-size:16px;margin:0;flex-shrink:0}
+.posthead .story-avatar-container{width:36px;height:36px;margin:0;flex-shrink:0}
 .username{font-weight:600;font-size:14px;color:#fff}
 .time{color:#71717a;font-size:11px;margin-top:1px}
 .posttext{font-size:14px;line-height:1.45;padding:0 16px 8px 16px;white-space:pre-wrap;overflow-wrap:anywhere;color:#e4e4e7}
@@ -551,7 +558,7 @@ function status(id,message){
 
 function createAvatarNode(profile, isStoryActive=false){
  const container = document.createElement('div');
- container.className = isStoryActive ? 'story-avatar-container' : 'story-avatar-container';
+ container.className = 'story-avatar-container';
  
  const inner = document.createElement('div');
  inner.className = 'story-avatar-inner';
@@ -683,7 +690,6 @@ function setupRealtimeNotifications(){
   .subscribe();
 }
 
-/* CÁMARA Y HISTORIAS ESTILO INSTAGRAM */
 async function loadStoriesData(){
  if(!currentUser) return;
 
@@ -697,7 +703,7 @@ async function loadStoriesData(){
  const container = document.getElementById('storiescontainer');
  const fragment = document.createDocumentFragment();
 
- // 1. Tu historia (Burbuja grande con etiqueta "+" estilo Instagram)
+ // 1. Tu historia
  const myStoryDiv = document.createElement('div');
  myStoryDiv.className = myActiveStory ? 'story has-story' : 'story';
  myStoryDiv.id = 'mystorybtn';
@@ -741,7 +747,7 @@ async function loadStoriesData(){
  myStoryDiv.append(myAvatarContainer, myLabel);
  fragment.append(myStoryDiv);
 
- // 2. Historias de personas seguidas
+ // 2. Historias de seguidos (Sin duplicados)
  const followingData = followingRes.data;
  if(followingData && followingData.length > 0){
   const followingIds = followingData.map(f => f.following_id);
@@ -799,12 +805,10 @@ async function handleStoryClick(){
   return showTab('profile');
  }
  if(myActiveStory){
-  // Ver historia activa
   document.getElementById('storyUsername').textContent = '@'+(myProfile?.username||'mi_historia');
   document.getElementById('storyImage').src = myActiveStory.image_url;
   document.getElementById('storyViewer').classList.add('active');
  }else{
-  // Abrir cámara en tiempo real estilo Instagram
   await openCameraModal();
  }
 }
@@ -822,7 +826,7 @@ async function openCameraModal(){
   document.getElementById('cameraVideo').srcObject = mediaStream;
  }catch(err){
   console.error('Error al acceder a la cámara:', err);
-  alert('No se pudo acceder a la cámara. Puedes seleccionar una foto de la galería.');
+  alert('No se pudo acceder a la cámara. Seleccionando de la galería.');
   document.getElementById('galleryFileInput').click();
   closeCameraModal();
  }
@@ -848,7 +852,6 @@ function takePhoto(){
   capturedBlob = blob;
   const imageUrl = URL.createObjectURL(blob);
   
-  // Apagar cámara y mostrar vista previa para compartir
   if(mediaStream){
    mediaStream.getTracks().forEach(track=>track.stop());
    mediaStream=null;
