@@ -166,7 +166,6 @@ textarea{height:120px;resize:vertical}
  <p class="muted">Tu publicación será visible para la comunidad.</p>
 </div>
 
-<!-- ACTIVIDAD -->
 <div id="notifications" class="section">
  <h2>Actividad</h2>
  <p class="muted">Novedades e interacciones de tu cuenta.</p>
@@ -214,7 +213,6 @@ textarea{height:120px;resize:vertical}
  </div>
 </div>
 
-<!-- PERFIL PUBLICO -->
 <div id="publicprofile" class="section">
  <button class="secondary back-button" onclick="showTab('explore')">← Volver a explorar</button>
 
@@ -269,10 +267,7 @@ function showTab(id,btn){
   if(index>=0)document.querySelectorAll('nav button')[index].classList.add('active');
  }
 
- // Cargar actividad al entrar en la sección
- if(id==='notifications'){
-  loadActivity();
- }
+ if(id==='notifications')loadActivity();
 }
 
 function status(id,message){
@@ -519,7 +514,7 @@ function formatDate(date){
  });
 }
 
-// NUEVA FUNCIÓN: ACTIVIDAD DE SEGUIDORES
+// ACTIVIDAD: SEGUIDORES, ME GUSTA Y COMENTARIOS
 async function loadActivity(){
  const container=document.getElementById('activitylist');
 
@@ -530,82 +525,176 @@ async function loadActivity(){
 
  container.textContent='Cargando actividad...';
 
- // Buscar usuarios que siguen a la cuenta actual
- const {data:follows,error}=await db
-  .from('follows')
-  .select('follower_id,following_id,created_at')
-  .eq('following_id',currentUser.id)
-  .order('created_at',{ascending:false})
-  .limit(50);
+ try{
+  // Obtener publicaciones propias
+  const {data:ownPosts,error:postsError}=await db.from('posts')
+   .select('id,user_id')
+   .eq('user_id',currentUser.id);
 
- if(error){
-  container.textContent='No se pudo cargar la actividad: '+error.message;
-  console.error('Error de actividad:',error);
-  return;
- }
+  if(postsError)throw postsError;
 
- if(!follows||follows.length===0){
-  container.innerHTML='<div class="activity-empty">Todavía no tenés actividad.<br>Cuando alguien te siga, aparecerá aquí.</div>';
-  return;
- }
+  const postIds=(ownPosts||[]).map(p=>p.id);
 
- const ids=[...new Set(follows.map(f=>f.follower_id))];
+  // Consultar seguidores y las interacciones en publicaciones propias
+  const [followsResult,likesResult,commentsResult]=await Promise.all([
+   db.from('follows')
+    .select('follower_id,following_id,created_at')
+    .eq('following_id',currentUser.id)
+    .order('created_at',{ascending:false})
+    .limit(50),
 
- const {data:profiles,error:profileError}=await db
-  .from('profiles')
-  .select('id,username,display_name,avatar_url')
-  .in('id',ids);
+   postIds.length
+    ?db.from('likes')
+      .select('user_id,post_id,created_at')
+      .in('post_id',postIds)
+      .order('created_at',{ascending:false})
+      .limit(100)
+    :Promise.resolve({data:[],error:null}),
 
- if(profileError){
-  container.textContent='Error al cargar usuarios: '+profileError.message;
-  return;
- }
+   postIds.length
+    ?db.from('comments')
+      .select('id,user_id,post_id,content,created_at')
+      .in('post_id',postIds)
+      .order('created_at',{ascending:false})
+      .limit(100)
+    :Promise.resolve({data:[],error:null})
+  ]);
 
- const profileMap={};
- (profiles||[]).forEach(p=>profileMap[p.id]=p);
+  if(followsResult.error)throw followsResult.error;
+  if(likesResult.error)throw likesResult.error;
+  if(commentsResult.error)throw commentsResult.error;
 
- container.replaceChildren();
+  const follows=followsResult.data||[];
+  const likes=likesResult.data||[];
+  const comments=commentsResult.data||[];
 
- follows.forEach(follow=>{
-  const profile=profileMap[follow.follower_id];
+  const events=[];
 
-  if(!profile)return;
+  follows.forEach(f=>{
+   if(f.follower_id===currentUser.id)return;
 
-  const item=document.createElement('div');
-  item.className='activity-item';
+   events.push({
+    type:'follow',
+    user_id:f.follower_id,
+    created_at:f.created_at
+   });
+  });
 
-  const av=document.createElement('div');
-  av.className='avatar';
-  av.replaceChildren(avatar(profile));
+  likes.forEach(l=>{
+   if(l.user_id===currentUser.id)return;
 
-  const info=document.createElement('div');
-  info.className='activity-info';
+   events.push({
+    type:'like',
+    user_id:l.user_id,
+    post_id:l.post_id,
+    created_at:l.created_at
+   });
+  });
 
-  const message=document.createElement('div');
-  const name=document.createElement('strong');
+  comments.forEach(c=>{
+   if(c.user_id===currentUser.id)return;
 
-  name.textContent=profile.display_name||profile.username||'Usuario';
+   events.push({
+    type:'comment',
+    user_id:c.user_id,
+    post_id:c.post_id,
+    content:c.content,
+    created_at:c.created_at
+   });
+  });
 
-  message.append(
-   name,
-   document.createTextNode(' empezó a seguirte')
+  // Ordenar cronológicamente
+  events.sort((a,b)=>
+   new Date(b.created_at||0)-new Date(a.created_at||0)
   );
 
-  const date=document.createElement('div');
-  date.className='activity-date';
+  if(!events.length){
+   container.innerHTML=
+    '<div class="activity-empty">Todavía no tenés actividad.<br>Cuando alguien te siga, dé Me gusta o comente tus publicaciones, aparecerá aquí.</div>';
+   return;
+  }
 
-  date.textContent=follow.created_at
-   ?formatDate(follow.created_at)
-   :'Nuevo seguidor';
+  // Cargar perfiles de quienes realizaron las acciones
+  const userIds=[
+   ...new Set(events.map(e=>e.user_id).filter(Boolean))
+  ];
 
-  info.append(message,date);
-  item.append(av,info);
+  const {data:profiles,error:profileError}=await db.from('profiles')
+   .select('id,username,display_name,avatar_url')
+   .in('id',userIds);
 
-  item.style.cursor='pointer';
-  item.onclick=()=>openPublicProfile(profile.id);
+  if(profileError)throw profileError;
 
-  container.append(item);
- });
+  const profileMap={};
+  (profiles||[]).forEach(p=>profileMap[p.id]=p);
+
+  container.replaceChildren();
+
+  events.forEach(event=>{
+   const profile=profileMap[event.user_id];
+   if(!profile)return;
+
+   const item=document.createElement('div');
+   item.className='activity-item';
+
+   const av=document.createElement('div');
+   av.className='avatar';
+   av.replaceChildren(avatar(profile));
+
+   const info=document.createElement('div');
+   info.className='activity-info';
+
+   const message=document.createElement('div');
+   const name=document.createElement('strong');
+
+   name.textContent=
+    profile.display_name||profile.username||'Usuario';
+
+   message.append(name);
+
+   if(event.type==='follow'){
+    message.append(
+     document.createTextNode(' empezó a seguirte 👤')
+    );
+   }else if(event.type==='like'){
+    message.append(
+     document.createTextNode(' le dio Me gusta a tu publicación ❤️')
+    );
+   }else if(event.type==='comment'){
+    message.append(
+     document.createTextNode(' comentó tu publicación 💬')
+    );
+
+    const commentText=document.createElement('div');
+    commentText.style.color='#c7b8ed';
+    commentText.style.marginTop='5px';
+    commentText.textContent='“'+(event.content||'')+'”';
+
+    info.append(message,commentText);
+   }else{
+    info.append(message);
+   }
+
+   const date=document.createElement('div');
+   date.className='activity-date';
+   date.textContent=event.created_at
+    ?formatDate(event.created_at)
+    :'Actividad reciente';
+
+   info.append(date);
+   item.append(av,info);
+
+   item.style.cursor='pointer';
+   item.onclick=()=>openPublicProfile(profile.id);
+
+   container.append(item);
+  });
+
+ }catch(error){
+  console.error('Error al cargar actividad:',error);
+  container.textContent=
+   'No se pudo cargar la actividad: '+error.message;
+ }
 }
 
 // FEED
