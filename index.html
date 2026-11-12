@@ -40,6 +40,7 @@ main{max-width:600px;margin:auto}
 .posttext{font-size:15px;line-height:1.5;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .actions{display:flex;gap:20px;padding-top:13px;flex-wrap:wrap}
 .action{border:0;background:none;color:#ddd;font-size:14px;padding:5px 0}
+.action:disabled{opacity:.5}
 .liked{color:#ff548b}
 nav{
  position:fixed;bottom:0;left:0;right:0;height:70px;
@@ -89,6 +90,12 @@ textarea{height:120px;resize:vertical}
 .upload-actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:12px 0}
 .upload-actions button{font-size:12px}
 .hidden-file{display:none}
+.public-user{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #242430;cursor:pointer}
+.public-user .avatar{margin:0;flex-shrink:0}
+.public-user-info{min-width:0;overflow-wrap:anywhere}
+.public-user-info strong{display:block}
+.public-user-info small{color:#999}
+.back-button{margin-bottom:12px}
 </style>
 </head>
 
@@ -134,13 +141,10 @@ textarea{height:120px;resize:vertical}
 
 <div id="profile" class="section">
  <div class="profilebox">
-
   <div class="profilecover" id="mycover"></div>
-
   <div class="profileavatar">
    <div class="avatar" id="myavatar">👤</div>
   </div>
-
   <h2 id="myname">Mi perfil</h2>
   <p id="myusername" class="muted">@invitado</p>
   <p id="mybio">Bienvenido a Ög.</p>
@@ -159,23 +163,40 @@ textarea{height:120px;resize:vertical}
 
  <div id="accountbox" style="display:none">
   <h3>Editar perfil</h3>
-
   <div class="upload-actions">
    <button class="secondary" onclick="document.getElementById('avatarfile').click()">📷 Cambiar foto</button>
    <button class="secondary" onclick="document.getElementById('coverfile').click()">🖼 Cambiar portada</button>
   </div>
-
   <input class="hidden-file" id="avatarfile" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadImage('avatar',this)">
   <input class="hidden-file" id="coverfile" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadImage('cover',this)">
-
   <p class="muted">Imágenes JPG, PNG o WEBP. Máximo 5 MB.</p>
-
   <input class="field" id="editname" placeholder="Nombre visible">
   <input class="field" id="editbio" placeholder="Descripción">
   <button class="primary" onclick="saveProfile()">Guardar cambios</button>
   <button class="secondary" style="width:100%;margin-top:12px" onclick="signOut()">Cerrar sesión</button>
   <p id="profilestatus" class="status"></p>
  </div>
+</div>
+
+<!-- PERFIL PUBLICO -->
+<div id="publicprofile" class="section">
+ <button class="secondary back-button" onclick="showTab('explore')">← Volver a explorar</button>
+
+ <div class="profilebox">
+  <div class="profilecover" id="publiccover"></div>
+  <div class="profileavatar">
+   <div class="avatar" id="publicavatar">👤</div>
+  </div>
+  <h2 id="publicname">Usuario</h2>
+  <p id="publicusername" class="muted">@usuario</p>
+  <p id="publicbio"></p>
+  <p id="publiccounts" class="muted">0 seguidores · 0 seguidos</p>
+  <button class="primary" id="publicfollow" onclick="toggleFollow()">Seguir</button>
+  <p id="publicstatus" class="status"></p>
+ </div>
+
+ <h3>Publicaciones</h3>
+ <div id="publicposts"></div>
 </div>
 
 </main>
@@ -193,11 +214,13 @@ textarea{height:120px;resize:vertical}
 <script>
 const SUPABASE_URL="https://axxafvggyetnnaumqefi.supabase.co";
 const SUPABASE_KEY="sb_publishable_O4wRZft0LCo3DYiCWT4iqg_E5_c8B2A";
-
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let currentUser=null;
 let myProfile=null;
+let viewedProfile=null;
+let isFollowing=false;
+let searchTimer=null;
 
 function showTab(id,btn){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
@@ -231,14 +254,9 @@ async function signUp(){
  const password=document.getElementById('authpassword').value;
  const username=document.getElementById('authusername').value.trim().toLowerCase();
 
- if(!email||!password||!username)
-  return status('authstatus','Completá todos los campos.');
-
- if(!/^[a-z0-9_]{3,20}$/.test(username))
-  return status('authstatus','Usuario: 3 a 20 caracteres, letras, números o _.');
-
- if(password.length<8)
-  return status('authstatus','La contraseña debe tener al menos 8 caracteres.');
+ if(!email||!password||!username)return status('authstatus','Completá todos los campos.');
+ if(!/^[a-z0-9_]{3,20}$/.test(username))return status('authstatus','Usuario: 3 a 20 caracteres, letras, números o _.');
+ if(password.length<8)return status('authstatus','La contraseña debe tener al menos 8 caracteres.');
 
  status('authstatus','Creando cuenta...');
 
@@ -261,8 +279,7 @@ async function signIn(){
  const email=document.getElementById('authemail').value.trim();
  const password=document.getElementById('authpassword').value;
 
- if(!email||!password)
-  return status('authstatus','Ingresá correo y contraseña.');
+ if(!email||!password)return status('authstatus','Ingresá correo y contraseña.');
 
  status('authstatus','Iniciando sesión...');
 
@@ -280,6 +297,7 @@ async function signOut(){
 
  currentUser=null;
  myProfile=null;
+ viewedProfile=null;
  updateProfileUI();
  await loadPosts();
  showTab('profile');
@@ -337,7 +355,6 @@ function updateProfileUI(){
  document.getElementById('mybio').textContent=myProfile?.bio||'';
  document.getElementById('editname').value=myProfile?.display_name||'';
  document.getElementById('editbio').value=myProfile?.bio||'';
-
  document.getElementById('myavatar').replaceChildren(avatar(myProfile));
 
  const cover=document.getElementById('mycover');
@@ -381,19 +398,14 @@ async function uploadImage(type,input){
  status('profilestatus','Subiendo imagen...');
 
  const extension={
-  'image/jpeg':'jpg',
-  'image/png':'png',
-  'image/webp':'webp'
+  'image/jpeg':'jpg','image/png':'png','image/webp':'webp'
  }[file.type];
 
  const path=currentUser.id+'/'+type+'-'+Date.now()+'.'+extension;
 
- const {error:uploadError}=await db.storage
-  .from('og-media')
+ const {error:uploadError}=await db.storage.from('og-media')
   .upload(path,file,{
-   cacheControl:'3600',
-   upsert:false,
-   contentType:file.type
+   cacheControl:'3600',upsert:false,contentType:file.type
   });
 
  if(uploadError){
@@ -402,17 +414,13 @@ async function uploadImage(type,input){
   return;
  }
 
- const {data:urlData}=db.storage
-  .from('og-media')
-  .getPublicUrl(path);
-
+ const {data:urlData}=db.storage.from('og-media').getPublicUrl(path);
  const field=type==='avatar'?'avatar_url':'cover_url';
 
  const {data,error}=await db.from('profiles')
   .update({[field]:urlData.publicUrl})
   .eq('id',currentUser.id)
-  .select()
-  .single();
+  .select().single();
 
  if(error){
   status('profilestatus','La imagen se subió, pero no se pudo guardar en el perfil: '+error.message);
@@ -423,7 +431,6 @@ async function uploadImage(type,input){
  myProfile=data;
  updateProfileUI();
  status('profilestatus',type==='avatar'?'¡Foto de perfil actualizada!':'¡Portada actualizada!');
-
  input.value='';
 }
 
@@ -446,6 +453,7 @@ async function saveProfile(){
  status('profilestatus','Perfil actualizado correctamente.');
 }
 
+// CONTADORES PROPIOS
 async function loadFollowCounts(){
  if(!currentUser)return;
 
@@ -453,6 +461,11 @@ async function loadFollowCounts(){
   db.from('follows').select('*',{count:'exact',head:true}).eq('following_id',currentUser.id),
   db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',currentUser.id)
  ]);
+
+ if(followers.error||following.error){
+  console.error(followers.error||following.error);
+  return;
+ }
 
  document.getElementById('mycounts').textContent=
   (followers.count||0)+' seguidores · '+(following.count||0)+' seguidos';
@@ -470,9 +483,7 @@ async function loadPosts(){
  container.replaceChildren();
 
  const {data:posts,error}=await db.from('posts')
-  .select('*')
-  .order('created_at',{ascending:false})
-  .limit(50);
+  .select('*').order('created_at',{ascending:false}).limit(50);
 
  if(error){
   container.textContent='No se pudieron cargar las publicaciones: '+error.message;
@@ -484,8 +495,7 @@ async function loadPosts(){
  const userIds=[...new Set(posts.map(p=>p.user_id))];
 
  const {data:profiles,error:profileError}=await db.from('profiles')
-  .select('id,username,display_name,avatar_url')
-  .in('id',userIds);
+  .select('id,username,display_name,avatar_url').in('id',userIds);
 
  if(profileError){
   container.textContent='Error al cargar perfiles: '+profileError.message;
@@ -507,8 +517,13 @@ async function loadPosts(){
   const av=document.createElement('div');
   av.className='avatar';
   av.replaceChildren(avatar(profile));
+  av.style.cursor='pointer';
+  av.onclick=()=>openPublicProfile(post.user_id);
 
   const info=document.createElement('div');
+  info.style.cursor='pointer';
+  info.onclick=()=>openPublicProfile(post.user_id);
+
   const name=document.createElement('div');
   name.className='username';
   name.textContent=profile.display_name||profile.username||'Usuario';
@@ -567,10 +582,8 @@ async function loadPosts(){
 
   if(currentUser){
    const {data:like,error:likeError}=await db.from('likes')
-    .select('user_id')
-    .eq('post_id',post.id)
-    .eq('user_id',currentUser.id)
-    .maybeSingle();
+    .select('user_id').eq('post_id',post.id)
+    .eq('user_id',currentUser.id).maybeSingle();
 
    if(likeError)console.error(likeError);
 
@@ -591,12 +604,10 @@ async function publish(){
 
  const input=document.getElementById('newpost');
  const content=input.value.trim();
-
  if(!content)return alert('Escribí algo primero.');
 
  const {error}=await db.from('posts').insert({
-  user_id:currentUser.id,
-  content
+  user_id:currentUser.id,content
  });
 
  if(error)return alert('Error al publicar: '+error.message);
@@ -614,20 +625,16 @@ async function toggleLike(postId,button){
  }
 
  const {data:existing,error:readError}=await db.from('likes')
-  .select('user_id')
-  .eq('post_id',postId)
-  .eq('user_id',currentUser.id)
-  .maybeSingle();
+  .select('user_id').eq('post_id',postId)
+  .eq('user_id',currentUser.id).maybeSingle();
 
  if(readError)return alert(readError.message);
 
  if(existing){
   const {error}=await db.from('likes').delete()
-   .eq('post_id',postId)
-   .eq('user_id',currentUser.id);
+   .eq('post_id',postId).eq('user_id',currentUser.id);
 
   if(error)return alert(error.message);
-
   button.classList.remove('liked');
   button.textContent='♡ Me gusta';
  }else{
@@ -636,7 +643,6 @@ async function toggleLike(postId,button){
   });
 
   if(error)return alert(error.message);
-
   button.classList.add('liked');
   button.textContent='♥ Me gusta';
  }
@@ -653,31 +659,25 @@ async function addComment(postId){
  if(!content||!content.trim())return;
 
  const {error}=await db.from('comments').insert({
-  post_id:postId,
-  user_id:currentUser.id,
-  content:content.trim()
+  post_id:postId,user_id:currentUser.id,content:content.trim()
  });
 
  if(error)return alert('Error: '+error.message);
-
  alert('Comentario publicado.');
 }
 
 async function viewComments(postId){
  const {data:comments,error}=await db.from('comments')
   .select('id,user_id,content,created_at')
-  .eq('post_id',postId)
-  .order('created_at',{ascending:true});
+  .eq('post_id',postId).order('created_at',{ascending:true});
 
  if(error)return alert(error.message);
-
  if(!comments.length)return alert('Todavía no hay comentarios.');
 
  const userIds=[...new Set(comments.map(c=>c.user_id))];
 
  const {data:profiles,error:profileError}=await db.from('profiles')
-  .select('id,username')
-  .in('id',userIds);
+  .select('id,username').in('id',userIds);
 
  if(profileError)return alert(profileError.message);
 
@@ -689,31 +689,189 @@ async function viewComments(postId){
  ).join('\n\n'));
 }
 
-// SEGUIR USUARIOS
+// SEGUIR DESDE EL FEED
 async function followUser(userId,button){
  if(!currentUser){
   alert('Iniciá sesión para seguir usuarios.');
   return showTab('profile');
  }
 
+ button.disabled=true;
+
  const {error}=await db.from('follows').insert({
-  follower_id:currentUser.id,
-  following_id:userId
+  follower_id:currentUser.id,following_id:userId
  });
 
+ button.disabled=false;
+
  if(error){
-  if(error.code==='23505')return alert('Ya seguís a este usuario.');
+  if(error.code==='23505'){
+   button.textContent='✓ Siguiendo';
+   return;
+  }
   return alert(error.message);
  }
 
  button.textContent='✓ Siguiendo';
- button.disabled=true;
  await loadFollowCounts();
 }
 
-// BUSCAR USUARIOS
-let searchTimer;
+// ABRIR PERFIL PUBLICO
+async function openPublicProfile(userId){
+ if(!currentUser){
+  alert('Iniciá sesión para visitar perfiles.');
+  return showTab('profile');
+ }
 
+ if(userId===currentUser.id)return showTab('profile');
+
+ status('publicstatus','Cargando perfil...');
+ showTab('publicprofile');
+
+ const {data:profile,error}=await db.from('profiles')
+  .select('*').eq('id',userId).maybeSingle();
+
+ if(error||!profile){
+  status('publicstatus',error?.message||'No se encontró el perfil.');
+  return;
+ }
+
+ viewedProfile=profile;
+
+ document.getElementById('publicname').textContent=
+  profile.display_name||profile.username||'Usuario';
+ document.getElementById('publicusername').textContent='@'+profile.username;
+ document.getElementById('publicbio').textContent=profile.bio||'';
+ document.getElementById('publicavatar').replaceChildren(avatar(profile));
+
+ const cover=document.getElementById('publiccover');
+ cover.replaceChildren();
+
+ if(profile.cover_url){
+  const img=document.createElement('img');
+  img.src=profile.cover_url;
+  img.alt='Portada del perfil';
+  cover.append(img);
+ }
+
+ const [followers,following,relation]=await Promise.all([
+  db.from('follows').select('*',{count:'exact',head:true}).eq('following_id',userId),
+  db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',userId),
+  db.from('follows').select('follower_id')
+   .eq('follower_id',currentUser.id)
+   .eq('following_id',userId)
+   .maybeSingle()
+ ]);
+
+ if(followers.error||following.error||relation.error){
+  status('publicstatus',(followers.error||following.error||relation.error).message);
+  return;
+ }
+
+ isFollowing=!!relation.data;
+ document.getElementById('publiccounts').textContent=
+  (followers.count||0)+' seguidores · '+(following.count||0)+' seguidos';
+
+ updateFollowButton();
+
+ const container=document.getElementById('publicposts');
+ container.replaceChildren();
+
+ const {data:posts,error:postError}=await db.from('posts')
+  .select('*').eq('user_id',userId)
+  .order('created_at',{ascending:false}).limit(50);
+
+ if(postError){
+  container.textContent='No se pudieron cargar las publicaciones: '+postError.message;
+ }else if(!posts||!posts.length){
+  container.textContent='Este usuario todavía no publicó nada.';
+ }else{
+  posts.forEach(post=>{
+   const article=document.createElement('article');
+   article.className='post';
+
+   const content=document.createElement('p');
+   content.className='posttext';
+   content.textContent=post.content||'';
+   article.append(content);
+
+   if(post.image_url){
+    const img=document.createElement('img');
+    img.className='postimage';
+    img.src=post.image_url;
+    img.alt='Publicación';
+    article.append(img);
+   }
+
+   const time=document.createElement('div');
+   time.className='time';
+   time.textContent=formatDate(post.created_at);
+   article.append(time);
+
+   container.append(article);
+  });
+ }
+
+ status('publicstatus','');
+}
+
+// ACTUALIZAR BOTON DE SEGUIMIENTO
+function updateFollowButton(){
+ const button=document.getElementById('publicfollow');
+ button.textContent=isFollowing?'Dejar de seguir':'Seguir';
+ button.classList.toggle('secondary',isFollowing);
+}
+
+// SEGUIR / DEJAR DE SEGUIR
+async function toggleFollow(){
+ if(!currentUser||!viewedProfile)return;
+
+ const button=document.getElementById('publicfollow');
+ button.disabled=true;
+ status('publicstatus','Actualizando seguimiento...');
+
+ let error=null;
+
+ if(isFollowing){
+  const result=await db.from('follows').delete()
+   .eq('follower_id',currentUser.id)
+   .eq('following_id',viewedProfile.id);
+  error=result.error;
+ }else{
+  const result=await db.from('follows').insert({
+   follower_id:currentUser.id,
+   following_id:viewedProfile.id
+  });
+  error=result.error;
+ }
+
+ button.disabled=false;
+
+ if(error){
+  status('publicstatus','No se pudo actualizar: '+error.message);
+  return;
+ }
+
+ isFollowing=!isFollowing;
+ updateFollowButton();
+
+ const [followers,following]=await Promise.all([
+  db.from('follows').select('*',{count:'exact',head:true})
+   .eq('following_id',viewedProfile.id),
+  db.from('follows').select('*',{count:'exact',head:true})
+   .eq('follower_id',viewedProfile.id)
+ ]);
+
+ if(!followers.error&&!following.error){
+  document.getElementById('publiccounts').textContent=
+   (followers.count||0)+' seguidores · '+(following.count||0)+' seguidos';
+ }
+
+ await loadFollowCounts();
+ status('publicstatus',isFollowing?'Ahora seguís a este usuario.':'Dejaste de seguir a este usuario.');
+}
+
+// BUSCAR USUARIOS
 async function searchUsers(){
  clearTimeout(searchTimer);
 
@@ -726,8 +884,7 @@ async function searchUsers(){
  searchTimer=setTimeout(async()=>{
   const {data,error}=await db.from('profiles')
    .select('id,username,display_name,avatar_url')
-   .ilike('username','%'+value+'%')
-   .limit(20);
+   .ilike('username','%'+value+'%').limit(20);
 
   if(error){
    result.textContent=error.message;
@@ -741,17 +898,25 @@ async function searchUsers(){
 
   data.forEach(profile=>{
    const item=document.createElement('div');
-   item.className='posthead';
-   item.style.padding='12px 0';
+   item.className='public-user';
 
    const av=document.createElement('div');
    av.className='avatar';
    av.replaceChildren(avatar(profile));
 
-   const name=document.createElement('div');
-   name.textContent=(profile.display_name||profile.username)+' @'+profile.username;
+   const info=document.createElement('div');
+   info.className='public-user-info';
 
-   item.append(av,name);
+   const name=document.createElement('strong');
+   name.textContent=profile.display_name||profile.username;
+
+   const username=document.createElement('small');
+   username.textContent='@'+profile.username;
+
+   info.append(name,username);
+   item.append(av,info);
+
+   item.onclick=()=>openPublicProfile(profile.id);
    result.append(item);
   });
  },350);
@@ -767,6 +932,7 @@ db.auth.onAuthStateChange((event,session)=>{
   }else{
    currentUser=null;
    myProfile=null;
+   viewedProfile=null;
    updateProfileUI();
    await loadPosts();
   }
