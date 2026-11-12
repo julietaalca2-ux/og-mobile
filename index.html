@@ -603,9 +603,13 @@ async function loadAccount(user){
  myProfile=profile;
  profilesCache[user.id]=profile;
  updateProfileUI();
- await loadPosts();
- await loadMyStory();
- await loadStories();
+ 
+ // CARGA EN PARALELO ULTRA-RÁPIDA (Optimización de fluidez)
+ await Promise.all([
+  loadPosts(),
+  loadStoriesData()
+ ]);
+ 
  setupRealtimeNotifications();
 }
 
@@ -614,7 +618,7 @@ function setupRealtimeNotifications(){
 
  realtimeChannel=db.channel('public-notifications')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows'},payload=>{
-   if(payload.new.following_id===currentUser?.id){ loadActivity(); loadStories(); }
+   if(payload.new.following_id===currentUser?.id){ loadActivity(); loadStoriesData(); }
   })
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'likes'},payload=>{
    loadActivity();
@@ -623,109 +627,126 @@ function setupRealtimeNotifications(){
    loadActivity();
   })
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'stories'},payload=>{
-   loadStories();
+   loadStoriesData();
   })
   .subscribe();
 }
 
-/* GESTIÓN DE HISTORIAS Y SEGUIDOS */
-async function loadMyStory(){
- if(!currentUser)return;
- const {data}=await db.from('stories')
-  .select('*')
-  .eq('user_id', currentUser.id)
-  .order('created_at', {ascending:false})
-  .limit(1)
-  .maybeSingle();
+/* GESTIÓN DE HISTORIAS OPTIMIZADA Y FLUIDA */
+async function loadStoriesData(){
+ if(!currentUser) return;
 
- myActiveStory=data||null;
- updateStoryUI();
+ // 1. Consultar en paralelo las historias propias y de los seguidos para reducir latencia
+ const [myStoryRes, followingRes] = await Promise.all([
+  db.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(1).maybeSingle(),
+  db.from('follows').select('following_id').eq('follower_id', currentUser.id)
+ ]);
+
+ myActiveStory = myStoryRes.data || null;
+
+ const container = document.getElementById('storiescontainer');
+ const fragment = document.createDocumentFragment();
+
+ // Renderizar "Tu historia" de forma limpia
+ const myStoryDiv = document.createElement('div');
+ myStoryDiv.className = myActiveStory ? 'story has-story' : 'story';
+ myStoryDiv.id = 'mystorybtn';
+ myStoryDiv.onclick = handleStoryClick;
+
+ const myAvatarWrap = document.createElement('div');
+ myAvatarWrap.className = 'avatar';
+ myAvatarWrap.id = 'mystoryavatar';
+ myAvatarWrap.replaceChildren(createAvatarInner(myActiveStory ? myActiveStory.image_url : null, true));
+
+ const myLabel = document.createElement('div');
+ myLabel.textContent = 'Tu historia';
+ myLabel.style.overflow = 'hidden';
+ myLabel.style.textOverflow = 'ellipsis';
+ myLabel.style.whiteSpace = 'nowrap';
+ myLabel.style.width = '64px';
+
+ myStoryDiv.append(myAvatarWrap, myLabel);
+ fragment.append(myStoryDiv);
+
+ const followingData = followingRes.data;
+ if(followingData && followingData.length > 0){
+  const followingIds = followingData.map(f => f.following_id);
+
+  // Obtener historias de los seguidos
+  const {data: storiesData} = await db.from('stories')
+   .select('user_id, image_url, created_at')
+   .in('user_id', followingIds)
+   .order('created_at', {ascending: false});
+
+  if(storiesData && storiesData.length > 0){
+   // Filtrar usando un objeto diccionario para garantizar 1 sola aparición por usuario (cero duplicados)
+   const uniqueStories = {};
+   storiesData.forEach(s => {
+    if(!uniqueStories[s.user_id]) uniqueStories[s.user_id] = s;
+   });
+
+   const userIdsToFetch = Object.keys(uniqueStories).filter(id => !profilesCache[id]);
+   if(userIdsToFetch.length > 0){
+    const {data: profiles} = await db.from('profiles').select('id, username, avatar_url').in('id', userIdsToFetch);
+    (profiles || []).forEach(p => profilesCache[p.id] = p);
+   }
+
+   // Construir los elementos de los seguidos en memoria (DocumentFragment) antes de inyectar al DOM
+   Object.values(uniqueStories).forEach(story => {
+    const profile = profilesCache[story.user_id];
+    if(!profile) return;
+
+    const storyDiv = document.createElement('div');
+    storyDiv.className = 'story has-story';
+    storyDiv.onclick = () => openUserStory(profile, story.image_url);
+
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    av.replaceChildren(avatar(profile));
+
+    const name = document.createElement('div');
+    name.style.overflow = 'hidden';
+    name.style.textOverflow = 'ellipsis';
+    name.style.whiteSpace = 'nowrap';
+    name.style.width = '64px';
+    name.textContent = profile.username;
+
+    storyDiv.append(av, name);
+    fragment.append(storyDiv);
+   });
+  }
+ }
+
+ // Inserción única al DOM para evitar parpadeos y acelerar la renderización
+ container.replaceChildren(fragment);
+}
+
+function createAvatarInner(imgUrl, isSelf){
+ const inner = document.createElement('div');
+ inner.className = 'avatar-inner';
+ if(imgUrl){
+  const img = document.createElement('img');
+  img.src = imgUrl;
+  img.alt = 'Historia';
+  inner.append(img);
+ }else{
+  inner.textContent = '＋';
+ }
+ return inner;
 }
 
 function updateStoryUI(){
- const storyAvatar=document.getElementById('mystoryavatar');
+ const storyWrap = document.getElementById('mystorybtn');
+ const storyAvatar = document.getElementById('mystoryavatar');
+ if(!storyWrap || !storyAvatar) return;
+
  if(myActiveStory){
-  document.getElementById('mystorybtn').classList.add('has-story');
-  const inner=document.createElement('div');
-  inner.className='avatar-inner';
-  const img=document.createElement('img');
-  img.src=myActiveStory.image_url;
-  img.alt='Mi historia';
-  inner.append(img);
-  storyAvatar.replaceChildren(inner);
+  storyWrap.classList.add('has-story');
+  storyAvatar.replaceChildren(createAvatarInner(myActiveStory.image_url, true));
  }else{
-  document.getElementById('mystorybtn').classList.remove('has-story');
-  const inner=document.createElement('div');
-  inner.className='avatar-inner';
-  inner.textContent='＋';
-  storyAvatar.replaceChildren(inner);
+  storyWrap.classList.remove('has-story');
+  storyAvatar.replaceChildren(createAvatarInner(null, true));
  }
-}
-
-async function loadStories(){
- if(!currentUser) return;
- const container=document.getElementById('storiescontainer');
- 
- // Limpiar contenedor por completo y recrear únicamente "Tu historia" inicial
- container.innerHTML = `
-  <div class="story" id="mystorybtn" onclick="handleStoryClick()">
-   <div class="avatar" id="mystoryavatar"><div class="avatar-inner">＋</div></div>
-   Tu historia
-  </div>
- `;
- updateStoryUI();
-
- // 1. Obtener IDs de las personas que sigo
- const {data: followingData} = await db.from('follows')
-  .select('following_id')
-  .eq('follower_id', currentUser.id);
-
- if(!followingData || !followingData.length) return;
- const followingIds = followingData.map(f => f.following_id);
-
- // 2. Obtener historias activas de los seguidos
- const {data: storiesData} = await db.from('stories')
-  .select('user_id, image_url, created_at')
-  .in('user_id', followingIds)
-  .order('created_at', {ascending: false});
-
- if(!storiesData || !storiesData.length) return;
-
- // Agrupar para garantizar que cada usuario aparezca una sola vez (evita duplicados)
- const uniqueStories = {};
- storiesData.forEach(s => {
-  if(!uniqueStories[s.user_id]) uniqueStories[s.user_id] = s;
- });
-
- const userIdsToFetch = Object.keys(uniqueStories).filter(id => !profilesCache[id]);
- if(userIdsToFetch.length > 0){
-  const {data: profiles} = await db.from('profiles').select('id, username, avatar_url').in('id', userIdsToFetch);
-  (profiles||[]).forEach(p => profilesCache[p.id] = p);
- }
-
- // 3. Renderizar historias de los seguidos sin duplicar
- Object.values(uniqueStories).forEach(story => {
-  const profile = profilesCache[story.user_id];
-  if(!profile) return;
-
-  const storyDiv = document.createElement('div');
-  storyDiv.className = 'story has-story';
-  storyDiv.onclick = () => openUserStory(profile, story.image_url);
-
-  const av = document.createElement('div');
-  av.className='avatar';
-  av.replaceChildren(avatar(profile));
-
-  const name = document.createElement('div');
-  name.style.overflow = 'hidden';
-  name.style.textOverflow = 'ellipsis';
-  name.style.whiteSpace = 'nowrap';
-  name.style.width = '64px';
-  name.textContent = profile.username;
-
-  storyDiv.append(av, name);
-  container.append(storyDiv);
- });
 }
 
 function openUserStory(profile, imageUrl){
@@ -740,8 +761,8 @@ function handleStoryClick(){
   return showTab('profile');
  }
  if(myActiveStory){
-  document.getElementById('storyUsername').textContent='@'+(myProfile?.username||'mi_historia');
-  document.getElementById('storyImage').src=myActiveStory.image_url;
+  document.getElementById('storyUsername').textContent = '@'+(myProfile?.username||'mi_historia');
+  document.getElementById('storyImage').src = myActiveStory.image_url;
   document.getElementById('storyViewer').classList.add('active');
  }else{
   document.getElementById('storyfileinput').click();
@@ -753,18 +774,18 @@ function closeStoryViewer(){
 }
 
 async function uploadStory(input){
- if(!currentUser)return;
- const file=input.files?.[0];
- if(!file)return;
+ if(!currentUser) return;
+ const file = input.files?.[0];
+ if(!file) return;
 
- const allowed=['image/jpeg','image/png','image/webp'];
+ const allowed = ['image/jpeg','image/png','image/webp'];
  if(!allowed.includes(file.type)){
   alert('Formato no permitido.');
   input.value='';
   return;
  }
 
- if(file.size>5*1024*1024){
+ if(file.size > 5*1024*1024){
   alert('La imagen supera los 5 MB.');
   input.value='';
   return;
@@ -772,11 +793,11 @@ async function uploadStory(input){
 
  alert('Subiendo historia...');
 
- const extension={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
- const path=currentUser.id+'/story-'+Date.now()+'.'+extension;
+ const extension = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
+ const path = currentUser.id+'/story-'+Date.now()+'.'+extension;
 
- const {error:uploadError}=await db.storage.from('og-media')
-  .upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
+ const {error:uploadError} = await db.storage.from('og-media')
+  .upload(path, file, {cacheControl:'3600', upsert:false, contentType:file.type});
 
  if(uploadError){
   alert('Error al subir historia: '+uploadError.message);
@@ -784,9 +805,9 @@ async function uploadStory(input){
   return;
  }
 
- const {data:urlData}=db.storage.from('og-media').getPublicUrl(path);
+ const {data:urlData} = db.storage.from('og-media').getPublicUrl(path);
 
- const {data,error}=await db.from('stories')
+ const {data, error} = await db.from('stories')
   .insert({user_id:currentUser.id, image_url:urlData.publicUrl})
   .select().single();
 
@@ -796,9 +817,9 @@ async function uploadStory(input){
   return;
  }
 
- myActiveStory=data;
- updateStoryUI();
+ myActiveStory = data;
  input.value='';
+ await loadStoriesData(); // Refrescar carrusel de inmediato de forma fluida
  alert('¡Historia publicada!');
 }
 
@@ -1421,7 +1442,7 @@ async function toggleFollow(){
  isFollowing=!isFollowing;
  updateFollowButton();
  await loadFollowCounts();
- await loadStories();
+ await loadStoriesData();
 }
 
 async function searchUsers(){
