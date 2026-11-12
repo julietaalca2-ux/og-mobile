@@ -1,1 +1,128 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09090f">
+<title>Ög — Explorar</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#09090f;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:20px 18px 14px;border-bottom:1px solid #24242d;position:sticky;top:0;background:#09090f;z-index:5}
+.logo{font-size:25px;font-weight:800;letter-spacing:-1px}
+.subtitle{color:#92929e;font-size:13px;margin-top:4px}
+main{padding:20px 16px 100px;max-width:650px;margin:auto}
+.search{width:100%;padding:15px 16px;border-radius:14px;background:#17171f;border:1px solid #30303a;color:white;font-size:15px;outline:none}
+.search:focus{border-color:#9270ff}
+.heading{font-size:17px;font-weight:700;margin:25px 0 15px}
+.user{display:flex;align-items:center;gap:13px;padding:13px 4px;border-bottom:1px solid #24242d;cursor:pointer}
+.avatar{width:48px;height:48px;border-radius:50%;background:#282432;object-fit:cover;flex-shrink:0}
+.info{flex:1;min-width:0}
+.name{font-weight:700;font-size:14px}
+.username{font-size:13px;color:#92929e;margin-top:4px}
+.empty,.message{text-align:center;color:#92929e;padding:25px 10px;font-size:14px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#101017;border-top:1px solid #292933;display:flex;justify-content:space-around;padding:13px 5px calc(13px + env(safe-area-inset-bottom));z-index:10}
+nav a{color:#aaa;text-decoration:none;font-size:12px;text-align:center}
+nav a.active{color:white}
+nav span{display:block;font-size:21px;margin-bottom:4px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Ög</div>
+  <div class="subtitle">Descubrí personas</div>
+</header>
+
+<main>
+  <input id="search" class="search" placeholder="Buscar usuarios..." autocomplete="off">
+  <div class="heading">Explorar personas</div>
+  <div id="results"><div class="message">Cargando usuarios...</div></div>
+</main>
+
+<nav>
+  <a href="/index.html"><span>⌂</span>Inicio</a>
+  <a href="/explorar.html" class="active"><span>⌕</span>Explorar</a>
+  <a href="/crear.html"><span>＋</span>Crear</a>
+  <a href="/actividad.html"><span>♡</span>Actividad</a>
+  <a href="/perfil.html"><span>◉</span>Perfil</a>
+</nav>
+
+<script>
+const SUPABASE_URL="https://axxafvggyetnnaumqefi.supabase.co";
+const SUPABASE_KEY="sb_publishable_O4wRZft0LCo3DYiCWT4iqg_E5_c8B2A";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const results=document.getElementById("results");
+const search=document.getElementById("search");
+
+function escapeHTML(value){
+  return String(value??"").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function showUsers(users){
+  if(!users.length){
+    results.innerHTML='<div class="empty">No se encontraron usuarios.</div>';
+    return;
+  }
+
+  results.innerHTML=users.map(user=>{
+    const name=user.full_name||user.username||"Usuario";
+    const username=user.username||"";
+    const avatar=user.avatar_url||"";
+    return `
+      <div class="user" data-id="${escapeHTML(user.id)}">
+        <img class="avatar" src="${escapeHTML(avatar)}"
+          onerror="this.style.display='none'">
+        <div class="info">
+          <div class="name">${escapeHTML(name)}</div>
+          <div class="username">@${escapeHTML(username)}</div>
+        </div>
+      </div>`;
+  }).join("");
+
+  results.querySelectorAll(".user").forEach(item=>{
+    item.addEventListener("click",()=>{
+      location.href="/usuario.html?id="+encodeURIComponent(item.dataset.id);
+    });
+  });
+}
+
+async function loadUsers(term=""){
+  results.innerHTML='<div class="message">Buscando...</div>';
+
+  let query=db.from("profiles").select("*").limit(40);
+
+  if(term){
+    query=query.or(
+      `username.ilike.%${term}%,full_name.ilike.%${term}%`
+    );
+  }
+
+  const {data,error}=await query;
+
+  if(error){
+    results.innerHTML='<div class="empty">No se pudieron cargar los usuarios.</div>';
+    console.error(error);
+    return;
+  }
+
+  showUsers(data||[]);
+}
+
+let searchTimer;
+search.addEventListener("input",()=>{
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>{
+    loadUsers(search.value.trim().replace(/[(),]/g,""));
+  },300);
+});
+
+loadUsers();
+</script>
+</body>
+</html>
+
