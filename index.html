@@ -63,7 +63,7 @@ header{
 main{max-width:470px;margin:auto}
 main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
-#feed.active, #profile.active, #publicprofile.active {padding: 0 !important;}
+#feed.active, #profile.active, #publicprofile.active, #settingsPage.active {padding: 0 !important;}
 
 /* CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM */
 #cameraModal{
@@ -91,7 +91,6 @@ main > div.active {display: block !important;}
  width:100%;max-width:430px;margin:0 auto;
 }
 
-/* Control deslizante de Zoom (Slider) */
 .camera-zoom-container{
  display:flex;align-items:center;justify-content:center;gap:8px;
  background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);
@@ -263,6 +262,43 @@ textarea{height:120px;resize:none}
 .settings-item.danger{color:#ef4444}
 .settings-item.danger svg{color:#ef4444}
 
+/* PÁGINA COMPLETA DE CONFIGURACIÓN */
+.settings-header{
+ padding:12px 16px;border-bottom:1px solid #18181b;
+ display:flex;align-items:center;gap:12px;
+ position:sticky;top:54px;background:#000;z-index:10;
+}
+.settings-group{
+ padding:16px;border-bottom:1px solid #18181b;
+}
+.settings-group-title{
+ font-size:12px;font-weight:700;text-transform:uppercase;
+ letter-spacing:0.6px;color:#71717a;margin:0 0 12px 0;
+}
+.settings-row{
+ display:flex;align-items:center;justify-content:space-between;
+ padding:10px 0;gap:12px;
+}
+.settings-row-info{flex:1}
+.settings-row-title{font-size:14px;font-weight:500;color:#fff;margin:0}
+.settings-row-desc{font-size:12px;color:#71717a;margin:2px 0 0 0}
+
+/* Switch estilo iOS / Dark Mode */
+.toggle-switch{
+ position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;
+}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{
+ position:absolute;cursor:pointer;inset:0;background:#27272a;
+ border-radius:24px;transition:0.25s;
+}
+.toggle-slider:before{
+ position:absolute;content:"";height:18px;width:18px;
+ left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.25s;
+}
+input:checked + .toggle-slider{background:#3b82f6}
+input:checked + .toggle-slider:before{transform:translateX(20px)}
+
 .public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #18181b;cursor:pointer}
 .public-user .story-avatar-container{margin:0;width:44px;height:44px;flex-shrink:0}
 .public-user-info{min-width:0;overflow-wrap:anywhere}
@@ -292,7 +328,7 @@ textarea{height:120px;resize:none}
  </div>
  <div id="header-profile-icons" style="display:none;align-items:center;gap:4px">
   <button class="icon" onclick="toggleSettingsDrawer()" aria-label="Configuración">
-   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
  </div>
 </header>
@@ -467,6 +503,95 @@ textarea{height:120px;resize:none}
  </div>
 </div>
 
+<!-- VISTA COMPLETA DE CONFIGURACIÓN -->
+<div id="settingsPage" class="section">
+ <div class="settings-header">
+  <button class="secondary" style="padding:6px 12px" onclick="showTab('profile')">← Volver</button>
+  <strong style="font-size:15px">Configuración y privacidad</strong>
+ </div>
+
+ <!-- Seguridad y Cuenta -->
+ <div class="settings-group">
+  <h4 class="settings-group-title">Seguridad y contraseña</h4>
+  <div class="settings-row">
+   <div class="settings-row-info">
+    <p class="settings-row-title">Correo asociado</p>
+    <p class="settings-row-desc" id="settingsEmailText">No disponible</p>
+   </div>
+  </div>
+  <input class="field" id="newPasswordInput" type="password" placeholder="Nueva contraseña (mín. 8 caracteres)">
+  <button class="primary" style="margin-top:10px" onclick="updateUserPassword()">Actualizar contraseña</button>
+  <p id="passwordStatus" class="status"></p>
+ </div>
+
+ <!-- Privacidad -->
+ <div class="settings-group">
+  <h4 class="settings-group-title">Privacidad de la cuenta</h4>
+  <div class="settings-row">
+   <div class="settings-row-info">
+    <p class="settings-row-title">Cuenta privada</p>
+    <p class="settings-row-desc">Solo tus seguidores podrán ver tus historias y fotos.</p>
+   </div>
+   <label class="toggle-switch">
+    <input type="checkbox" id="privateAccountToggle" onchange="saveLocalSettings()">
+    <span class="toggle-slider"></span>
+   </label>
+  </div>
+  <div class="settings-row">
+   <div class="settings-row-info">
+    <p class="settings-row-title">Mostrar estado de actividad</p>
+    <p class="settings-row-desc">Permite que otros vean cuándo estás en línea.</p>
+   </div>
+   <label class="toggle-switch">
+    <input type="checkbox" id="activityStatusToggle" checked onchange="saveLocalSettings()">
+    <span class="toggle-slider"></span>
+   </label>
+  </div>
+ </div>
+
+ <!-- Notificaciones -->
+ <div class="settings-group">
+  <h4 class="settings-group-title">Notificaciones</h4>
+  <div class="settings-row">
+   <div class="settings-row-info">
+    <p class="settings-row-title">Me gusta y comentarios</p>
+    <p class="settings-row-desc">Alertas cuando interactúan con tus publicaciones.</p>
+   </div>
+   <label class="toggle-switch">
+    <input type="checkbox" id="notifLikesToggle" checked onchange="saveLocalSettings()">
+    <span class="toggle-slider"></span>
+   </label>
+  </div>
+  <div class="settings-row">
+   <div class="settings-row-info">
+    <p class="settings-row-title">Nuevos seguidores</p>
+    <p class="settings-row-desc">Avisar cuando alguien empieza a seguirte.</p>
+   </div>
+   <label class="toggle-switch">
+    <input type="checkbox" id="notifFollowsToggle" checked onchange="saveLocalSettings()">
+    <span class="toggle-slider"></span>
+   </label>
+  </div>
+ </div>
+
+ <!-- Información técnica -->
+ <div class="settings-group" style="border-bottom:none">
+  <h4 class="settings-group-title">Información de la aplicación</h4>
+  <div class="settings-row">
+   <div class="settings-row-info">
+    <p class="settings-row-title">Versión de Ög</p>
+    <p class="settings-row-desc">1.2.0 (Build Optimizado)</p>
+   </div>
+  </div>
+  <div class="settings-row">
+   <div class="settings-row-info">
+    <p class="settings-row-title">ID de usuario</p>
+    <p class="settings-row-desc" id="settingsUserIdText" style="font-family:monospace;font-size:11px">—</p>
+   </div>
+  </div>
+ </div>
+</div>
+
 <!-- PERFIL PÚBLICO -->
 <div id="publicprofile" class="section">
  <div style="padding:10px 16px;border-bottom:1px solid #18181b;display:flex;align-items:center;gap:12px">
@@ -528,11 +653,11 @@ textarea{height:120px;resize:none}
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
    Editar perfil
   </div>
-  <div class="settings-item" onclick="alert('Sección de Privacidad de Ög')">
+  <div class="settings-item" onclick="toggleSettingsDrawer(); openSettingsPage()">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
    Configuración y privacidad
   </div>
-  <div class="settings-item" onclick="alert('Versión 1.0.0 - Ög Social')">
+  <div class="settings-item" onclick="toggleSettingsDrawer(); openSettingsPage()">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
    Información de la aplicación
   </div>
@@ -621,7 +746,7 @@ function showTab(id,btn){
  const defaultIcons=document.getElementById('header-default-icons');
  const profileIcons=document.getElementById('header-profile-icons');
 
- if(id==='profile'){
+ if(id==='profile' || id==='settingsPage'){
   defaultIcons.style.display='none';
   profileIcons.style.display='flex';
  }else{
@@ -640,6 +765,61 @@ function toggleSettingsDrawer(){
 
 function toggleEditPanel(){
  document.getElementById('accountbox').classList.toggle('open');
+}
+
+/* ========================================================
+   FUNCIONES DE CONFIGURACIÓN, SEGURIDAD Y PRIVACIDAD
+   ======================================================== */
+function openSettingsPage(){
+ if(!currentUser){
+  alert('Iniciá sesión para acceder a la configuración.');
+  return showTab('profile');
+ }
+ document.getElementById('settingsEmailText').textContent = currentUser.email || 'No disponible';
+ document.getElementById('settingsUserIdText').textContent = currentUser.id;
+ document.getElementById('passwordStatus').textContent = '';
+ document.getElementById('newPasswordInput').value = '';
+ loadLocalSettings();
+ showTab('settingsPage');
+}
+
+async function updateUserPassword(){
+ const newPassword = document.getElementById('newPasswordInput').value;
+ if(!newPassword || newPassword.length < 8){
+  return status('passwordStatus', 'La contraseña debe tener al menos 8 caracteres.');
+ }
+
+ status('passwordStatus', 'Actualizando contraseña...');
+ const { error } = await db.auth.updateUser({ password: newPassword });
+
+ if(error){
+  return status('passwordStatus', 'Error: ' + error.message);
+ }
+
+ document.getElementById('newPasswordInput').value = '';
+ status('passwordStatus', '¡Contraseña actualizada correctamente!');
+}
+
+function saveLocalSettings(){
+ const prefs = {
+  privateAccount: document.getElementById('privateAccountToggle').checked,
+  activityStatus: document.getElementById('activityStatusToggle').checked,
+  notifLikes: document.getElementById('notifLikesToggle').checked,
+  notifFollows: document.getElementById('notifFollowsToggle').checked
+ };
+ localStorage.setItem('og_user_settings_' + (currentUser?.id || 'guest'), JSON.stringify(prefs));
+}
+
+function loadLocalSettings(){
+ try{
+  const raw = localStorage.getItem('og_user_settings_' + (currentUser?.id || 'guest'));
+  if(!raw) return;
+  const prefs = JSON.parse(raw);
+  document.getElementById('privateAccountToggle').checked = !!prefs.privateAccount;
+  document.getElementById('activityStatusToggle').checked = prefs.activityStatus !== false;
+  document.getElementById('notifLikesToggle').checked = prefs.notifLikes !== false;
+  document.getElementById('notifFollowsToggle').checked = prefs.notifFollows !== false;
+ }catch(e){}
 }
 
 function status(id,message){
@@ -806,7 +986,6 @@ async function loadStoriesData(){
  myInner.className = 'story-avatar-inner';
  myInner.id = 'mystoryavatar';
  
- // CORRECCIÓN CLAVE: ¡Adentro SIEMPRE se muestra tu foto de perfil real (o placeholder si no tienes)!
  if(myProfile?.avatar_url){
   const img = document.createElement('img');
   img.src = myProfile.avatar_url;
@@ -923,7 +1102,6 @@ async function openCameraModal(){
  await startCameraStream();
 }
 
-// Control de zoom interactivo por Slider
 function adjustZoom(value){
  currentZoom = parseFloat(value);
  document.getElementById('zoomValueText').textContent = currentZoom.toFixed(1) + 'x';
