@@ -96,6 +96,38 @@ textarea{height:120px;resize:vertical}
 .public-user-info strong{display:block}
 .public-user-info small{color:#999}
 .back-button{margin-bottom:12px}
+
+/* ACTIVIDAD */
+.activity-item{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ padding:15px 0;
+ border-bottom:1px solid #242430;
+}
+.activity-item .avatar{
+ width:45px;
+ height:45px;
+ min-width:45px;
+ margin:0;
+}
+.activity-info{
+ flex:1;
+ min-width:0;
+ font-size:14px;
+ line-height:1.5;
+}
+.activity-info strong{color:white}
+.activity-date{
+ color:#888;
+ font-size:11px;
+ margin-top:4px;
+}
+.activity-empty{
+ text-align:center;
+ padding:35px 15px;
+ color:#999;
+}
 </style>
 </head>
 
@@ -134,9 +166,13 @@ textarea{height:120px;resize:vertical}
  <p class="muted">Tu publicación será visible para la comunidad.</p>
 </div>
 
+<!-- ACTIVIDAD -->
 <div id="notifications" class="section">
  <h2>Actividad</h2>
- <p class="muted">Tu actividad aparecerá aquí.</p>
+ <p class="muted">Novedades e interacciones de tu cuenta.</p>
+ <div id="activitylist">
+  <p class="muted">Cargando actividad...</p>
+ </div>
 </div>
 
 <div id="profile" class="section">
@@ -231,6 +267,11 @@ function showTab(id,btn){
  else{
   const index=['feed','explore','create','notifications','profile'].indexOf(id);
   if(index>=0)document.querySelectorAll('nav button')[index].classList.add('active');
+ }
+
+ // Cargar actividad al entrar en la sección
+ if(id==='notifications'){
+  loadActivity();
  }
 }
 
@@ -334,6 +375,7 @@ async function loadAccount(user){
  await loadPosts();
 }
 
+// ACTUALIZAR INTERFAZ DE PERFIL
 function updateProfileUI(){
  const logged=!!currentUser;
 
@@ -474,6 +516,95 @@ async function loadFollowCounts(){
 function formatDate(date){
  return new Date(date).toLocaleString('es-AR',{
   dateStyle:'short',timeStyle:'short'
+ });
+}
+
+// NUEVA FUNCIÓN: ACTIVIDAD DE SEGUIDORES
+async function loadActivity(){
+ const container=document.getElementById('activitylist');
+
+ if(!currentUser){
+  container.textContent='Iniciá sesión para ver tu actividad.';
+  return;
+ }
+
+ container.textContent='Cargando actividad...';
+
+ // Buscar usuarios que siguen a la cuenta actual
+ const {data:follows,error}=await db
+  .from('follows')
+  .select('follower_id,following_id,created_at')
+  .eq('following_id',currentUser.id)
+  .order('created_at',{ascending:false})
+  .limit(50);
+
+ if(error){
+  container.textContent='No se pudo cargar la actividad: '+error.message;
+  console.error('Error de actividad:',error);
+  return;
+ }
+
+ if(!follows||follows.length===0){
+  container.innerHTML='<div class="activity-empty">Todavía no tenés actividad.<br>Cuando alguien te siga, aparecerá aquí.</div>';
+  return;
+ }
+
+ const ids=[...new Set(follows.map(f=>f.follower_id))];
+
+ const {data:profiles,error:profileError}=await db
+  .from('profiles')
+  .select('id,username,display_name,avatar_url')
+  .in('id',ids);
+
+ if(profileError){
+  container.textContent='Error al cargar usuarios: '+profileError.message;
+  return;
+ }
+
+ const profileMap={};
+ (profiles||[]).forEach(p=>profileMap[p.id]=p);
+
+ container.replaceChildren();
+
+ follows.forEach(follow=>{
+  const profile=profileMap[follow.follower_id];
+
+  if(!profile)return;
+
+  const item=document.createElement('div');
+  item.className='activity-item';
+
+  const av=document.createElement('div');
+  av.className='avatar';
+  av.replaceChildren(avatar(profile));
+
+  const info=document.createElement('div');
+  info.className='activity-info';
+
+  const message=document.createElement('div');
+  const name=document.createElement('strong');
+
+  name.textContent=profile.display_name||profile.username||'Usuario';
+
+  message.append(
+   name,
+   document.createTextNode(' empezó a seguirte')
+  );
+
+  const date=document.createElement('div');
+  date.className='activity-date';
+
+  date.textContent=follow.created_at
+   ?formatDate(follow.created_at)
+   :'Nuevo seguidor';
+
+  info.append(message,date);
+  item.append(av,info);
+
+  item.style.cursor='pointer';
+  item.onclick=()=>openPublicProfile(profile.id);
+
+  container.append(item);
  });
 }
 
@@ -939,6 +1070,7 @@ db.auth.onAuthStateChange((event,session)=>{
  },0);
 });
 
+// INICIALIZAR
 async function init(){
  const {data,error}=await db.auth.getSession();
 
