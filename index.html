@@ -52,7 +52,6 @@ header{
 }
 .story-avatar-inner img{width:100%;height:100%;object-fit:cover}
 
-/* Insignia de "+" estilo Instagram */
 .story-plus-badge{
  position:absolute;bottom:2px;right:2px;width:20px;height:20px;
  background:#3b82f6;color:#fff;border-radius:50%;
@@ -163,6 +162,33 @@ main > div.active {display: block !important;}
 .comment-input::placeholder{color:#71717a}
 .comment-send-btn{background:none;border:0;color:#3b82f6;font-weight:600;font-size:13px;cursor:pointer;padding:4px}
 
+/* MODAL VISOR DE PUBLICACIÓN DESDE EL PERFIL */
+#postDetailModal{
+ position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
+ z-index:500;display:none;align-items:center;justify-content:center;padding:16px;
+}
+#postDetailModal.active{display:flex}
+.post-modal-card{
+ background:#09090b;width:100%;max-width:430px;max-height:90vh;
+ border-radius:16px;border:1px solid #27272a;display:flex;flex-direction:column;overflow:hidden;
+}
+.post-modal-header{
+ display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #18181b;
+}
+.post-modal-body{overflow-y:auto;flex:1}
+
+/* SECCIÓN CREAR PUBLICACIÓN REDISEÑADA Y PROFESIONAL */
+.create-card{
+ background:#09090b;border:1px solid #27272a;border-radius:16px;padding:20px 16px;margin-top:10px;
+}
+.create-media-dropzone{
+ border:2px dashed #3f3f46;border-radius:12px;padding:24px 16px;text-align:center;
+ background:#121214;cursor:pointer;transition:border-color 0.2s, background 0.2s;margin-bottom:14px;
+ display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.create-media-dropzone:active{background:#18181b;border-color:#3b82f6}
+.create-media-dropzone svg{width:32px;height:32px;color:#a1a1aa}
+
 /* Navegación Inferior */
 nav{
  position:fixed;bottom:0;left:0;right:0;height:56px;
@@ -186,20 +212,20 @@ nav button.active svg{stroke-width:2.4}
 textarea,.field{
  width:100%;background:#121214;color:#fff;
  border:1px solid #27272a;border-radius:10px;
- padding:12px 14px;font:inherit;margin-top:10px;font-size:14px;
+ padding:12px 14px;font:inherit;margin-top:6px;font-size:14px;
  outline:none;transition:border-color 0.2s;
 }
 textarea:focus,.field:focus{border-color:#3b82f6}
-textarea{height:100px;resize:none}
+textarea{height:110px;resize:none}
 .primary{
- width:100%;padding:10px 14px;background:#3b82f6;color:white;
- border:0;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;
+ width:100%;padding:12px 14px;background:#3b82f6;color:white;
+ border:0;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;
  transition:background 0.15s ease;
 }
 .primary:active{background:#2563eb}
 .secondary{
  background:#27272a;border:0;color:white;
- padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+ padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
 }
 .secondary:active{background:#3f3f46}
 .status{font-size:13px;color:#60a5fa;margin:10px 0;overflow-wrap:anywhere;text-align:center}
@@ -234,7 +260,7 @@ textarea{height:100px;resize:none}
 .ig-grid-tabs{display:flex;justify-content:center;border-bottom:1px solid #18181b}
 .ig-grid-tab{flex:1;padding:12px;text-align:center;color:#fff;border-bottom:1.5px solid #fff;font-size:12px;font-weight:600;letter-spacing:0.5px}
 .ig-posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
-.ig-grid-item{aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid #18181b}
+.ig-grid-item{aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid #18181b;cursor:pointer}
 .ig-grid-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
 /* MENÚ LATERAL CONFIGURACIÓN */
@@ -405,23 +431,32 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div id="searchresult" style="margin-top:15px"></div>
 </div>
 
-<!-- CREAR PUBLICACIÓN CON IMAGEN Y TÍTULO -->
+<!-- CREAR PUBLICACIÓN REDISEÑADA Y PROFESIONAL -->
 <div id="create" class="section">
- <h2 style="margin-top:0">Crear publicación</h2>
- <p class="muted">Añade una foto, título con emojis y compártela.</p>
+ <h2 style="margin-top:0">Nueva publicación</h2>
+ <p class="muted">Comparte momentos con tu comunidad usando fotos y emojis.</p>
 
- <!-- Vista previa de imagen seleccionada para post -->
- <div id="postImagePreviewContainer" style="display:none;margin-bottom:12px;position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1/1;background:#121214">
-  <img id="postImagePreviewImg" style="width:100%;height:100%;object-fit:cover" alt="Previsualización">
-  <button class="secondary" style="position:absolute;top:8px;right:8px;padding:4px 10px;font-size:12px;background:rgba(0,0,0,0.7)" onclick="removePostImage()">Quitar</button>
+ <div class="create-card">
+  <!-- Zona de arrastre / selección de imagen -->
+  <div class="create-media-dropzone" onclick="document.getElementById('postImageFileInput').click()" id="dropzoneBox">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+   <span style="font-weight:600;font-size:14px;color:#fff">Agregar foto o imagen</span>
+   <span class="muted" style="font-size:11px">Formatos JPG, PNG, WEBP (Máx. 5MB)</span>
+  </div>
+
+  <!-- Vista previa de imagen -->
+  <div id="postImagePreviewContainer" style="display:none;margin-bottom:14px;position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1/1;background:#121214">
+   <img id="postImagePreviewImg" style="width:100%;height:100%;object-fit:cover" alt="Previsualización">
+   <button class="secondary" style="position:absolute;top:10px;right:10px;padding:6px 12px;font-size:12px;background:rgba(0,0,0,0.8)" onclick="removePostImage()">Cambiar foto</button>
+  </div>
+  <input type="file" id="postImageFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handlePostImageSelect(this)">
+
+  <label class="muted" style="font-size:12px;font-weight:600">Título / Descripción</label>
+  <textarea id="newpost" placeholder="Escribe un título llamativo (ej. ¡Atardecer increíble! 🌅✨)..."></textarea>
+  
+  <button class="primary" style="margin-top:16px" onclick="publish()">Compartir publicación</button>
+  <p id="publishStatus" class="status"></p>
  </div>
-
- <button class="secondary" style="width:100%;margin-bottom:12px" onclick="document.getElementById('postImageFileInput').click()">📷 Seleccionar imagen de publicación</button>
- <input type="file" id="postImageFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handlePostImageSelect(this)">
-
- <textarea id="newpost" placeholder="Escribe un título o descripción (puedes usar emojis 🔥✨)..."></textarea>
- <button class="primary" style="margin-top:12px" onclick="publish()">Publicar</button>
- <p id="publishStatus" class="status"></p>
 </div>
 
 <!-- ACTIVIDAD -->
@@ -585,7 +620,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.3.0 (Multimedia Optimizado)</p>
+    <p class="settings-row-desc">1.4.0 (Visor de Perfil Integrado)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -650,6 +685,19 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 </main>
 
+<!-- MODAL PARA VER PUBLICACIÓN DESDE EL PERFIL -->
+<div id="postDetailModal" onclick="closePostDetailModal()">
+ <div class="post-modal-card" onclick="event.stopPropagation()">
+  <div class="post-modal-header">
+   <strong style="font-size:14px">Publicación</strong>
+   <button class="secondary" style="padding:4px 10px;font-size:12px" onclick="closePostDetailModal()">✕</button>
+  </div>
+  <div class="post-modal-body" id="modalPostContainer">
+   <!-- Aquí se inyecta la publicación completa -->
+  </div>
+ </div>
+</div>
+
 <!-- MENÚ LATERAL CONFIGURACIÓN -->
 <div id="settingsOverlay" class="settings-overlay" onclick="toggleSettingsDrawer()">
  <div class="settings-drawer" onclick="event.stopPropagation()">
@@ -713,7 +761,7 @@ let realtimeChannel=null;
 let myActiveStory=null;
 let mediaStream=null;
 let capturedBlob=null;
-let postImageBlob = null; // Almacena la imagen seleccionada para el post
+let postImageBlob = null;
 let currentFacingMode = 'user';
 let currentZoom = 1;
 
@@ -1202,7 +1250,6 @@ async function handleGallerySelect(input){
  input.value = '';
 }
 
-// Selección de imagen para nueva publicación con título/emojis
 function handlePostImageSelect(input){
  const file = input.files?.[0];
  if(!file) return;
@@ -1211,6 +1258,7 @@ function handlePostImageSelect(input){
  const imageUrl = URL.createObjectURL(file);
  document.getElementById('postImagePreviewImg').src = imageUrl;
  document.getElementById('postImagePreviewContainer').style.display = 'block';
+ document.getElementById('dropzoneBox').style.display = 'none';
  input.value = '';
 }
 
@@ -1218,6 +1266,7 @@ function removePostImage(){
  postImageBlob = null;
  document.getElementById('postImagePreviewContainer').style.display = 'none';
  document.getElementById('postImagePreviewImg').src = '';
+ document.getElementById('dropzoneBox').style.display = 'flex';
 }
 
 async function uploadCapturedStory(){
@@ -1330,6 +1379,8 @@ async function loadMyPostsGrid(){
  posts.forEach(post=>{
   const item=document.createElement('div');
   item.className='ig-grid-item';
+  item.onclick = () => openPostDetail(post);
+
   if(post.image_url){
    const img=document.createElement('img');
    img.src=post.image_url;
@@ -1341,6 +1392,97 @@ async function loadMyPostsGrid(){
   fragment.append(item);
  });
  grid.replaceChildren(fragment);
+}
+
+// ABRIR PUBLICACIÓN DESDE EL PERFIL
+async function openPostDetail(post){
+ const modal = document.getElementById('postDetailModal');
+ const container = document.getElementById('modalPostContainer');
+ container.replaceChildren();
+
+ const profile = profilesCache[post.user_id] || myProfile || {username: 'usuario'};
+
+ const article = document.createElement('article');
+ article.className = 'post';
+ article.style.borderBottom = 'none';
+
+ const head = document.createElement('div');
+ head.className = 'posthead';
+ const av = createAvatarNode(profile, false);
+ const info = document.createElement('div');
+ const name = document.createElement('div');
+ name.className = 'username';
+ name.textContent = profile.display_name || profile.username || 'Usuario';
+ const time = document.createElement('div');
+ time.className = 'time';
+ time.textContent = formatDate(post.created_at);
+
+ info.append(name, time);
+ head.append(av, info);
+ article.append(head);
+
+ if(post.image_url){
+  const img = document.createElement('img');
+  img.className = 'postimage';
+  img.src = post.image_url;
+  article.append(img);
+ }
+
+ if(post.content){
+  const content = document.createElement('p');
+  content.className = 'posttext';
+  content.style.marginTop = post.image_url ? '12px' : '0';
+  content.textContent = post.content;
+  article.append(content);
+ }
+
+ const commentsSec = document.createElement('div');
+ commentsSec.className = 'post-comments-section';
+ commentsSec.id = `modal-comments-${post.id}`;
+ article.append(commentsSec);
+
+ const commentInputBox = document.createElement('div');
+ commentInputBox.className = 'comment-input-box open';
+ 
+ const commentInput = document.createElement('input');
+ commentInput.className = 'comment-input';
+ commentInput.placeholder = 'Agrega un comentario...';
+ 
+ const commentSend = document.createElement('button');
+ commentSend.className = 'comment-send-btn';
+ commentSend.textContent = 'Publicar';
+ commentSend.onclick = async () => {
+  await quickComment(post.id, commentInput);
+  loadPostComments(post.id, commentsSec);
+ };
+
+ commentInputBox.append(commentInput, commentSend);
+ article.append(commentInputBox);
+
+ const actions = document.createElement('div');
+ actions.className = 'post-actions';
+
+ const likeBtn = document.createElement('button');
+ likeBtn.className = 'post-action-btn';
+ likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+ likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
+ actions.append(likeBtn);
+ article.append(actions);
+
+ const likesCountDiv = document.createElement('div');
+ likesCountDiv.className = 'likes-count';
+ likesCountDiv.textContent = '0 Me gusta';
+ article.append(likesCountDiv);
+
+ container.append(article);
+ modal.classList.add('active');
+
+ loadPostLikes(post.id, likeBtn, likesCountDiv);
+ loadPostComments(post.id, commentsSec);
+}
+
+function closePostDetailModal(){
+ document.getElementById('postDetailModal').classList.remove('active');
 }
 
 async function uploadImage(type,input){
@@ -1733,6 +1875,8 @@ async function quickComment(postId, input){
  input.value='';
  const sec=document.getElementById(`comments-${postId}`);
  if(sec) loadPostComments(postId, sec);
+ const modalSec=document.getElementById(`modal-comments-${postId}`);
+ if(modalSec) loadPostComments(postId, modalSec);
 }
 
 async function showAllCommentsModal(postId){
@@ -1753,7 +1897,6 @@ async function showAllCommentsModal(postId){
  alert(comments.map(c=>'@'+(profilesCache[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
 }
 
-/* PUBLICAR CON SOPORTE DE IMAGEN Y TEXTO/EMOJIS */
 async function publish(){
  if(!currentUser){
   alert('Iniciá sesión para publicar.');
@@ -1879,6 +2022,8 @@ async function openPublicProfile(userId){
   posts.forEach(post=>{
    const item=document.createElement('div');
    item.className='ig-grid-item';
+   item.onclick = () => openPostDetail(post);
+
    if(post.image_url){
     const img=document.createElement('img');
     img.src=post.image_url;
