@@ -23,7 +23,7 @@ body.ios-glass-device header,
 body.ios-glass-device nav,
 body.ios-glass-device .settings-drawer,
 body.ios-glass-device .post-modal-card,
-body.ios-glass-device .wa-floating-bubble {
+body.ios-glass-device .wa-draggable-bubble {
  backdrop-filter: blur(25px) saturate(180%);
  -webkit-backdrop-filter: blur(25px) saturate(180%);
  background: rgba(18, 18, 20, 0.78);
@@ -36,16 +36,16 @@ body:not(.ios-glass-device) nav {
 }
 
 /* ==========================================================
-   BURBUJA FLOTANTE ESTILO WHATSAPP (Con efecto Glass & Slide)
+   BURBUJA FLOTANTE DESLIZABLE ESTILO WHATSAPP
    ========================================================== */
-.wa-floating-bubble {
+.wa-draggable-bubble {
  position: fixed;
- bottom: 85px;
+ bottom: 90px;
  right: 20px;
  width: 56px;
  height: 56px;
  border-radius: 50%;
- background: rgba(25, 25, 30, 0.85);
+ background: rgba(25, 25, 30, 0.82);
  backdrop-filter: blur(20px) saturate(180%);
  -webkit-backdrop-filter: blur(20px) saturate(180%);
  border: 1px solid rgba(255, 255, 255, 0.18);
@@ -53,17 +53,21 @@ body:not(.ios-glass-device) nav {
  display: flex;
  align-items: center;
  justify-content: center;
- cursor: pointer;
+ cursor: grab;
  z-index: 250;
- transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+ touch-action: none; /* Crucial para permitir arrastre fluido táctil sin scroll de página */
+ user-select: none;
+ transition: transform 0.1s ease;
 }
-.wa-floating-bubble:active {
- transform: scale(0.9);
+.wa-draggable-bubble:active {
+ cursor: grabbing;
+ transform: scale(0.94);
 }
-.wa-floating-bubble svg {
+.wa-draggable-bubble svg {
  width: 26px;
  height: 26px;
  fill: url(#waBubbleGradient);
+ pointer-events: none;
 }
 .wa-bubble-glow {
  position: absolute;
@@ -73,6 +77,7 @@ body:not(.ios-glass-device) nav {
  z-index: -1;
  filter: blur(4px);
  opacity: 0.8;
+ pointer-events: none;
 }
 
 /* HEADER */
@@ -417,8 +422,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 <body id="appBody">
 
-<!-- BURBUJA FLOTANTE ESTILO WHATSAPP (Con efecto Glassmorphism) -->
-<div class="wa-floating-bubble" onclick="openCameraModal()" aria-label="Acceso rápido AI / Cámara">
+<!-- BURBUJA FLOTANTE DESLIZABLE ESTILO WHATSAPP -->
+<div id="draggableBubble" class="wa-draggable-bubble" onclick="handleBubbleClick()" aria-label="Acceso rápido AI">
  <div class="wa-bubble-glow"></div>
  <svg viewBox="0 0 24 24">
   <defs>
@@ -848,6 +853,70 @@ let capturedBlob=null;
 let postImageBlob = null;
 let currentFacingMode = 'user';
 let currentZoom = 1;
+
+// ==========================================================
+// LÓGICA DE ARRASTRE Y DESLIZAMIENTO TÁCTIL PARA LA BURBUJA
+// ==========================================================
+const bubble = document.getElementById('draggableBubble');
+let isDragging = false;
+let hasMoved = false;
+let startX, startY, initialX, initialY;
+
+bubble.addEventListener('touchstart', dragStart, {passive: false});
+bubble.addEventListener('touchmove', drag, {passive: false});
+bubble.addEventListener('touchend', dragEnd);
+
+bubble.addEventListener('mousedown', dragStart);
+window.addEventListener('mousemove', drag);
+window.addEventListener('mouseup', dragEnd);
+
+function dragStart(e) {
+ isDragging = true;
+ hasMoved = false;
+ const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+ const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+ const rect = bubble.getBoundingClientRect();
+ initialX = clientX - rect.left;
+ initialY = clientY - rect.top;
+ 
+ // Cambiamos a absolute para poder posicionarla libremente con coordenadas de pantalla
+ bubble.style.position = 'fixed';
+ bubble.style.right = 'auto';
+ bubble.style.bottom = 'auto';
+}
+
+function drag(e) {
+ if (!isDragging) return;
+ hasMoved = true;
+ e.preventDefault();
+
+ const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+ const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+ let x = clientX - initialX;
+ let y = clientY - initialY;
+
+ // Límites de la pantalla para que no se salga
+ const maxX = window.innerWidth - bubble.offsetWidth - 10;
+ const maxY = window.innerHeight - bubble.offsetHeight - 80;
+ 
+ x = Math.max(10, Math.min(x, maxX));
+ y = Math.max(10, Math.min(y, maxY));
+
+ bubble.style.left = x + 'px';
+ bubble.style.top = y + 'px';
+}
+
+function dragEnd() {
+ isDragging = false;
+}
+
+function handleBubbleClick() {
+ if (!hasMoved) {
+  openCameraModal();
+ }
+}
 
 function detectiPhoneGlassCompatibility() {
  const ua = navigator.userAgent;
@@ -2017,222 +2086,4 @@ async function publish(){
 
  status('publishStatus','Publicando...');
 
- let imageUrl = null;
-
- if(postImageBlob){
-  const path = currentUser.id+'/post-'+Date.now()+'.jpg';
-  const {error:uploadError} = await db.storage.from('og-media')
-   .upload(path, postImageBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
-
-  if(uploadError){
-   status('publishStatus','Error al subir imagen.');
-   return;
-  }
-  const {data:urlData} = db.storage.from('og-media').getPublicUrl(path);
-  imageUrl = urlData.publicUrl;
- }
-
- const {error}=await db.from('posts').insert({
-  user_id: currentUser.id,
-  content: content,
-  image_url: imageUrl
- });
-
- if(error){
-  status('publishStatus','Error al publicar: '+error.message);
-  return;
- }
-
- input.value='';
- removePostImage();
- status('publishStatus','¡Publicado con éxito!');
- 
- await loadPosts();
- await loadMyPostsGrid();
- setTimeout(()=>showTab('feed'), 500);
-}
-
-async function toggleLike(postId,button, countDiv){
- if(!currentUser){
-  alert('Iniciá sesión para dar Me gusta.');
-  return showTab('profile');
- }
-
- const isLiked=button.classList.contains('liked');
- let currentCount=parseInt(countDiv.textContent)||0;
-
- if(isLiked){
-  button.classList.remove('liked');
-  currentCount=Math.max(0, currentCount-1);
-  await db.from('likes').delete().eq('post_id',postId).eq('user_id',currentUser.id);
- }else{
-  button.classList.add('liked');
-  currentCount+=1;
-  await db.from('likes').insert({post_id:postId,user_id:currentUser.id});
- }
- countDiv.textContent=currentCount+' Me gusta';
-}
-
-async function openPublicProfile(userId){
- if(!currentUser){
-  alert('Iniciá sesión para visitar perfiles.');
-  return showTab('profile');
- }
-
- if(userId===currentUser.id)return showTab('profile');
-
- status('publicstatus','Cargando...');
- showTab('publicprofile');
-
- let profile=profilesCache[userId];
- if(!profile){
-  const {data,error}=await db.from('profiles').select('*').eq('id',userId).maybeSingle();
-  if(error||!data)return status('publicstatus','No se encontró el perfil.');
-  profile=data;
-  profilesCache[userId]=data;
- }
-
- viewedProfile=profile;
- document.getElementById('publicheadername').textContent='@'+profile.username;
- document.getElementById('publicname').textContent=profile.display_name||profile.username||'Usuario';
- document.getElementById('publicusername').textContent='@'+profile.username;
- document.getElementById('publicbio').textContent=profile.bio||'';
- document.getElementById('publicavatar').replaceChildren(createAvatarNode(profile).firstChild);
-
- const cover=document.getElementById('publiccover');
- cover.replaceChildren();
- if(profile.cover_url){
-  const img=document.createElement('img');
-  img.src=profile.cover_url;
-  img.loading='lazy';
-  cover.append(img);
- }
-
- const [followers,following,relation]=await Promise.all([
-  db.from('follows').select('*',{count:'exact',head:true}).eq('following_id',userId),
-  db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',userId),
-  db.from('follows').select('follower_id').eq('follower_id',currentUser.id).eq('following_id',userId).maybeSingle()
- ]);
-
- isFollowing=!!relation.data;
- document.getElementById('publicfollowerscount').textContent=followers.count||0;
- document.getElementById('publicfollowingcount').textContent=following.count||0;
- updateFollowButton();
-
- const container=document.getElementById('publicposts');
- container.replaceChildren();
-
- const {data:posts}=await db.from('posts').select('*').eq('user_id',userId).order('created_at',{ascending:false});
- document.getElementById('publicpostscount').textContent=posts?posts.length:0;
-
- if(posts&&posts.length){
-  const fragment=document.createDocumentFragment();
-  posts.forEach(post=>{
-   const item=document.createElement('div');
-   item.className='ig-grid-item';
-   item.onclick = () => openPostDetail(post);
-
-   if(post.image_url){
-    const img=document.createElement('img');
-    img.src=post.image_url;
-    img.loading='lazy';
-    item.append(img);
-   }else{
-    item.textContent=(post.content||'').slice(0,55);
-   }
-   fragment.append(item);
-  });
-  container.replaceChildren(fragment);
- }
- status('publicstatus','');
-}
-
-function updateFollowButton(){
- const button=document.getElementById('publicfollow');
- button.textContent=isFollowing?'Siguiendo':'Seguir';
- button.className=isFollowing?'secondary':'primary';
-}
-
-async function toggleFollow(){
- if(!currentUser||!viewedProfile)return;
- const button=document.getElementById('publicfollow');
- button.disabled=true;
-
- let error=null;
- if(isFollowing){
-  const res=await db.from('follows').delete().eq('follower_id',currentUser.id).eq('following_id',viewedProfile.id);
-  error=res.error;
- }else{
-  const res=await db.from('follows').insert({follower_id:currentUser.id,following_id:viewedProfile.id});
-  error=res.error;
- }
- button.disabled=false;
- if(error)return alert(error.message);
-
- isFollowing=!isFollowing;
- updateFollowButton();
- await loadFollowCounts();
- await loadStoriesData();
-}
-
-async function searchUsers(){
- clearTimeout(searchTimer);
- const value=document.getElementById('search').value.trim();
- const result=document.getElementById('searchresult');
- result.replaceChildren();
- if(value.length<2)return;
-
- searchTimer=setTimeout(async()=>{
-  const {data}=await db.from('profiles').select('id,username,display_name,avatar_url').ilike('username','%'+value+'%').limit(20);
-  if(!data||!data.length){
-   result.innerHTML='<p class="muted" style="text-align:center">No se encontraron usuarios.</p>';
-   return;
-  }
-  const fragment=document.createDocumentFragment();
-  data.forEach(profile=>{
-   profilesCache[profile.id]=profile;
-   const item=document.createElement('div');
-   item.className='public-user';
-   const av=createAvatarNode(profile, false);
-   const info=document.createElement('div');
-   info.className='public-user-info';
-   const name=document.createElement('strong');
-   name.textContent=profile.display_name||profile.username;
-   const username=document.createElement('small');
-   username.textContent='@'+profile.username;
-   info.append(name,username);
-   item.append(av,info);
-   item.onclick=()=>openPublicProfile(profile.id);
-   fragment.append(item);
-  });
-  result.replaceChildren(fragment);
- },300);
-}
-
-db.auth.onAuthStateChange((event,session)=>{
- if(event==='INITIAL_SESSION')return;
- setTimeout(async()=>{
-  if(session?.user)await loadAccount(session.user);
-  else{
-   currentUser=null; myProfile=null; viewedProfile=null; myActiveStory=null;
-   updateStoryUI(); updateProfileUI(); await loadPosts();
-  }
- },0);
-});
-
-async function init(){
- detectiPhoneGlassCompatibility();
-
- const {data}=await db.auth.getSession();
- if(data.session)await loadAccount(data.session.user);
- else{
-  updateProfileUI();
-  await loadPosts();
- }
-}
-
-init();
-</script>
-
-</body>
-</html>
+ let
