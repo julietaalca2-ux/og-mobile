@@ -116,8 +116,16 @@ textarea{height:120px;resize:vertical}
  min-width:0;
  font-size:14px;
  line-height:1.5;
+ color:#fff;
+ overflow-wrap:anywhere;
 }
 .activity-info strong{color:white}
+.activity-info .activity-message{
+ display:block;
+ color:#fff;
+ visibility:visible;
+ opacity:1;
+}
 .activity-date{
  color:#888;
  font-size:11px;
@@ -514,7 +522,7 @@ function formatDate(date){
  });
 }
 
-// ACTIVIDAD: SEGUIDORES, ME GUSTA Y COMENTARIOS
+// ACTIVIDAD CORREGIDA
 async function loadActivity(){
  const container=document.getElementById('activitylist');
 
@@ -526,7 +534,6 @@ async function loadActivity(){
  container.textContent='Cargando actividad...';
 
  try{
-  // Obtener publicaciones propias
   const {data:ownPosts,error:postsError}=await db.from('posts')
    .select('id,user_id')
    .eq('user_id',currentUser.id);
@@ -535,7 +542,6 @@ async function loadActivity(){
 
   const postIds=(ownPosts||[]).map(p=>p.id);
 
-  // Consultar seguidores y las interacciones en publicaciones propias
   const [followsResult,likesResult,commentsResult]=await Promise.all([
    db.from('follows')
     .select('follower_id,following_id,created_at')
@@ -564,15 +570,10 @@ async function loadActivity(){
   if(likesResult.error)throw likesResult.error;
   if(commentsResult.error)throw commentsResult.error;
 
-  const follows=followsResult.data||[];
-  const likes=likesResult.data||[];
-  const comments=commentsResult.data||[];
-
   const events=[];
 
-  follows.forEach(f=>{
+  (followsResult.data||[]).forEach(f=>{
    if(f.follower_id===currentUser.id)return;
-
    events.push({
     type:'follow',
     user_id:f.follower_id,
@@ -580,9 +581,8 @@ async function loadActivity(){
    });
   });
 
-  likes.forEach(l=>{
+  (likesResult.data||[]).forEach(l=>{
    if(l.user_id===currentUser.id)return;
-
    events.push({
     type:'like',
     user_id:l.user_id,
@@ -591,9 +591,8 @@ async function loadActivity(){
    });
   });
 
-  comments.forEach(c=>{
+  (commentsResult.data||[]).forEach(c=>{
    if(c.user_id===currentUser.id)return;
-
    events.push({
     type:'comment',
     user_id:c.user_id,
@@ -603,7 +602,6 @@ async function loadActivity(){
    });
   });
 
-  // Ordenar cronológicamente
   events.sort((a,b)=>
    new Date(b.created_at||0)-new Date(a.created_at||0)
   );
@@ -614,7 +612,6 @@ async function loadActivity(){
    return;
   }
 
-  // Cargar perfiles de quienes realizaron las acciones
   const userIds=[
    ...new Set(events.map(e=>e.user_id).filter(Boolean))
   ];
@@ -645,34 +642,31 @@ async function loadActivity(){
    info.className='activity-info';
 
    const message=document.createElement('div');
-   const name=document.createElement('strong');
+   message.className='activity-message';
 
+   const name=document.createElement('strong');
    name.textContent=
     profile.display_name||profile.username||'Usuario';
 
    message.append(name);
 
    if(event.type==='follow'){
-    message.append(
-     document.createTextNode(' empezó a seguirte 👤')
-    );
+    message.append(document.createTextNode(' empezó a seguirte 👤'));
    }else if(event.type==='like'){
-    message.append(
-     document.createTextNode(' le dio Me gusta a tu publicación ❤️')
-    );
+    message.append(document.createTextNode(' le dio Me gusta a tu publicación ❤️'));
    }else if(event.type==='comment'){
-    message.append(
-     document.createTextNode(' comentó tu publicación 💬')
-    );
+    message.append(document.createTextNode(' comentó tu publicación 💬'));
+   }
 
+   // IMPORTANTE: insertar el mensaje para TODOS los tipos de actividad
+   info.append(message);
+
+   if(event.type==='comment'){
     const commentText=document.createElement('div');
     commentText.style.color='#c7b8ed';
     commentText.style.marginTop='5px';
     commentText.textContent='“'+(event.content||'')+'”';
-
-    info.append(message,commentText);
-   }else{
-    info.append(message);
+    info.append(commentText);
    }
 
    const date=document.createElement('div');
