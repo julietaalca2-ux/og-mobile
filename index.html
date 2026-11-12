@@ -11,17 +11,21 @@
 body{
  margin:0;background:#000000;color:#f4f4f5;
  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
- padding-bottom:90px;
+ padding-bottom:95px;
  -webkit-font-smoothing:antialiased;
  overflow-x:hidden;
 }
+
+/* HEADER CON GLASSMORPHISM AVANZADO (Compatible iPhone 11 al 18 Pro Max) */
 header{
- height:54px;padding:0 16px;display:flex;
+ height:56px;padding:0 16px;display:flex;
  align-items:center;justify-content:space-between;
- border-bottom:1px solid #18181b;
- position:sticky;top:0;background:rgba(0,0,0,0.85);
- backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+ border-bottom:1px solid rgba(255,255,255,0.08);
+ position:sticky;top:0;
+ background:rgba(0,0,0,0.75);
+ backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
  z-index:50;
+ padding-top:env(safe-area-inset-top);
 }
 .logo{font-size:26px;font-weight:900;letter-spacing:-1.5px;color:#fff}
 .icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
@@ -30,7 +34,7 @@ header{
 /* HISTORIAS ESTILO INSTAGRAM */
 .stories{
  display:flex;gap:14px;overflow-x:auto;padding:14px 16px;
- border-bottom:1px solid #18181b;background:#000;scrollbar-width:none;
+ border-bottom:1px solid rgba(255,255,255,0.08);background:#000;scrollbar-width:none;
  align-items:center;
 }
 .stories::-webkit-scrollbar{display:none}
@@ -74,7 +78,8 @@ main > div.active {display: block !important;}
 .camera-screen-container{
  position:absolute;inset:0;background:transparent;z-index:3;
  display:flex;flex-direction:column;justify-content:space-between;
- padding:40px 16px 30px 16px;pointer-events:none;
+ padding:calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
+ pointer-events:none;
 }
 .camera-screen-container > * {pointer-events:auto;}
 
@@ -92,7 +97,8 @@ main > div.active {display: block !important;}
 
 .camera-zoom-container{
  display:flex;align-items:center;justify-content:center;gap:8px;
- background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);
+ background:rgba(0,0,0,0.6);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+ border:1px solid rgba(255,255,255,0.1);
  padding:6px 14px;border-radius:20px;width:fit-content;margin:0 auto;
 }
 .camera-zoom-container input[type=range]{
@@ -130,15 +136,15 @@ main > div.active {display: block !important;}
 #storyViewer{
  position:fixed;inset:0;background:#000;z-index:300;
  display:none;flex-direction:column;justify-content:space-between;
- padding:20px 16px;
+ padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px) 16px;
 }
 #storyViewer.active{display:flex}
 .story-top-bar{display:flex;align-items:center;justify-content:space-between;color:#fff;position:relative;z-index:2}
 .story-content-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;margin:12px 0}
 .story-content-area img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
 
-/* ESTILO DE PUBLICACIONES TIPO INSTAGRAM */
-.post{background:#000;border-bottom:1px solid #18181b;margin-bottom:8px}
+/* ESTILO DE PUBLICACIONES */
+.post{background:#000;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
 .posthead{display:flex;align-items:center;gap:12px;padding:12px 16px}
 .posthead .story-avatar-container{width:36px;height:36px;margin:0;flex-shrink:0}
 .username{font-weight:600;font-size:14px;color:#fff}
@@ -156,47 +162,54 @@ main > div.active {display: block !important;}
 .comment-text{color:#d4d4d8}
 .view-more-comments{color:#71717a;background:none;border:0;padding:0;font-size:13px;cursor:pointer;margin-top:4px}
 
-.comment-input-box{display:none;align-items:center;border-top:1px solid #18181b;padding:8px 16px}
+.comment-input-box{display:none;align-items:center;border-top:1px solid rgba(255,255,255,0.08);padding:8px 16px}
 .comment-input-box.open{display:flex}
 .comment-input{flex:1;background:none;border:0;color:#fff;font-size:13px;outline:none}
 .comment-input::placeholder{color:#71717a}
 .comment-send-btn{background:none;border:0;color:#3b82f6;font-weight:600;font-size:13px;cursor:pointer;padding:4px}
 
-/* MODAL VISOR DE PUBLICACIÓN DESDE EL PERFIL */
+/* MODAL VISOR DE PUBLICACIÓN CON GLASS */
 #postDetailModal{
- position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
+ position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
  z-index:500;display:none;align-items:center;justify-content:center;padding:16px;
 }
 #postDetailModal.active{display:flex}
 .post-modal-card{
- background:#09090b;width:100%;max-width:430px;max-height:90vh;
- border-radius:16px;border:1px solid #27272a;display:flex;flex-direction:column;overflow:hidden;
+ background:rgba(18,18,20,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+ width:100%;max-width:430px;max-height:85vh;
+ border-radius:20px;border:1px solid rgba(255,255,255,0.12);
+ box-shadow:0 16px 40px rgba(0,0,0,0.5);
+ display:flex;flex-direction:column;overflow:hidden;
 }
 .post-modal-header{
- display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #18181b;
+ display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);
 }
 .post-modal-body{overflow-y:auto;flex:1}
 
-/* SECCIÓN CREAR PUBLICACIÓN */
+/* SECCIÓN CREAR PUBLICACIÓN CON TARJETA GLASS */
 .create-card{
- background:#09090b;border:1px solid #27272a;border-radius:16px;padding:20px 16px;margin-top:10px;
+ background:rgba(18,18,20,0.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+ border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:20px 16px;margin-top:10px;
+ box-shadow:0 8px 32px rgba(0,0,0,0.3);
 }
 .create-media-dropzone{
- border:2px dashed #3f3f46;border-radius:12px;padding:24px 16px;text-align:center;
- background:#121214;cursor:pointer;transition:border-color 0.2s, background 0.2s;margin-bottom:14px;
+ border:2px dashed rgba(255,255,255,0.2);border-radius:14px;padding:24px 16px;text-align:center;
+ background:rgba(0,0,0,0.4);cursor:pointer;transition:all 0.2s;margin-bottom:14px;
  display:flex;flex-direction:column;align-items:center;gap:8px;
 }
-.create-media-dropzone:active{background:#18181b;border-color:#3b82f6}
+.create-media-dropzone:active{background:rgba(255,255,255,0.05);border-color:#3b82f6}
 .create-media-dropzone svg{width:32px;height:32px;color:#a1a1aa}
 
-/* Navegación Inferior (Ahora con 4 elementos distribuidos perfectamente) */
+/* NAVEGACIÓN INFERIOR CON EFECTO GLASS FLOTANTE (iOS Nativo) */
 nav{
- position:fixed;bottom:0;left:0;right:0;height:56px;
- background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);
- -webkit-backdrop-filter:blur(16px);
- border-top:1px solid #18181b;
+ position:fixed;bottom:0;left:0;right:0;height:64px;
+ background:rgba(0,0,0,0.75);
+ backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+ border-top:1px solid rgba(255,255,255,0.1);
  display:flex;justify-content:space-around;align-items:center;
- z-index:100;padding-bottom:env(safe-area-inset-bottom);
+ z-index:100;
+ padding-bottom:env(safe-area-inset-bottom);
+ box-shadow:0 -10px 30px rgba(0,0,0,0.5);
 }
 nav button{
  background:none;border:0;color:#71717a;
@@ -210,24 +223,27 @@ nav button.active{color:#fff}
 nav button.active svg{stroke-width:2.4}
 
 textarea,.field{
- width:100%;background:#121214;color:#fff;
- border:1px solid #27272a;border-radius:10px;
+ width:100%;background:rgba(255,255,255,0.05);color:#fff;
+ border:1px solid rgba(255,255,255,0.12);border-radius:12px;
  padding:12px 14px;font:inherit;margin-top:6px;font-size:14px;
- outline:none;transition:border-color 0.2s;
+ outline:none;transition:border-color 0.2s, background 0.2s;
+ backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-textarea:focus,.field:focus{border-color:#3b82f6}
+textarea:focus,.field:focus{border-color:#3b82f6;background:rgba(255,255,255,0.08)}
 textarea{height:110px;resize:none}
 .primary{
  width:100%;padding:12px 14px;background:#3b82f6;color:white;
- border:0;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;
+ border:0;border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;
  transition:background 0.15s ease;
+ box-shadow:0 4px 14px rgba(59,130,246,0.4);
 }
 .primary:active{background:#2563eb}
 .secondary{
- background:#27272a;border:0;color:white;
- padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
+ background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:white;
+ padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;
+ backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
-.secondary:active{background:#3f3f46}
+.secondary:active{background:rgba(255,255,255,0.15)}
 .status{font-size:13px;color:#60a5fa;margin:10px 0;overflow-wrap:anywhere;text-align:center}
 .muted{color:#71717a;font-size:13px}
 .postimage{width:100%;aspect-ratio:1/1;object-fit:cover;background:#121214}
@@ -237,9 +253,9 @@ textarea{height:110px;resize:none}
 }
 
 /* PERFIL Y ESTILOS */
-.ig-cover{width:100%;height:110px;background:linear-gradient(135deg,#1e1b4b,#312e81,#09090b);overflow:hidden;position:relative}
+.ig-cover{width:100%;height:115px;background:linear-gradient(135deg,#1e1b4b,#312e81,#09090b);overflow:hidden;position:relative}
 .ig-cover img{width:100%;height:100%;object-fit:cover}
-.ig-header-container{padding:0 16px 16px 16px;border-bottom:1px solid #18181b}
+.ig-header-container{padding:0 16px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.08)}
 .ig-top-row{display:flex;align-items:center;justify-content:space-between;margin-top:-28px;margin-bottom:12px;position:relative;z-index:2}
 .ig-avatar-wrap .story-avatar-container{width:86px;height:86px;margin:0;border:3px solid #000;background:linear-gradient(135deg,#3b82f6,#a855f7)}
 .ig-stats{display:flex;flex:1;justify-content:space-around;padding-top:28px;text-align:center}
@@ -252,50 +268,56 @@ textarea{height:110px;resize:none}
 .ig-bio-text{font-size:14px;line-height:1.4;color:#e4e4e7;margin:0;white-space:pre-wrap}
 .ig-action-buttons{display:flex;gap:8px}
 .ig-action-buttons button{flex:1}
-.ig-edit-panel{background:#121214;border-bottom:1px solid #27272a;padding:16px;display:none}
+.ig-edit-panel{
+ background:rgba(18,18,20,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+ border-bottom:1px solid rgba(255,255,255,0.08);padding:16px;display:none;
+}
 .ig-edit-panel.open{display:block}
 .upload-actions{display:flex;gap:8px;margin:10px 0}
 .upload-actions button{flex:1}
 .hidden-file{display:none}
-.ig-grid-tabs{display:flex;justify-content:center;border-bottom:1px solid #18181b}
+.ig-grid-tabs{display:flex;justify-content:center;border-bottom:1px solid rgba(255,255,255,0.08)}
 .ig-grid-tab{flex:1;padding:12px;text-align:center;color:#fff;border-bottom:1.5px solid #fff;font-size:12px;font-weight:600;letter-spacing:0.5px}
 .ig-posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
-.ig-grid-item{aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid #18181b;cursor:pointer}
+.ig-grid-item{aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid rgba(255,255,255,0.08);cursor:pointer}
 .ig-grid-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
-/* MENÚ LATERAL CONFIGURACIÓN */
+/* MENÚ LATERAL CONFIGURACIÓN CON GLASS */
 .settings-overlay{
- position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+ position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
  z-index:200;display:none;opacity:0;transition:opacity 0.2s ease;
 }
 .settings-overlay.open{display:block;opacity:1}
 .settings-drawer{
- position:fixed;bottom:0;left:0;right:0;background:#121214;
- border-top-left-radius:20px;border-top-right-radius:20px;
- border-top:1px solid #27272a;z-index:201;padding:20px 16px 40px 16px;
+ position:fixed;bottom:0;left:0;right:0;
+ background:rgba(18,18,20,0.88);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);
+ border-top-left-radius:24px;border-top-right-radius:24px;
+ border-top:1px solid rgba(255,255,255,0.15);
+ z-index:201;padding:20px 16px calc(env(safe-area-inset-bottom) + 24px) 16px;
  transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.1,0.9,0.2,1);
  max-width:470px;margin:auto;
+ box-shadow:0 -10px 40px rgba(0,0,0,0.6);
 }
 .settings-overlay.open .settings-drawer{transform:translateY(0)}
-.settings-handle{width:36px;height:4px;background:#3f3f46;border-radius:2px;margin:0 auto 20px auto}
+.settings-handle{width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin:0 auto 20px auto}
 .settings-item{
  display:flex;align-items:center;gap:14px;padding:14px 10px;
- color:#fff;font-size:15px;font-weight:500;cursor:pointer;border-radius:10px;
+ color:#fff;font-size:15px;font-weight:500;cursor:pointer;border-radius:12px;
  transition:background 0.15s;
 }
-.settings-item:active{background:#18181b}
+.settings-item:active{background:rgba(255,255,255,0.08)}
 .settings-item svg{width:22px;height:22px;color:#a1a1aa}
 .settings-item.danger{color:#ef4444}
 .settings-item.danger svg{color:#ef4444}
 
 /* PÁGINA COMPLETA DE CONFIGURACIÓN */
 .settings-header{
- padding:12px 16px;border-bottom:1px solid #18181b;
+ padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);
  display:flex;align-items:center;gap:12px;
- position:sticky;top:54px;background:#000;z-index:10;
+ position:sticky;top:56px;background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:10;
 }
 .settings-group{
- padding:16px;border-bottom:1px solid #18181b;
+ padding:16px;border-bottom:1px solid rgba(255,255,255,0.08);
 }
 .settings-group-title{
  font-size:12px;font-weight:700;text-transform:uppercase;
@@ -316,21 +338,22 @@ textarea{height:110px;resize:none}
 .toggle-slider{
  position:absolute;cursor:pointer;inset:0;background:#27272a;
  border-radius:24px;transition:0.25s;
+ border:1px solid rgba(255,255,255,0.1);
 }
 .toggle-slider:before{
  position:absolute;content:"";height:18px;width:18px;
- left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.25s;
+ left:2px;bottom:2px;background:#fff;border-radius:50%;transition:0.25s;
 }
 input:checked + .toggle-slider{background:#3b82f6}
 input:checked + .toggle-slider:before{transform:translateX(20px)}
 
-.public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #18181b;cursor:pointer}
+.public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer}
 .public-user .story-avatar-container{margin:0;width:44px;height:44px;flex-shrink:0}
 .public-user-info{min-width:0;overflow-wrap:anywhere}
 .public-user-info strong{display:block;color:#fff;font-size:14px}
 .public-user-info small{color:#71717a}
 
-.activity-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #18181b}
+.activity-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
 .activity-item .story-avatar-container{width:42px;height:42px;min-width:42px;margin:0}
 .activity-info{flex:1;min-width:0;font-size:13px;line-height:1.4;color:#f4f4f5;overflow-wrap:anywhere}
 .activity-info strong{color:white}
@@ -347,7 +370,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <button class="icon" onclick="openCameraModal()" aria-label="Cámara">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
   </button>
-  <!-- Icono de Actividad superior activo al lado de la cámara -->
   <button class="icon" onclick="showTab('notifications')" aria-label="Actividad">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
   </button>
@@ -508,7 +530,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 
  <div id="authbox" style="padding:16px">
-  <div style="background:#121214;padding:16px;border-radius:12px;border:1px solid #18181b">
+  <div class="create-card">
    <h3 style="margin-top:0">Tu cuenta Ög</h3>
    <input class="field" id="authusername" placeholder="Usuario (ej. julieta)">
    <input class="field" id="authemail" type="email" placeholder="Correo electrónico" autocomplete="email">
@@ -619,7 +641,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.4.1 (Navegación Limpia)</p>
+    <p class="settings-row-desc">1.5.0 (iOS Glass Liquid Engine)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -633,7 +655,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 <!-- PERFIL PÚBLICO -->
 <div id="publicprofile" class="section">
- <div style="padding:10px 16px;border-bottom:1px solid #18181b;display:flex;align-items:center;gap:12px">
+ <div style="padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:12px">
   <button class="secondary" style="padding:6px 12px" onclick="showTab('explore')">← Volver</button>
   <strong id="publicheadername" style="font-size:15px">Perfil</strong>
  </div>
@@ -718,7 +740,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- NAVEGACIÓN INFERIOR LIMPIA (SIN EL CORAZÓN) -->
+<!-- NAVEGACIÓN INFERIOR GLASS -->
 <nav>
  <button class="active" onclick="showTab('feed',this)" aria-label="Inicio">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
