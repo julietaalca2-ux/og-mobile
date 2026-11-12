@@ -177,7 +177,7 @@ main > div.active {display: block !important;}
 }
 .post-modal-body{overflow-y:auto;flex:1}
 
-/* SECCIÓN CREAR PUBLICACIÓN REDISEÑADA Y PROFESIONAL */
+/* SECCIÓN CREAR PUBLICACIÓN */
 .create-card{
  background:#09090b;border:1px solid #27272a;border-radius:16px;padding:20px 16px;margin-top:10px;
 }
@@ -189,7 +189,7 @@ main > div.active {display: block !important;}
 .create-media-dropzone:active{background:#18181b;border-color:#3b82f6}
 .create-media-dropzone svg{width:32px;height:32px;color:#a1a1aa}
 
-/* Navegación Inferior */
+/* Navegación Inferior (Ahora con 4 elementos distribuidos perfectamente) */
 nav{
  position:fixed;bottom:0;left:0;right:0;height:56px;
  background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);
@@ -347,6 +347,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <button class="icon" onclick="openCameraModal()" aria-label="Cámara">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
   </button>
+  <!-- Icono de Actividad superior activo al lado de la cámara -->
   <button class="icon" onclick="showTab('notifications')" aria-label="Actividad">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
   </button>
@@ -437,14 +438,12 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <p class="muted">Comparte momentos con tu comunidad usando fotos y emojis.</p>
 
  <div class="create-card">
-  <!-- Zona de arrastre / selección de imagen -->
   <div class="create-media-dropzone" onclick="document.getElementById('postImageFileInput').click()" id="dropzoneBox">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
    <span style="font-weight:600;font-size:14px;color:#fff">Agregar foto o imagen</span>
    <span class="muted" style="font-size:11px">Formatos JPG, PNG, WEBP (Máx. 5MB)</span>
   </div>
 
-  <!-- Vista previa de imagen -->
   <div id="postImagePreviewContainer" style="display:none;margin-bottom:14px;position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1/1;background:#121214">
    <img id="postImagePreviewImg" style="width:100%;height:100%;object-fit:cover" alt="Previsualización">
    <button class="secondary" style="position:absolute;top:10px;right:10px;padding:6px 12px;font-size:12px;background:rgba(0,0,0,0.8)" onclick="removePostImage()">Cambiar foto</button>
@@ -620,7 +619,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.4.0 (Visor de Perfil Integrado)</p>
+    <p class="settings-row-desc">1.4.1 (Navegación Limpia)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -692,9 +691,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <strong style="font-size:14px">Publicación</strong>
    <button class="secondary" style="padding:4px 10px;font-size:12px" onclick="closePostDetailModal()">✕</button>
   </div>
-  <div class="post-modal-body" id="modalPostContainer">
-   <!-- Aquí se inyecta la publicación completa -->
-  </div>
+  <div class="post-modal-body" id="modalPostContainer"></div>
  </div>
 </div>
 
@@ -721,6 +718,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
+<!-- NAVEGACIÓN INFERIOR LIMPIA (SIN EL CORAZÓN) -->
 <nav>
  <button class="active" onclick="showTab('feed',this)" aria-label="Inicio">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -733,10 +731,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <button onclick="showTab('create',this)" aria-label="Crear">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
   <small>Crear</small>
- </button>
- <button onclick="showTab('notifications',this)" aria-label="Actividad">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-  <small>Actividad</small>
  </button>
  <button onclick="showTab('profile',this)" aria-label="Perfil">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -792,7 +786,7 @@ function showTab(id,btn){
 
  if(btn)btn.classList.add('active');
  else{
-  const index=['feed','explore','create','notifications','profile'].indexOf(id);
+  const index=['feed','explore','create','profile'].indexOf(id);
   if(index>=0)document.querySelectorAll('nav button')[index].classList.add('active');
  }
 
@@ -1394,7 +1388,6 @@ async function loadMyPostsGrid(){
  grid.replaceChildren(fragment);
 }
 
-// ABRIR PUBLICACIÓN DESDE EL PERFIL
 async function openPostDetail(post){
  const modal = document.getElementById('postDetailModal');
  const container = document.getElementById('modalPostContainer');
