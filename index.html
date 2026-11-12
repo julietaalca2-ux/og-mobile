@@ -230,7 +230,7 @@ textarea{height:120px;resize:none}
 
 <!-- FEED -->
 <div id="feed" class="active">
- <div class="stories">
+ <div class="stories" id="storiescontainer">
   <div class="story" id="mystorybtn" onclick="handleStoryClick()">
    <div class="avatar" id="mystoryavatar"><div class="avatar-inner">＋</div></div>
    Tu historia
@@ -664,9 +664,9 @@ function updateStoryUI(){
 
 async function loadStories(){
  if(!currentUser) return;
- const container=document.querySelector('.stories');
+ const container=document.getElementById('storiescontainer');
  
- // Mantener siempre "Tu historia" primero
+ // Limpiar contenedor por completo y recrear únicamente "Tu historia" inicial
  container.innerHTML = `
   <div class="story" id="mystorybtn" onclick="handleStoryClick()">
    <div class="avatar" id="mystoryavatar"><div class="avatar-inner">＋</div></div>
@@ -691,6 +691,7 @@ async function loadStories(){
 
  if(!storiesData || !storiesData.length) return;
 
+ // Agrupar para garantizar que cada usuario aparezca una sola vez (evita duplicados)
  const uniqueStories = {};
  storiesData.forEach(s => {
   if(!uniqueStories[s.user_id]) uniqueStories[s.user_id] = s;
@@ -702,7 +703,7 @@ async function loadStories(){
   (profiles||[]).forEach(p => profilesCache[p.id] = p);
  }
 
- // 3. Renderizar historias de los seguidos
+ // 3. Renderizar historias de los seguidos sin duplicar
  Object.values(uniqueStories).forEach(story => {
   const profile = profilesCache[story.user_id];
   if(!profile) return;
@@ -712,7 +713,7 @@ async function loadStories(){
   storyDiv.onclick = () => openUserStory(profile, story.image_url);
 
   const av = document.createElement('div');
-  av.className = 'avatar';
+  av.className='avatar';
   av.replaceChildren(avatar(profile));
 
   const name = document.createElement('div');
