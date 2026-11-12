@@ -43,7 +43,6 @@ header{
  border-radius:50%;padding:2.5px;
  background:#27272a;
 }
-/* Aro de colores estilo Instagram si tiene historia */
 .story.has-story .story-avatar-container{
  background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);
 }
@@ -66,11 +65,10 @@ main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active {padding: 0 !important;}
 
-/* CÁMARA A PANTALLA COMPLETA CON ZOOM Y SLIDER */
+/* CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM */
 #cameraModal{
  position:fixed;inset:0;background:#000;z-index:400;
  display:none;flex-direction:column;justify-content:space-between;
- -webkit-transform:translateZ(0);transform:translateZ(0);
 }
 #cameraModal.active{display:flex}
 
@@ -83,7 +81,6 @@ main > div.active {display: block !important;}
 
 .camera-video-fullscreen{
  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#000;
- -webkit-transform:translateZ(0);transform:translateZ(0);
  transform-origin: center center;
  transition: transform 0.05s ease-out;
 }
@@ -94,14 +91,14 @@ main > div.active {display: block !important;}
  width:100%;max-width:430px;margin:0 auto;
 }
 
-/* Control deslizante de Zoom (Slider vertical/horizontal elegante) */
+/* Control deslizante de Zoom (Slider) */
 .camera-zoom-container{
- display:flex;align-items:center;justify-content:center;gap:10px;
- background:rgba(0,0,0,0.4);backdrop-filter:blur(8px);
- padding:6px 16px;border-radius:20px;width:fit-content;margin:0 auto;
+ display:flex;align-items:center;justify-content:center;gap:8px;
+ background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);
+ padding:6px 14px;border-radius:20px;width:fit-content;margin:0 auto;
 }
 .camera-zoom-container input[type=range]{
- -webkit-appearance:none;width:120px;height:4px;background:rgba(255,255,255,0.3);
+ -webkit-appearance:none;width:110px;height:4px;background:rgba(255,255,255,0.3);
  border-radius:2px;outline:none;
 }
 .camera-zoom-container input[type=range]::-webkit-slider-thumb{
@@ -110,41 +107,26 @@ main > div.active {display: block !important;}
 .camera-zoom-label{font-size:11px;font-weight:600;color:#fff}
 
 .camera-bottom-ui{
- display:flex;flex-direction:column;align-items:center;gap:16px;
+ display:flex;flex-direction:column;align-items:center;gap:20px;
  width:100%;max-width:430px;margin:0 auto;
 }
-
-.capture-btn-wrapper{
- display:flex;flex-direction:column;align-items:center;gap:6px;
-}
 .capture-btn{
- width:68px;height:68px;border-radius:50%;background:transparent;border:4px solid #fff;
+ width:78px;height:78px;border-radius:50%;background:transparent;border:4px solid #fff;
  cursor:pointer;display:grid;place-items:center;transition:transform 0.1s ease;
 }
 .capture-btn::after{
- content:'';width:54px;height:54px;border-radius:50%;background:#fff;display:block;
+ content:'';width:64px;height:64px;border-radius:50%;background:#fff;display:block;
 }
 .capture-btn:active{transform:scale(0.92)}
-.capture-label{font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.8)}
 
 .camera-actions-row{
  display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 24px;
 }
 .camera-gallery-icon{
- width:42px;height:42px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,0.8);
+ width:44px;height:44px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,0.8);
  background:#27272a;cursor:pointer;display:grid;place-items:center;
 }
 .camera-gallery-icon img{width:100%;height:100%;object-fit:cover}
-
-/* PESTAÑAS INFERIORES CÁMARA (Publicación | Historia | Reel) */
-.camera-modes-bar{
- display:flex;justify-content:center;gap:24px;width:100%;font-size:13px;font-weight:600;
- text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.6);
- text-shadow:0 1px 3px rgba(0,0,0,0.9);
- margin-bottom:4px;
-}
-.camera-modes-bar span{cursor:pointer;transition:color 0.2s}
-.camera-modes-bar span.active-mode{color:#fff;border-bottom:2px solid #fff;padding-bottom:2px}
 
 /* VISOR DE HISTORIAS A PANTALLA COMPLETA */
 #storyViewer{
@@ -333,9 +315,9 @@ textarea{height:120px;resize:none}
  <div id="posts"></div>
 </div>
 
-<!-- CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM Y MODOS -->
+<!-- CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM -->
 <div id="cameraModal">
- <video id="cameraVideo" class="camera-video-fullscreen" autoplay playsinline muted webkit-playsinline></video>
+ <video id="cameraVideo" class="camera-video-fullscreen" autoplay playsinline muted></video>
  <img id="capturedImagePreview" class="camera-video-fullscreen" style="display:none" alt="Vista previa">
 
  <div class="camera-screen-container">
@@ -344,7 +326,7 @@ textarea{height:120px;resize:none}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
    </button>
    
-   <!-- Barra de Zoom táctil y visual -->
+   <!-- Barra deslizante de Zoom (Slider) -->
    <div class="camera-zoom-container">
     <span class="camera-zoom-label">🔍</span>
     <input type="range" id="zoomRangeInput" min="1" max="4" step="0.1" value="1" oninput="adjustZoom(this.value)">
@@ -361,22 +343,9 @@ textarea{height:120px;resize:none}
     <div class="camera-gallery-icon" onclick="document.getElementById('galleryFileInput').click()" id="galleryThumbIcon">
      📁
     </div>
-    
-    <div class="capture-btn-wrapper">
-     <button class="capture-btn" id="captureBtn" onclick="takePhoto()"></button>
-     <span class="capture-label" id="captureLabelText">Historia</span>
-    </div>
-
-    <div style="width:42px"></div>
+    <button class="capture-btn" id="captureBtn" onclick="takePhoto()"></button>
+    <div style="width:44px"></div>
    </div>
-
-   <!-- Pestañas inferiores de modos de cámara -->
-   <div class="camera-modes-bar">
-    <span onclick="switchCameraMode('publicacion')">Publicación</span>
-    <span class="active-mode" onclick="switchCameraMode('historia')">Historia</span>
-    <span onclick="switchCameraMode('reel')">Reel</span>
-   </div>
-
    <button class="primary" id="publishStoryBtn" style="display:none;width:90%;margin:auto;padding:12px 20px;font-size:15px;border-radius:24px;" onclick="uploadCapturedStory()">Compartir en tu historia</button>
   </div>
  </div>
@@ -617,8 +586,7 @@ let capturedBlob=null;
 let currentFacingMode = 'user';
 let currentZoom = 1;
 
-const isHighEndDevice = navigator.hardwareConcurrency ? navigator.hardwareConcurrency > 4 : true;
-
+// GESTOS TIPO INSTAGRAM (Deslizar a la derecha para abrir cámara)
 let touchStartX = 0;
 let touchEndX = 0;
 
@@ -678,7 +646,7 @@ function status(id,message){
  document.getElementById(id).textContent=message;
 }
 
-function createAvatarNode(profile){
+function createAvatarNode(profile, isStoryActive=false){
  const container = document.createElement('div');
  container.className = 'story-avatar-container';
  
@@ -826,7 +794,6 @@ async function loadStoriesData(){
  const fragment = document.createDocumentFragment();
 
  const myStoryDiv = document.createElement('div');
- // Si hay historia activa, añade el aro con degradé de colores de Instagram
  myStoryDiv.className = myActiveStory ? 'story has-story' : 'story';
  myStoryDiv.id = 'mystorybtn';
  myStoryDiv.onclick = handleStoryClick;
@@ -839,7 +806,7 @@ async function loadStoriesData(){
  myInner.className = 'story-avatar-inner';
  myInner.id = 'mystoryavatar';
  
- // CORRECCIÓN CLAVE: ¡Siempre se muestra la foto de perfil real adentro!
+ // CORRECCIÓN CLAVE: ¡Adentro SIEMPRE se muestra tu foto de perfil real (o placeholder si no tienes)!
  if(myProfile?.avatar_url){
   const img = document.createElement('img');
   img.src = myProfile.avatar_url;
@@ -852,7 +819,8 @@ async function loadStoriesData(){
   myInner.append(ph);
  }
 
- // Si no tiene historia activa, muestra el botón azul "+"
+ myAvatarContainer.append(myInner);
+
  if(!myActiveStory){
   const badge = document.createElement('div');
   badge.className = 'story-plus-badge';
@@ -901,7 +869,7 @@ async function loadStoriesData(){
     storyDiv.className = 'story has-story';
     storyDiv.onclick = () => openUserStory(profile, story.image_url);
 
-    const avatarBox = createAvatarNode(profile);
+    const avatarBox = createAvatarNode(profile, true);
 
     const name = document.createElement('div');
     name.style.overflow = 'hidden';
@@ -937,18 +905,15 @@ async function handleStoryClick(){
  }
 }
 
-/* ========================================================
-   CÁMARA CON ZOOM POR SLIDER Y GESTOS FLUIDOS
-   ======================================================== */
 async function openCameraModal(){
  capturedBlob = null;
  currentZoom = 1;
  document.getElementById('zoomRangeInput').value = 1;
  document.getElementById('zoomValueText').textContent = '1x';
- 
+
+ document.getElementById('capturedImagePreview').style.display = 'none';
  const videoElem = document.getElementById('cameraVideo');
  videoElem.style.transform = 'scale(1)';
- document.getElementById('capturedImagePreview').style.display = 'none';
  videoElem.style.display = 'block';
  document.getElementById('captureBtn').style.display = 'block';
  document.getElementById('publishStoryBtn').style.display = 'none';
@@ -958,54 +923,31 @@ async function openCameraModal(){
  await startCameraStream();
 }
 
-async function startCameraStream(){
- if(mediaStream){
-  mediaStream.getTracks().forEach(track => track.stop());
-  mediaStream = null;
- }
-
- try{
-  const videoConstraints = isHighEndDevice ? {
-   facingMode: currentFacingMode,
-   width: { ideal: 1080 },
-   height: { ideal: 1920 }
-  } : {
-   facingMode: currentFacingMode,
-   width: { ideal: 720 },
-   height: { ideal: 1280 }
-  };
-
-  mediaStream = await navigator.mediaDevices.getUserMedia({
-   video: videoConstraints,
-   audio: false
-  });
-
-  const videoElem = document.getElementById('cameraVideo');
-  videoElem.srcObject = mediaStream;
-  await videoElem.play().catch(e => console.warn("Demora en reproducción:", e));
- }catch(err){
-  console.error('Error al inicializar cámara:', err);
-  try {
-   mediaStream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: currentFacingMode },
-    audio: false
-   });
-   const videoElem = document.getElementById('cameraVideo');
-   videoElem.srcObject = mediaStream;
-   await videoElem.play();
-  }catch(fallbackErr){
-   alert('No se pudo acceder a la cámara. Revisa los permisos.');
-   closeCameraModal();
-  }
- }
-}
-
-// Control de zoom interactivo por deslizador (Slider)
+// Control de zoom interactivo por Slider
 function adjustZoom(value){
  currentZoom = parseFloat(value);
  document.getElementById('zoomValueText').textContent = currentZoom.toFixed(1) + 'x';
  const videoElem = document.getElementById('cameraVideo');
  videoElem.style.transform = `scale(${currentZoom})`;
+}
+
+async function startCameraStream(){
+ if(mediaStream){
+  mediaStream.getTracks().forEach(track=>track.stop());
+ }
+
+ try{
+  mediaStream = await navigator.mediaDevices.getUserMedia({
+   video:{facingMode: currentFacingMode},
+   audio:false
+  });
+  const videoElem = document.getElementById('cameraVideo');
+  videoElem.srcObject = mediaStream;
+  await videoElem.play();
+ }catch(err){
+  console.error('Error al acceder a la cámara:', err);
+  alert('No se pudo acceder a la cámara. Asegúrate de dar permisos de cámara en tu navegador.');
+ }
 }
 
 async function switchCamera(){
@@ -1015,12 +957,6 @@ async function switchCamera(){
  document.getElementById('zoomValueText').textContent = '1x';
  document.getElementById('cameraVideo').style.transform = 'scale(1)';
  await startCameraStream();
-}
-
-function switchCameraMode(modeName){
- document.querySelectorAll('.camera-modes-bar span').forEach(el => el.classList.remove('active-mode'));
- event.target.classList.add('active-mode');
- document.getElementById('captureLabelText').textContent = modeName.charAt(0).toUpperCase() + modeName.slice(1);
 }
 
 async function updateGalleryThumbIcon(){
@@ -1034,32 +970,27 @@ async function updateGalleryThumbIcon(){
 
 function closeCameraModal(){
  if(mediaStream){
-  mediaStream.getTracks().forEach(track => track.stop());
-  mediaStream = null;
+  mediaStream.getTracks().forEach(track=>track.stop());
+  mediaStream=null;
  }
- const videoElem = document.getElementById('cameraVideo');
- videoElem.srcObject = null;
  document.getElementById('cameraModal').classList.remove('active');
 }
 
 function takePhoto(){
  const video = document.getElementById('cameraVideo');
  const canvas = document.createElement('canvas');
- 
- const scale = isHighEndDevice ? 1 : 0.85;
- canvas.width = (video.videoWidth || 720) * scale;
- canvas.height = (video.videoHeight || 1280) * scale;
- 
- const ctx = canvas.getContext('2d', { alpha: false });
+ canvas.width = video.videoWidth || 720;
+ canvas.height = video.videoHeight || 1280;
+ const ctx = canvas.getContext('2d');
  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
- canvas.toBlob(blob => {
+ canvas.toBlob(blob=>{
   capturedBlob = blob;
   const imageUrl = URL.createObjectURL(blob);
   
   if(mediaStream){
-   mediaStream.getTracks().forEach(track => track.stop());
-   mediaStream = null;
+   mediaStream.getTracks().forEach(track=>track.stop());
+   mediaStream=null;
   }
 
   const preview = document.getElementById('capturedImagePreview');
@@ -1068,7 +999,7 @@ function takePhoto(){
   video.style.display = 'none';
   document.getElementById('captureBtn').style.display = 'none';
   document.getElementById('publishStoryBtn').style.display = 'block';
- }, 'image/jpeg', 0.82);
+ }, 'image/jpeg', 0.9);
 }
 
 async function handleGallerySelect(input){
@@ -1085,8 +1016,8 @@ async function handleGallerySelect(input){
  document.getElementById('publishStoryBtn').style.display = 'block';
 
  if(mediaStream){
-  mediaStream.getTracks().forEach(track => track.stop());
-  mediaStream = null;
+  mediaStream.getTracks().forEach(track=>track.stop());
+  mediaStream=null;
  }
  input.value = '';
 }
@@ -1185,7 +1116,6 @@ function updateProfileUI(){
 
  loadFollowCounts();
  loadMyPostsGrid();
- loadStoriesData();
 }
 
 async function loadMyPostsGrid(){
@@ -1365,7 +1295,7 @@ async function loadActivity(){
    const item=document.createElement('div');
    item.className='activity-item';
 
-   const av=createAvatarNode(profile);
+   const av=createAvatarNode(profile, false);
 
    const info=document.createElement('div');
    info.className='activity-info';
@@ -1441,7 +1371,7 @@ async function loadPosts(){
   const head=document.createElement('div');
   head.className='posthead';
 
-  const av=createAvatarNode(profile);
+  const av=createAvatarNode(profile, false);
   av.style.cursor='pointer';
   av.onclick=()=>openPublicProfile(post.user_id);
 
@@ -1783,7 +1713,7 @@ async function searchUsers(){
    profilesCache[profile.id]=profile;
    const item=document.createElement('div');
    item.className='public-user';
-   const av=createAvatarNode(profile);
+   const av=createAvatarNode(profile, false);
    const info=document.createElement('div');
    info.className='public-user-info';
    const name=document.createElement('strong');
