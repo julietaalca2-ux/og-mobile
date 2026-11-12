@@ -65,11 +65,11 @@ main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active {padding: 0 !important;}
 
-/* CÁMARA A PANTALLA COMPLETA OPTIMIZADA (GPU ACCELERATED) */
+/* CÁMARA A PANTALLA COMPLETA HARDWARE-ACCELERATED */
 #cameraModal{
  position:fixed;inset:0;background:#000;z-index:400;
  display:none;flex-direction:column;justify-content:space-between;
- transform:translateZ(0); /* Forzar aceleración por hardware */
+ -webkit-transform:translateZ(0);transform:translateZ(0);
 }
 #cameraModal.active{display:flex}
 
@@ -276,7 +276,7 @@ textarea{height:120px;resize:none}
  </div>
  <div id="header-profile-icons" style="display:none;align-items:center;gap:4px">
   <button class="icon" onclick="toggleSettingsDrawer()" aria-label="Configuración">
-   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
  </div>
 </header>
@@ -299,7 +299,7 @@ textarea{height:120px;resize:none}
  <div id="posts"></div>
 </div>
 
-<!-- CÁMARA A PANTALLA COMPLETA OPTIMIZADA -->
+<!-- CÁMARA A PANTALLA COMPLETA ADAPTATIVA (GAMA ALTA & BAJA) -->
 <div id="cameraModal">
  <video id="cameraVideo" class="camera-video-fullscreen" autoplay playsinline muted webkit-playsinline></video>
  <img id="capturedImagePreview" class="camera-video-fullscreen" style="display:none" alt="Vista previa">
@@ -561,6 +561,9 @@ let mediaStream=null;
 let capturedBlob=null;
 let currentFacingMode = 'user';
 
+// Detector automático de capacidad de hardware (Gama alta vs Baja)
+const isHighEndDevice = navigator.hardwareConcurrency ? navigator.hardwareConcurrency > 4 : true;
+
 // GESTOS TIPO INSTAGRAM (Deslizar a la derecha para abrir cámara)
 let touchStartX = 0;
 let touchEndX = 0;
@@ -621,7 +624,7 @@ function status(id,message){
  document.getElementById(id).textContent=message;
 }
 
-function createAvatarNode(profile, isStoryActive=false){
+function createAvatarNode(profile){
  const container = document.createElement('div');
  container.className = 'story-avatar-container';
  
@@ -793,13 +796,15 @@ async function loadStoriesData(){
   myInner.append(ph);
  }
 
- const badge = document.createElement('div');
- badge.className = 'story-plus-badge';
- badge.id = 'mystorybadge';
- badge.textContent = myActiveStory ? '✓' : '+';
- badge.style.background = myActiveStory ? '#10b981' : '#3b82f6';
-
- myAvatarContainer.append(myInner, badge);
+ // Sin insignia de tilde (✓), solo aro de color si tiene historia activa
+ if(!myActiveStory){
+  const badge = document.createElement('div');
+  badge.className = 'story-plus-badge';
+  badge.id = 'mystorybadge';
+  badge.textContent = '+';
+  badge.style.background = '#3b82f6';
+  myAvatarContainer.append(badge);
+ }
 
  const myLabel = document.createElement('div');
  myLabel.textContent = 'Tu historia';
@@ -840,7 +845,7 @@ async function loadStoriesData(){
     storyDiv.className = 'story has-story';
     storyDiv.onclick = () => openUserStory(profile, story.image_url);
 
-    const avatarBox = createAvatarNode(profile, true);
+    const avatarBox = createAvatarNode(profile);
 
     const name = document.createElement('div');
     name.style.overflow = 'hidden';
@@ -877,7 +882,7 @@ async function handleStoryClick(){
 }
 
 /* ========================================================
-   CÁMARA OPTIMIZADA DE ALTO RENDIMIENTO (FLUJO NATIVO)
+   CÁMARA OPTIMIZADA CON RENDIMIENTO ADAPTATIVO POR HARDWARE
    ======================================================== */
 async function openCameraModal(){
  capturedBlob = null;
@@ -892,31 +897,34 @@ async function openCameraModal(){
 }
 
 async function startCameraStream(){
- // Limpieza absoluta de streams anteriores para evitar fugas de memoria RAM
  if(mediaStream){
   mediaStream.getTracks().forEach(track => track.stop());
   mediaStream = null;
  }
 
  try{
-  // Solicitud optimizada que se adapta al rendimiento del procesador móvil
+  // Adaptación dinámica de procesamiento: Gama alta usa 1080p, Gama baja/entrada usa 720p optimizados
+  const videoConstraints = isHighEndDevice ? {
+   facingMode: currentFacingMode,
+   width: { ideal: 1080 },
+   height: { ideal: 1920 }
+  } : {
+   facingMode: currentFacingMode,
+   width: { ideal: 720 },
+   height: { ideal: 1280 }
+  };
+
   mediaStream = await navigator.mediaDevices.getUserMedia({
-   video: {
-    facingMode: currentFacingMode,
-    width: { ideal: 720 },
-    height: { ideal: 1280 }
-   },
+   video: videoConstraints,
    audio: false
   });
 
   const videoElem = document.getElementById('cameraVideo');
   videoElem.srcObject = mediaStream;
-  
-  // Reproducción segura optimizada para evitar excepciones de promesas en móviles
-  await videoElem.play().catch(e => console.warn("Autoplay bloqueado o demorado:", e));
+  await videoElem.play().catch(e => console.warn("Demora en reproducción de video:", e));
  }catch(err){
   console.error('Error al inicializar la cámara:', err);
-  alert('No se pudo acceder a la cámara. Revisa los permisos de tu navegador.');
+  alert('No se pudo acceder a la cámara. Revisa los permisos en tu navegador.');
   closeCameraModal();
  }
 }
@@ -936,7 +944,6 @@ async function updateGalleryThumbIcon(){
 }
 
 function closeCameraModal(){
- // Liberación estricta de recursos de video de hardware
  if(mediaStream){
   mediaStream.getTracks().forEach(track => track.stop());
   mediaStream = null;
@@ -949,12 +956,16 @@ function closeCameraModal(){
 function takePhoto(){
  const video = document.getElementById('cameraVideo');
  const canvas = document.createElement('canvas');
- canvas.width = video.videoWidth || 720;
- canvas.height = video.videoHeight || 1280;
- const ctx = canvas.getContext('2d');
+ 
+ // Escalado inteligente del canvas acorde a la potencia de cálculo del teléfono
+ const scale = isHighEndDevice ? 1 : 0.85;
+ canvas.width = (video.videoWidth || 720) * scale;
+ canvas.height = (video.videoHeight || 1280) * scale;
+ 
+ const ctx = canvas.getContext('2d', { alpha: false });
  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
- // Compresión inteligente (0.8) para no saturar memoria ni ancho de banda
+ // Calidad de compresión optimizada: 0.82 para alta calidad sin sobrecargar RAM
  canvas.toBlob(blob => {
   capturedBlob = blob;
   const imageUrl = URL.createObjectURL(blob);
@@ -970,7 +981,7 @@ function takePhoto(){
   video.style.display = 'none';
   document.getElementById('captureBtn').style.display = 'none';
   document.getElementById('publishStoryBtn').style.display = 'block';
- }, 'image/jpeg', 0.8);
+ }, 'image/jpeg', 0.82);
 }
 
 async function handleGallerySelect(input){
@@ -1266,7 +1277,7 @@ async function loadActivity(){
    const item=document.createElement('div');
    item.className='activity-item';
 
-   const av=createAvatarNode(profile, false);
+   const av=createAvatarNode(profile);
 
    const info=document.createElement('div');
    info.className='activity-info';
@@ -1342,7 +1353,7 @@ async function loadPosts(){
   const head=document.createElement('div');
   head.className='posthead';
 
-  const av=createAvatarNode(profile, false);
+  const av=createAvatarNode(profile);
   av.style.cursor='pointer';
   av.onclick=()=>openPublicProfile(post.user_id);
 
@@ -1684,7 +1695,7 @@ async function searchUsers(){
    profilesCache[profile.id]=profile;
    const item=document.createElement('div');
    item.className='public-user';
-   const av=createAvatarNode(profile, false);
+   const av=createAvatarNode(profile);
    const info=document.createElement('div');
    info.className='public-user-info';
    const name=document.createElement('strong');
