@@ -559,7 +559,7 @@ let mediaStream=null;
 let capturedBlob=null;
 let currentFacingMode = 'user';
 
-// GESTOS TIPO INSTAGRAM (Deslizar a la derecha para abrir cámara)
+// GESTOS TIPO INSTAGRAM (Deslizar a la derecha para abrir cámara de forma fluida)
 let touchStartX = 0;
 let touchEndX = 0;
 
@@ -570,15 +570,8 @@ feedElement.addEventListener('touchstart', e => {
 
 feedElement.addEventListener('touchend', e => {
  touchEndX = e.changedTouches[0].screenX;
- handleSwipeGesture();
+ if((touchEndX - touchStartX) > 70) openCameraModal();
 }, {passive: true});
-
-function handleSwipeGesture(){
- const swipeDistance = touchEndX - touchStartX;
- if(swipeDistance > 70){
-  openCameraModal();
- }
-}
 
 function showTab(id,btn){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
@@ -619,7 +612,7 @@ function status(id,message){
  document.getElementById(id).textContent=message;
 }
 
-function createAvatarNode(profile, isStoryActive=false){
+function createAvatarNode(profile){
  const container = document.createElement('div');
  container.className = 'story-avatar-container';
  
@@ -642,39 +635,12 @@ function createAvatarNode(profile, isStoryActive=false){
  return container;
 }
 
-async function signUp(){
- const email=document.getElementById('authemail').value.trim();
- const password=document.getElementById('authpassword').value;
- const username=document.getElementById('authusername').value.trim().toLowerCase();
-
- if(!email||!password||!username)return status('authstatus','Completá todos los campos.');
- if(!/^[a-z0-9_]{3,20}$/.test(username))return status('authstatus','Usuario: 3 a 20 caracteres.');
- if(password.length<8)return status('authstatus','Contraseña mínima de 8 caracteres.');
-
- status('authstatus','Creando cuenta...');
-
- const {data,error}=await db.auth.signUp({
-  email,password,options:{data:{username}}
- });
-
- if(error)return status('authstatus',error.message);
-
- if(data.session){
-  await loadAccount(data.user);
-  status('authstatus','¡Cuenta creada!');
- }else{
-  status('authstatus','Cuenta creada. Revisá tu correo.');
- }
-}
-
 async function signIn(){
  const email=document.getElementById('authemail').value.trim();
  const password=document.getElementById('authpassword').value;
-
  if(!email||!password)return status('authstatus','Ingresá correo y contraseña.');
 
  status('authstatus','Iniciando sesión...');
-
  const {data,error}=await db.auth.signInWithPassword({email,password});
  if(error)return status('authstatus',error.message);
 
@@ -682,15 +648,25 @@ async function signIn(){
  status('authstatus','Sesión iniciada.');
 }
 
-async function signOut(){
- const {error}=await db.auth.signOut();
- if(error)return alert(error.message);
+async function signUp(){
+ const email=document.getElementById('authemail').value.trim();
+ const password=document.getElementById('authpassword').value;
+ const username=document.getElementById('authusername').value.trim().toLowerCase();
 
+ if(!email||!password||!username)return status('authstatus','Completá todos los campos.');
+ status('authstatus','Creando cuenta...');
+
+ const {data,error}=await db.auth.signUp({email,password,options:{data:{username}}});
+ if(error)return status('authstatus',error.message);
+
+ if(data.session) await loadAccount(data.user);
+ else status('authstatus','Cuenta creada. Revisá tu correo.');
+}
+
+async function signOut(){
+ await db.auth.signOut();
  if(realtimeChannel) db.removeChannel(realtimeChannel);
- currentUser=null;
- myProfile=null;
- viewedProfile=null;
- myActiveStory=null;
+ currentUser=null; myProfile=null; viewedProfile=null; myActiveStory=null;
  updateStoryUI();
  document.getElementById('accountbox').classList.remove('open');
  updateProfileUI();
@@ -700,25 +676,11 @@ async function signOut(){
 
 async function loadAccount(user){
  currentUser=user;
-
- let {data:profile,error}=await db.from('profiles')
-  .select('*').eq('id',user.id).maybeSingle();
-
- if(error){
-  status('authstatus','Error al consultar perfil: '+error.message);
-  return;
- }
+ let {data:profile}=await db.from('profiles').select('*').eq('id',user.id).maybeSingle();
 
  if(!profile){
   const username=user.user_metadata?.username||('usuario_'+user.id.slice(0,8));
-  const {data:created,error:createError}=await db.from('profiles')
-   .insert({id:user.id,username,display_name:username})
-   .select().single();
-
-  if(createError){
-   status('authstatus','No se pudo crear perfil: '+createError.message);
-   return;
-  }
+  const {data:created}=await db.from('profiles').insert({id:user.id,username,display_name:username}).select().single();
   profile=created;
  }
 
@@ -726,33 +688,19 @@ async function loadAccount(user){
  profilesCache[user.id]=profile;
  updateProfileUI();
  
- await Promise.all([
-  loadPosts(),
-  loadStoriesData()
- ]);
- 
+ // Carga paralela ultrarrápida
+ await Promise.all([loadPosts(), loadStoriesData()]);
  setupRealtimeNotifications();
 }
 
 function setupRealtimeNotifications(){
  if(realtimeChannel) db.removeChannel(realtimeChannel);
-
  realtimeChannel=db.channel('public-notifications')
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows'},payload=>{
-   if(payload.new.following_id===currentUser?.id){ loadActivity(); loadStoriesData(); }
-  })
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'likes'},payload=>{
-   loadActivity();
-  })
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'comments'},payload=>{
-   loadActivity();
-  })
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'stories'},payload=>{
-   loadStoriesData();
-  })
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'stories'},()=>loadStoriesData())
   .subscribe();
 }
 
+// CARGA DE HISTORIAS OPTIMIZADA Y VELOZ
 async function loadStoriesData(){
  if(!currentUser) return;
 
@@ -762,41 +710,31 @@ async function loadStoriesData(){
  ]);
 
  myActiveStory = myStoryRes.data || null;
-
  const container = document.getElementById('storiescontainer');
  const fragment = document.createDocumentFragment();
 
+ // 1. Tu historia
  const myStoryDiv = document.createElement('div');
  myStoryDiv.className = myActiveStory ? 'story has-story' : 'story';
- myStoryDiv.id = 'mystorybtn';
  myStoryDiv.onclick = handleStoryClick;
 
  const myAvatarContainer = document.createElement('div');
  myAvatarContainer.className = 'story-avatar-container';
- myAvatarContainer.id = 'mystoryavatar-container';
-
  const myInner = document.createElement('div');
  myInner.className = 'story-avatar-inner';
- myInner.id = 'mystoryavatar';
  
  if(myActiveStory){
   const img = document.createElement('img');
   img.src = myActiveStory.image_url;
-  img.alt = 'Mi historia';
   myInner.append(img);
  }else{
-  const ph = document.createElement('div');
-  ph.style.fontSize = '24px';
-  ph.textContent = '👤';
-  myInner.append(ph);
+  myInner.innerHTML = '<div style="font-size:24px">👤</div>';
  }
 
  const badge = document.createElement('div');
  badge.className = 'story-plus-badge';
- badge.id = 'mystorybadge';
  badge.textContent = myActiveStory ? '✓' : '+';
  badge.style.background = myActiveStory ? '#10b981' : '#3b82f6';
-
  myAvatarContainer.append(myInner, badge);
 
  const myLabel = document.createElement('div');
@@ -809,10 +747,9 @@ async function loadStoriesData(){
  myStoryDiv.append(myAvatarContainer, myLabel);
  fragment.append(myStoryDiv);
 
- const followingData = followingRes.data;
- if(followingData && followingData.length > 0){
-  const followingIds = followingData.map(f => f.following_id);
-
+ // 2. Historias de seguidos (Lote optimizado)
+ const followingIds = (followingRes.data || []).map(f => f.following_id);
+ if(followingIds.length > 0){
   const {data: storiesData} = await db.from('stories')
    .select('user_id, image_url, created_at')
    .in('user_id', followingIds)
@@ -820,13 +757,11 @@ async function loadStoriesData(){
 
   if(storiesData && storiesData.length > 0){
    const uniqueStories = {};
-   storiesData.forEach(s => {
-    if(!uniqueStories[s.user_id]) uniqueStories[s.user_id] = s;
-   });
+   storiesData.forEach(s => { if(!uniqueStories[s.user_id]) uniqueStories[s.user_id] = s; });
 
-   const userIdsToFetch = Object.keys(uniqueStories).filter(id => !profilesCache[id]);
-   if(userIdsToFetch.length > 0){
-    const {data: profiles} = await db.from('profiles').select('id, username, avatar_url').in('id', userIdsToFetch);
+   const missingIds = Object.keys(uniqueStories).filter(id => !profilesCache[id]);
+   if(missingIds.length > 0){
+    const {data: profiles} = await db.from('profiles').select('id, username, avatar_url').in('id', missingIds);
     (profiles || []).forEach(p => profilesCache[p.id] = p);
    }
 
@@ -838,8 +773,7 @@ async function loadStoriesData(){
     storyDiv.className = 'story has-story';
     storyDiv.onclick = () => openUserStory(profile, story.image_url);
 
-    const avatarBox = createAvatarNode(profile, true);
-
+    const avatarBox = createAvatarNode(profile);
     const name = document.createElement('div');
     name.style.overflow = 'hidden';
     name.style.textOverflow = 'ellipsis';
@@ -852,19 +786,13 @@ async function loadStoriesData(){
    });
   }
  }
-
  container.replaceChildren(fragment);
 }
 
-function updateStoryUI(){
- loadStoriesData();
-}
+function updateStoryUI(){ loadStoriesData(); }
 
 async function handleStoryClick(){
- if(!currentUser){
-  alert('Iniciá sesión para ver o subir historias.');
-  return showTab('profile');
- }
+ if(!currentUser){ alert('Iniciá sesión para ver o subir historias.'); return showTab('profile'); }
  if(myActiveStory){
   document.getElementById('storyUsername').textContent = '@'+(myProfile?.username||'mi_historia');
   document.getElementById('storyImage').src = myActiveStory.image_url;
@@ -874,43 +802,41 @@ async function handleStoryClick(){
  }
 }
 
+// CÁMARA ROBUSTA SIN ERRORES (Manejo asíncrono seguro iOS/Android)
 async function openCameraModal(){
  capturedBlob = null;
  document.getElementById('capturedImagePreview').style.display = 'none';
- document.getElementById('cameraVideo').style.display = 'block';
+ const video = document.getElementById('cameraVideo');
+ video.style.display = 'block';
  document.getElementById('captureBtn').style.display = 'block';
  document.getElementById('publishStoryBtn').style.display = 'none';
  document.getElementById('cameraModal').classList.add('active');
 
  updateGalleryThumbIcon();
- await startCameraStream();
-}
 
-async function startCameraStream(){
- if(mediaStream){
-  mediaStream.getTracks().forEach(track=>track.stop());
- }
-
- try{
+ try {
+  if(mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+  
   mediaStream = await navigator.mediaDevices.getUserMedia({
-   video:{facingMode: currentFacingMode},
-   audio:false
+   video: { facingMode: currentFacingMode, width: { ideal: 1080 }, height: { ideal: 1920 } },
+   audio: false
   });
-  const videoElem = document.getElementById('cameraVideo');
-  videoElem.srcObject = mediaStream;
-  await videoElem.play();
- }catch(err){
-  console.error('Error al acceder a la cámara:', err);
-  alert('No se pudo acceder a la cámara. Asegúrate de dar permisos de cámara en tu navegador.');
+  
+  video.srcObject = mediaStream;
+  await video.play().catch(() => {});
+ } catch (err) {
+  console.error("Cámara no disponible:", err);
+  alert("No se pudo iniciar la cámara. Verifica los permisos de tu navegador.");
+  closeCameraModal();
  }
 }
 
 async function switchCamera(){
  currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
- await startCameraStream();
+ await openCameraModal();
 }
 
-async function updateGalleryThumbIcon(){
+function updateGalleryThumbIcon(){
  const iconDiv = document.getElementById('galleryThumbIcon');
  if(myProfile?.avatar_url){
   iconDiv.innerHTML = `<img src="${myProfile.avatar_url}" alt="Galería">`;
@@ -921,8 +847,8 @@ async function updateGalleryThumbIcon(){
 
 function closeCameraModal(){
  if(mediaStream){
-  mediaStream.getTracks().forEach(track=>track.stop());
-  mediaStream=null;
+  mediaStream.getTracks().forEach(t => t.stop());
+  mediaStream = null;
  }
  document.getElementById('cameraModal').classList.remove('active');
 }
@@ -935,13 +861,13 @@ function takePhoto(){
  const ctx = canvas.getContext('2d');
  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
- canvas.toBlob(blob=>{
+ canvas.toBlob(blob => {
   capturedBlob = blob;
   const imageUrl = URL.createObjectURL(blob);
   
   if(mediaStream){
-   mediaStream.getTracks().forEach(track=>track.stop());
-   mediaStream=null;
+   mediaStream.getTracks().forEach(t => t.stop());
+   mediaStream = null;
   }
 
   const preview = document.getElementById('capturedImagePreview');
@@ -950,7 +876,7 @@ function takePhoto(){
   video.style.display = 'none';
   document.getElementById('captureBtn').style.display = 'none';
   document.getElementById('publishStoryBtn').style.display = 'block';
- }, 'image/jpeg', 0.9);
+ }, 'image/jpeg', 0.85);
 }
 
 async function handleGallerySelect(input){
@@ -958,51 +884,33 @@ async function handleGallerySelect(input){
  if(!file) return;
  capturedBlob = file;
 
- const imageUrl = URL.createObjectURL(file);
  const preview = document.getElementById('capturedImagePreview');
- preview.src = imageUrl;
+ preview.src = URL.createObjectURL(file);
  preview.style.display = 'block';
  document.getElementById('cameraVideo').style.display = 'none';
  document.getElementById('captureBtn').style.display = 'none';
  document.getElementById('publishStoryBtn').style.display = 'block';
 
- if(mediaStream){
-  mediaStream.getTracks().forEach(track=>track.stop());
-  mediaStream=null;
- }
+ if(mediaStream){ mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
  input.value = '';
 }
 
 async function uploadCapturedStory(){
  if(!currentUser || !capturedBlob) return;
-
  alert('Subiendo historia...');
 
  const path = currentUser.id+'/story-'+Date.now()+'.jpg';
-
- const {error:uploadError} = await db.storage.from('og-media')
-  .upload(path, capturedBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
-
- if(uploadError){
-  alert('Error al subir historia: '+uploadError.message);
-  return;
- }
+ const {error:uploadError} = await db.storage.from('og-media').upload(path, capturedBlob, {upsert:false, contentType:'image/jpeg'});
+ if(uploadError) return alert('Error al subir: '+uploadError.message);
 
  const {data:urlData} = db.storage.from('og-media').getPublicUrl(path);
-
- const {data, error} = await db.from('stories')
-  .insert({user_id:currentUser.id, image_url:urlData.publicUrl})
-  .select().single();
-
- if(error){
-  alert('Error al guardar la historia.');
-  return;
- }
+ const {data, error} = await db.from('stories').insert({user_id:currentUser.id, image_url:urlData.publicUrl}).select().single();
+ if(error) return alert('Error al guardar.');
 
  myActiveStory = data;
  closeCameraModal();
  await loadStoriesData();
- alert('¡Historia publicada con éxito!');
+ alert('¡Historia publicada!');
 }
 
 function openUserStory(profile, imageUrl){
@@ -1011,57 +919,47 @@ function openUserStory(profile, imageUrl){
  document.getElementById('storyViewer').classList.add('active');
 }
 
-function closeStoryViewer(){
- document.getElementById('storyViewer').classList.remove('active');
-}
+function closeStoryViewer(){ document.getElementById('storyViewer').classList.remove('active'); }
 
 function updateProfileUI(){
- const logged=!!currentUser;
-
- document.getElementById('authbox').style.display=logged?'none':'block';
- document.getElementById('profile-actions').style.display=logged?'flex':'none';
- document.getElementById('my-grid-section').style.display=logged?'block':'none';
+ const logged = !!currentUser;
+ document.getElementById('authbox').style.display = logged ? 'none' : 'block';
+ document.getElementById('profile-actions').style.display = logged ? 'flex' : 'none';
+ document.getElementById('my-grid-section').style.display = logged ? 'block' : 'none';
 
  if(!logged){
-  document.getElementById('myname').textContent='Mi perfil';
-  document.getElementById('myusername').textContent='@invitado';
-  document.getElementById('mybio').textContent='Bienvenido a Ög.';
-  document.getElementById('mypostscount').textContent='0';
-  document.getElementById('myfollowerscount').textContent='0';
-  document.getElementById('myfollowingcount').textContent='0';
+  document.getElementById('myname').textContent = 'Mi perfil';
+  document.getElementById('myusername').textContent = '@invitado';
+  document.getElementById('mybio').textContent = 'Bienvenido a Ög.';
+  document.getElementById('mypostscount').textContent = '0';
+  document.getElementById('myfollowerscount').textContent = '0';
+  document.getElementById('myfollowingcount').textContent = '0';
   document.getElementById('myavatar').replaceChildren();
   document.getElementById('mycover').replaceChildren();
   return;
  }
 
- document.getElementById('myname').textContent=myProfile?.display_name||myProfile?.username||'Mi perfil';
- document.getElementById('myusername').textContent='@'+(myProfile?.username||'');
- document.getElementById('mybio').textContent=myProfile?.bio||'';
- document.getElementById('editname').value=myProfile?.display_name||'';
- document.getElementById('editbio').value=myProfile?.bio||'';
+ document.getElementById('myname').textContent = myProfile?.display_name || myProfile?.username || 'Mi perfil';
+ document.getElementById('myusername').textContent = '@'+(myProfile?.username || '');
+ document.getElementById('mybio').textContent = myProfile?.bio || '';
+ document.getElementById('editname').value = myProfile?.display_name || '';
+ document.getElementById('editbio').value = myProfile?.bio || '';
 
  const myAvatarBox = document.getElementById('myavatar');
  myAvatarBox.replaceChildren();
  if(myProfile?.avatar_url){
   const img = document.createElement('img');
   img.src = myProfile.avatar_url;
-  img.alt = 'Avatar';
   myAvatarBox.append(img);
  }else{
-  const ph = document.createElement('div');
-  ph.style.fontSize = '28px';
-  ph.textContent = '👤';
-  myAvatarBox.append(ph);
+  myAvatarBox.innerHTML = '<div style="font-size:28px">👤</div>';
  }
 
- const cover=document.getElementById('mycover');
+ const cover = document.getElementById('mycover');
  cover.replaceChildren();
-
  if(myProfile?.cover_url){
-  const img=document.createElement('img');
-  img.src=myProfile.cover_url;
-  img.alt='Portada';
-  img.loading='lazy';
+  const img = document.createElement('img');
+  img.src = myProfile.cover_url;
   cover.append(img);
  }
 
@@ -1070,634 +968,292 @@ function updateProfileUI(){
 }
 
 async function loadMyPostsGrid(){
- if(!currentUser)return;
- const grid=document.getElementById('mypostsgrid');
- const {data:posts}=await db.from('posts').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+ if(!currentUser) return;
+ const {data:posts} = await db.from('posts').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false});
+ document.getElementById('mypostscount').textContent = posts ? posts.length : 0;
  
- document.getElementById('mypostscount').textContent=posts?posts.length:0;
- grid.replaceChildren();
- 
- if(!posts||!posts.length)return;
- 
- const fragment=document.createDocumentFragment();
- posts.forEach(post=>{
-  const item=document.createElement('div');
-  item.className='ig-grid-item';
+ const grid = document.getElementById('mypostsgrid');
+ const fragment = document.createDocumentFragment();
+ (posts || []).forEach(post => {
+  const item = document.createElement('div');
+  item.className = 'ig-grid-item';
   if(post.image_url){
-   const img=document.createElement('img');
-   img.src=post.image_url;
-   img.loading='lazy';
+   const img = document.createElement('img');
+   img.src = post.image_url;
+   img.loading = 'lazy';
    item.append(img);
   }else{
-   item.textContent=(post.content||'').slice(0,55);
+   item.textContent = (post.content || '').slice(0, 55);
   }
   fragment.append(item);
  });
  grid.replaceChildren(fragment);
 }
 
-async function uploadImage(type,input){
- if(!currentUser){
-  status('profilestatus','Iniciá sesión primero.');
-  input.value='';
-  return;
- }
+async function uploadImage(type, input){
+ if(!currentUser) return;
+ const file = input.files?.[0];
+ if(!file) return;
 
- const file=input.files?.[0];
- if(!file)return;
+ const path = currentUser.id+'/'+type+'-'+Date.now()+'.jpg';
+ const {error:uploadError} = await db.storage.from('og-media').upload(path, file, {upsert:false, contentType:file.type});
+ if(uploadError) return status('profilestatus','Error al subir.');
 
- const allowed=['image/jpeg','image/png','image/webp'];
- if(!allowed.includes(file.type)){
-  status('profilestatus','Formato no permitido.');
-  input.value='';
-  return;
- }
+ const {data:urlData} = db.storage.from('og-media').getPublicUrl(path);
+ const field = type==='avatar' ? 'avatar_url' : 'cover_url';
+ const {data} = await db.from('profiles').update({[field]:urlData.publicUrl}).eq('id', currentUser.id).select().single();
 
- if(file.size>5*1024*1024){
-  status('profilestatus','Máximo 5 MB.');
-  input.value='';
-  return;
- }
-
- status('profilestatus','Subiendo...');
-
- const extension={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
- const path=currentUser.id+'/'+type+'-'+Date.now()+'.'+extension;
-
- const {error:uploadError}=await db.storage.from('og-media')
-  .upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
-
- if(uploadError){
-  status('profilestatus','Error al subir: '+uploadError.message);
-  input.value='';
-  return;
- }
-
- const {data:urlData}=db.storage.from('og-media').getPublicUrl(path);
- const field=type==='avatar'?'avatar_url':'cover_url';
-
- const {data,error}=await db.from('profiles')
-  .update({[field]:urlData.publicUrl})
-  .eq('id',currentUser.id)
-  .select().single();
-
- if(error){
-  status('profilestatus','Error al guardar.');
-  input.value='';
-  return;
- }
-
- myProfile=data;
- profilesCache[currentUser.id]=data;
+ myProfile = data;
+ profilesCache[currentUser.id] = data;
  updateProfileUI();
  status('profilestatus','¡Actualizado!');
- input.value='';
+ input.value = '';
 }
 
 async function saveProfile(){
- if(!currentUser)return;
-
- const display_name=document.getElementById('editname').value.trim();
- const bio=document.getElementById('editbio').value.trim();
-
- const {data,error}=await db.from('profiles')
-  .update({display_name,bio})
-  .eq('id',currentUser.id)
-  .select().single();
-
- if(error)return status('profilestatus',error.message);
-
- myProfile=data;
- profilesCache[currentUser.id]=data;
+ if(!currentUser) return;
+ const display_name = document.getElementById('editname').value.trim();
+ const bio = document.getElementById('editbio').value.trim();
+ const {data} = await db.from('profiles').update({display_name, bio}).eq('id', currentUser.id).select().single();
+ myProfile = data;
+ profilesCache[currentUser.id] = data;
  updateProfileUI();
  status('profilestatus','¡Guardado!');
- setTimeout(()=>toggleEditPanel(),700);
+ setTimeout(() => toggleEditPanel(), 700);
 }
 
 async function loadFollowCounts(){
- if(!currentUser)return;
-
- const [followers,following]=await Promise.all([
-  db.from('follows').select('*',{count:'exact',head:true}).eq('following_id',currentUser.id),
-  db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',currentUser.id)
+ if(!currentUser) return;
+ const [followers, following] = await Promise.all([
+  db.from('follows').select('*', {count:'exact', head:true}).eq('following_id', currentUser.id),
+  db.from('follows').select('*', {count:'exact', head:true}).eq('follower_id', currentUser.id)
  ]);
-
- if(followers.error||following.error)return;
-
- document.getElementById('myfollowerscount').textContent=followers.count||0;
- document.getElementById('myfollowingcount').textContent=following.count||0;
+ document.getElementById('myfollowerscount').textContent = followers.count || 0;
+ document.getElementById('myfollowingcount').textContent = following.count || 0;
 }
 
 function formatDate(date){
- return new Date(date).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'});
+ return new Date(date).toLocaleString('es-AR', {dateStyle:'short', timeStyle:'short'});
 }
 
 async function loadActivity(){
- const container=document.getElementById('activitylist');
+ const container = document.getElementById('activitylist');
+ if(!currentUser){ container.textContent = 'Iniciá sesión para ver tu actividad.'; return; }
 
- if(!currentUser){
-  container.textContent='Iniciá sesión para ver tu actividad.';
-  return;
+ const {data:ownPosts} = await db.from('posts').select('id').eq('user_id', currentUser.id);
+ const postIds = (ownPosts || []).map(p => p.id);
+
+ const [followsRes, likesRes, commentsRes] = await Promise.all([
+  db.from('follows').select('follower_id, created_at').eq('following_id', currentUser.id).limit(15),
+  postIds.length ? db.from('likes').select('user_id, post_id, created_at').in('post_id', postIds).limit(15) : {data:[]},
+  postIds.length ? db.from('comments').select('id, user_id, post_id, content, created_at').in('post_id', postIds).limit(15) : {data:[]}
+ ]);
+
+ const events = [];
+ (followsRes.data || []).forEach(f => { if(f.follower_id !== currentUser.id) events.push({type:'follow', ...f}); });
+ (likesRes.data || []).forEach(l => { if(l.user_id !== currentUser.id) events.push({type:'like', ...l}); });
+ (commentsRes.data || []).forEach(c => { if(c.user_id !== currentUser.id) events.push({type:'comment', ...c}); });
+ events.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+ if(!events.length){ container.innerHTML = '<div class="activity-empty">Sin actividad reciente.</div>'; return; }
+
+ const missing = [...new Set(events.map(e => e.user_id))].filter(id => !profilesCache[id]);
+ if(missing.length > 0){
+  const {data: profiles} = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
+  (profiles || []).forEach(p => profilesCache[p.id] = p);
  }
 
- container.textContent='Cargando actividad...';
-
- try{
-  const {data:ownPosts,error:postsError}=await db.from('posts').select('id').eq('user_id',currentUser.id);
-  if(postsError)throw postsError;
-
-  const postIds=(ownPosts||[]).map(p=>p.id);
-
-  const [followsResult,likesResult,commentsResult]=await Promise.all([
-   db.from('follows').select('follower_id,created_at').eq('following_id',currentUser.id).order('created_at',{ascending:false}).limit(30),
-   postIds.length?db.from('likes').select('user_id,post_id,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]}),
-   postIds.length?db.from('comments').select('id,user_id,post_id,content,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]})
-  ]);
-
-  const events=[];
-  (followsResult.data||[]).forEach(f=>{
-   if(f.follower_id!==currentUser.id) events.push({type:'follow',user_id:f.follower_id,created_at:f.created_at});
-  });
-  (likesResult.data||[]).forEach(l=>{
-   if(l.user_id!==currentUser.id) events.push({type:'like',user_id:l.user_id,created_at:l.created_at});
-  });
-  (commentsResult.data||[]).forEach(c=>{
-   if(c.user_id!==currentUser.id) events.push({type:'comment',user_id:c.user_id,content:c.content,created_at:c.created_at});
-  });
-
-  events.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
-
-  if(!events.length){
-   container.innerHTML='<div class="activity-empty">Todavía no tenés actividad reciente.</div>';
-   return;
-  }
-
-  const missingUserIds=[...new Set(events.map(e=>e.user_id))].filter(id=>!profilesCache[id]);
-  if(missingUserIds.length>0){
-   const {data:newProfiles}=await db.from('profiles').select('id,username,display_name,avatar_url').in('id',missingUserIds);
-   (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
-  }
-
-  const fragment=document.createDocumentFragment();
-  events.forEach(event=>{
-   const profile=profilesCache[event.user_id];
-   if(!profile)return;
-
-   const item=document.createElement('div');
-   item.className='activity-item';
-
-   const av=createAvatarNode(profile, false);
-
-   const info=document.createElement('div');
-   info.className='activity-info';
-
-   const message=document.createElement('div');
-   const name=document.createElement('strong');
-   name.textContent=profile.display_name||profile.username||'Usuario';
-   message.append(name);
-
-   if(event.type==='follow') message.append(document.createTextNode(' comenzó a seguirte.'));
-   else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
-   else if(event.type==='comment') message.append(document.createTextNode(' comentó tu publicación.'));
-
-   info.append(message);
-
-   if(event.type==='comment'){
-    const commentText=document.createElement('div');
-    commentText.style.color='#a1a1aa';
-    commentText.style.marginTop='3px';
-    commentText.textContent='“'+(event.content||'')+'”';
-    info.append(commentText);
-   }
-
-   const date=document.createElement('div');
-   date.className='activity-date';
-   date.textContent=event.created_at?formatDate(event.created_at):'Reciente';
-
-   info.append(date);
-   item.append(av,info);
-   item.onclick=()=>openPublicProfile(profile.id);
-
-   fragment.append(item);
-  });
-
-  container.replaceChildren(fragment);
-
- }catch(error){
-  console.error('Error al cargar actividad:',error);
-  container.textContent='No se pudo cargar la actividad.';
- }
+ const fragment = document.createDocumentFragment();
+ events.forEach(ev => {
+  const profile = profilesCache[ev.user_id];
+  if(!profile) return;
+  const item = document.createElement('div');
+  item.className = 'activity-item';
+  item.append(createAvatarNode(profile));
+  
+  const info = document.createElement('div');
+  info.className = 'activity-info';
+  const text = document.createElement('div');
+  text.innerHTML = `<strong>${profile.display_name || profile.username}</strong> ${ev.type==='follow'?'comenzó a seguirte.':ev.type==='like'?'le dio Me gusta a tu post.':'comentó tu post.'}`;
+  info.append(text);
+  item.append(info);
+  item.onclick = () => openPublicProfile(profile.id);
+  fragment.append(item);
+ });
+ container.replaceChildren(fragment);
 }
 
+// CARGA DE POSTS EN LOTE OPTIMIZADA
 async function loadPosts(){
- const container=document.getElementById('posts');
- 
- const {data:posts,error}=await db.from('posts')
-  .select('*').order('created_at',{ascending:false}).limit(20);
+ const container = document.getElementById('posts');
+ const {data:posts} = await db.from('posts').select('*').order('created_at', {ascending:false}).limit(15);
 
- if(error){
-  container.textContent='No se pudieron cargar las publicaciones.';
-  return;
+ if(!posts || !posts.length){ container.replaceChildren(); return; }
+
+ const missing = [...new Set(posts.map(p => p.user_id))].filter(id => !profilesCache[id]);
+ if(missing.length > 0){
+  const {data:profiles} = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
+  (profiles || []).forEach(p => profilesCache[p.id] = p);
  }
 
- if(!posts||!posts.length){
-  container.replaceChildren();
-  return;
- }
-
- const missingUserIds=[...new Set(posts.map(p=>p.user_id))].filter(id=>!profilesCache[id]);
- if(missingUserIds.length>0){
-  const {data:newProfiles}=await db.from('profiles').select('id,username,display_name,avatar_url').in('id',missingUserIds);
-  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
- }
-
- const fragment=document.createDocumentFragment();
-
+ const fragment = document.createDocumentFragment();
  for(const post of posts){
-  const profile=profilesCache[post.user_id]||{username:'usuario'};
+  const profile = profilesCache[post.user_id] || {username:'usuario'};
+  const article = document.createElement('article');
+  article.className = 'post';
 
-  const article=document.createElement('article');
-  article.className='post';
+  const head = document.createElement('div');
+  head.className = 'posthead';
+  const av = createAvatarNode(profile);
+  av.onclick = () => openPublicProfile(post.user_id);
 
-  const head=document.createElement('div');
-  head.className='posthead';
-
-  const av=createAvatarNode(profile, false);
-  av.style.cursor='pointer';
-  av.onclick=()=>openPublicProfile(post.user_id);
-
-  const info=document.createElement('div');
-  info.style.cursor='pointer';
-  info.onclick=()=>openPublicProfile(post.user_id);
-
-  const name=document.createElement('div');
-  name.className='username';
-  name.textContent=profile.display_name||profile.username||'Usuario';
-
-  const time=document.createElement('div');
-  time.className='time';
-  time.textContent=formatDate(post.created_at);
-
-  info.append(name,time);
-  head.append(av,info);
+  const info = document.createElement('div');
+  info.onclick = () => openPublicProfile(post.user_id);
+  info.innerHTML = `<div class="username">${profile.display_name||profile.username}</div><div class="time">${formatDate(post.created_at)}</div>`;
+  head.append(av, info);
   article.append(head);
 
   if(post.image_url){
-   const img=document.createElement('img');
-   img.className='postimage';
-   img.src=post.image_url;
-   img.alt='Imagen';
-   img.loading='lazy';
+   const img = document.createElement('img');
+   img.className = 'postimage';
+   img.src = post.image_url;
+   img.loading = 'lazy';
    article.append(img);
   }
 
   if(post.content){
-   const content=document.createElement('p');
-   content.className='posttext';
-   content.style.marginTop=post.image_url?'12px':'0';
-   content.textContent=post.content;
-   article.append(content);
+   const txt = document.createElement('p');
+   txt.className = 'posttext';
+   txt.textContent = post.content;
+   article.append(txt);
   }
 
-  const commentsSec=document.createElement('div');
-  commentsSec.className='post-comments-section';
-  commentsSec.id=`comments-${post.id}`;
-  article.append(commentsSec);
-
-  const commentInputBox=document.createElement('div');
-  commentInputBox.className='comment-input-box';
-  commentInputBox.id=`commentbox-${post.id}`;
-  
-  const commentInput=document.createElement('input');
-  commentInput.className='comment-input';
-  commentInput.placeholder='Agrega un comentario...';
-  
-  const commentSend=document.createElement('button');
-  commentSend.className='comment-send-btn';
-  commentSend.textContent='Publicar';
-  commentSend.onclick=()=>quickComment(post.id, commentInput);
-
-  commentInputBox.append(commentInput, commentSend);
-  article.append(commentInputBox);
-
-  const actions=document.createElement('div');
-  actions.className='post-actions';
-
-  const likeBtn=document.createElement('button');
-  likeBtn.className='post-action-btn';
-  likeBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
-  likeBtn.onclick=()=>toggleLike(post.id, likeBtn, likesCountDiv);
-
-  const commentIconBtn=document.createElement('button');
-  commentIconBtn.className='post-action-btn';
-  commentIconBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
-  
-  commentIconBtn.onclick=()=>{
-   const box=document.getElementById(`commentbox-${post.id}`);
-   box.classList.toggle('open');
-   if(box.classList.contains('open')){
-    box.querySelector('input').focus();
-   }
-  };
-  
-  actions.append(likeBtn, commentIconBtn);
-  article.append(actions);
-
-  const likesCountDiv=document.createElement('div');
-  likesCountDiv.className='likes-count';
-  likesCountDiv.textContent='0 Me gusta';
-  article.append(likesCountDiv);
-
   fragment.append(article);
-
-  loadPostLikes(post.id, likeBtn, likesCountDiv);
-  loadPostComments(post.id, commentsSec);
  }
-
  container.replaceChildren(fragment);
 }
 
-async function loadPostLikes(postId, btn, countDiv){
- const {count, data, error}=await db.from('likes')
-  .select('user_id',{count:'exact'})
-  .eq('post_id',postId);
-
- if(!error){
-  countDiv.textContent=(count||0)+' Me gusta';
-  if(currentUser && data.some(l=>l.user_id===currentUser.id)){
-   btn.classList.add('liked');
-  }
- }
-}
-
-async function loadPostComments(postId, container){
- const {data:comments, error}=await db.from('comments')
-  .select('id, user_id, content, created_at')
-  .eq('post_id', postId)
-  .order('created_at', {ascending:true});
-
- if(error || !comments || !comments.length) return;
-
- const missing=[...new Set(comments.map(c=>c.user_id))].filter(id=>!profilesCache[id]);
- if(missing.length>0){
-  const {data:newProfiles}=await db.from('profiles').select('id, username').in('id',missing);
-  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
- }
-
- container.replaceChildren();
- 
- const visibleComments=comments.slice(-2);
- 
- visibleComments.forEach(c=>{
-  const item=document.createElement('div');
-  item.className='comment-item';
-  const userSpan=document.createElement('span');
-  userSpan.className='comment-user';
-  userSpan.textContent=profilesCache[c.user_id]?.username||'usuario';
-  const textSpan=document.createElement('span');
-  textSpan.className='comment-text';
-  textSpan.textContent=c.content;
-  item.append(userSpan, textSpan);
-  container.append(item);
- });
-
- if(comments.length>2){
-  const viewMoreBtn=document.createElement('button');
-  viewMoreBtn.className='view-more-comments';
-  viewMoreBtn.textContent=`Ver los ${comments.length} comentarios`;
-  viewMoreBtn.onclick=()=>showAllCommentsModal(postId);
-  container.append(viewMoreBtn);
- }
-}
-
-async function quickComment(postId, input){
- if(!currentUser){
-  alert('Iniciá sesión para comentar.');
-  return showTab('profile');
- }
- const content=input.value.trim();
- if(!content)return;
-
- const {error}=await db.from('comments').insert({
-  post_id:postId, user_id:currentUser.id, content
- });
-
- if(error)return alert('Error: '+error.message);
- input.value='';
- const sec=document.getElementById(`comments-${postId}`);
- if(sec) loadPostComments(postId, sec);
-}
-
-async function showAllCommentsModal(postId){
- const {data:comments, error}=await db.from('comments')
-  .select('id, user_id, content, created_at')
-  .eq('post_id', postId)
-  .order('created_at', {ascending:true});
-
- if(error||!comments.length)return alert('No hay comentarios.');
-
- const userIds=[...new Set(comments.map(c=>c.user_id))];
- const missing=[...userIds].filter(id=>!profilesCache[id]);
- if(missing.length>0){
-  const {data:newProfiles}=await db.from('profiles').select('id, username').in('id',missing);
-  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
- }
-
- alert(comments.map(c=>'@'+(profilesCache[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
-}
-
-async function publish(){
- if(!currentUser){
-  alert('Iniciá sesión para publicar.');
-  return showTab('profile');
- }
-
- const input=document.getElementById('newpost');
- const content=input.value.trim();
- if(!content)return alert('Escribí algo primero.');
-
- const {error}=await db.from('posts').insert({user_id:currentUser.id,content});
- if(error)return alert('Error al publicar: '+error.message);
-
- input.value='';
- await loadPosts();
- await loadMyPostsGrid();
- showTab('feed');
-}
-
-async function toggleLike(postId,button, countDiv){
- if(!currentUser){
-  alert('Iniciá sesión para dar Me gusta.');
-  return showTab('profile');
- }
-
- const isLiked=button.classList.contains('liked');
- let currentCount=parseInt(countDiv.textContent)||0;
-
- if(isLiked){
-  button.classList.remove('liked');
-  currentCount=Math.max(0, currentCount-1);
-  await db.from('likes').delete().eq('post_id',postId).eq('user_id',currentUser.id);
- }else{
-  button.classList.add('liked');
-  currentCount+=1;
-  await db.from('likes').insert({post_id:postId,user_id:currentUser.id});
- }
- countDiv.textContent=currentCount+' Me gusta';
-}
-
 async function openPublicProfile(userId){
- if(!currentUser){
-  alert('Iniciá sesión para visitar perfiles.');
-  return showTab('profile');
- }
-
- if(userId===currentUser.id)return showTab('profile');
+ if(!currentUser) return showTab('profile');
+ if(userId === currentUser.id) return showTab('profile');
 
  status('publicstatus','Cargando...');
  showTab('publicprofile');
 
- let profile=profilesCache[userId];
+ let profile = profilesCache[userId];
  if(!profile){
-  const {data,error}=await db.from('profiles').select('*').eq('id',userId).maybeSingle();
-  if(error||!data)return status('publicstatus','No se encontró el perfil.');
-  profile=data;
-  profilesCache[userId]=data;
+  const {data} = await db.from('profiles').select('*').eq('id', userId).maybeSingle();
+  profile = data;
+  profilesCache[userId] = data;
  }
 
- viewedProfile=profile;
- document.getElementById('publicheadername').textContent='@'+profile.username;
- document.getElementById('publicname').textContent=profile.display_name||profile.username||'Usuario';
- document.getElementById('publicusername').textContent='@'+profile.username;
- document.getElementById('publicbio').textContent=profile.bio||'';
+ viewedProfile = profile;
+ document.getElementById('publicheadername').textContent = '@'+profile.username;
+ document.getElementById('publicname').textContent = profile.display_name||profile.username;
+ document.getElementById('publicusername').textContent = '@'+profile.username;
+ document.getElementById('publicbio').textContent = profile.bio||'';
  document.getElementById('publicavatar').replaceChildren(createAvatarNode(profile).firstChild);
 
- const cover=document.getElementById('publiccover');
+ const cover = document.getElementById('publiccover');
  cover.replaceChildren();
  if(profile.cover_url){
-  const img=document.createElement('img');
-  img.src=profile.cover_url;
-  img.loading='lazy';
+  const img = document.createElement('img');
+  img.src = profile.cover_url;
   cover.append(img);
  }
 
- const [followers,following,relation]=await Promise.all([
-  db.from('follows').select('*',{count:'exact',head:true}).eq('following_id',userId),
-  db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',userId),
-  db.from('follows').select('follower_id').eq('follower_id',currentUser.id).eq('following_id',userId).maybeSingle()
+ const [followers, following, relation] = await Promise.all([
+  db.from('follows').select('*', {count:'exact', head:true}).eq('following_id', userId),
+  db.from('follows').select('*', {count:'exact', head:true}).eq('follower_id', userId),
+  db.from('follows').select('follower_id').eq('follower_id', currentUser.id).eq('following_id', userId).maybeSingle()
  ]);
 
- isFollowing=!!relation.data;
- document.getElementById('publicfollowerscount').textContent=followers.count||0;
- document.getElementById('publicfollowingcount').textContent=following.count||0;
+ isFollowing = !!relation.data;
+ document.getElementById('publicfollowerscount').textContent = followers.count||0;
+ document.getElementById('publicfollowingcount').textContent = following.count||0;
  updateFollowButton();
 
- const container=document.getElementById('publicposts');
- container.replaceChildren();
-
- const {data:posts}=await db.from('posts').select('*').eq('user_id',userId).order('created_at',{ascending:false});
- document.getElementById('publicpostscount').textContent=posts?posts.length:0;
-
- if(posts&&posts.length){
-  const fragment=document.createDocumentFragment();
-  posts.forEach(post=>{
-   const item=document.createElement('div');
-   item.className='ig-grid-item';
-   if(post.image_url){
-    const img=document.createElement('img');
-    img.src=post.image_url;
-    img.loading='lazy';
-    item.append(img);
-   }else{
-    item.textContent=(post.content||'').slice(0,55);
-   }
-   fragment.append(item);
-  });
-  container.replaceChildren(fragment);
- }
+ const {data:posts} = await db.from('posts').select('*').eq('user_id', userId).order('created_at', {ascending:false});
+ document.getElementById('publicpostscount').textContent = posts ? posts.length : 0;
+ 
+ const grid = document.getElementById('publicposts');
+ const fragment = document.createDocumentFragment();
+ (posts || []).forEach(post => {
+  const item = document.createElement('div');
+  item.className = 'ig-grid-item';
+  if(post.image_url){
+   const img = document.createElement('img');
+   img.src = post.image_url;
+   img.loading = 'lazy';
+   item.append(img);
+  }else{
+   item.textContent = (post.content||'').slice(0,55);
+  }
+  fragment.append(item);
+ });
+ grid.replaceChildren(fragment);
  status('publicstatus','');
 }
 
 function updateFollowButton(){
- const button=document.getElementById('publicfollow');
- button.textContent=isFollowing?'Siguiendo':'Seguir';
- button.className=isFollowing?'secondary':'primary';
+ const btn = document.getElementById('publicfollow');
+ btn.textContent = isFollowing ? 'Siguiendo' : 'Seguir';
+ btn.className = isFollowing ? 'secondary' : 'primary';
 }
 
 async function toggleFollow(){
- if(!currentUser||!viewedProfile)return;
- const button=document.getElementById('publicfollow');
- button.disabled=true;
-
- let error=null;
+ if(!currentUser || !viewedProfile) return;
  if(isFollowing){
-  const res=await db.from('follows').delete().eq('follower_id',currentUser.id).eq('following_id',viewedProfile.id);
-  error=res.error;
+  await db.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', viewedProfile.id);
  }else{
-  const res=await db.from('follows').insert({follower_id:currentUser.id,following_id:viewedProfile.id});
-  error=res.error;
+  await db.from('follows').insert({follower_id: currentUser.id, following_id: viewedProfile.id});
  }
- button.disabled=false;
- if(error)return alert(error.message);
-
- isFollowing=!isFollowing;
+ isFollowing = !isFollowing;
  updateFollowButton();
- await loadFollowCounts();
- await loadStoriesData();
+ loadFollowCounts();
+ loadStoriesData();
 }
 
 async function searchUsers(){
  clearTimeout(searchTimer);
- const value=document.getElementById('search').value.trim();
- const result=document.getElementById('searchresult');
- result.replaceChildren();
- if(value.length<2)return;
+ const val = document.getElementById('search').value.trim();
+ const res = document.getElementById('searchresult');
+ res.replaceChildren();
+ if(val.length < 2) return;
 
- searchTimer=setTimeout(async()=>{
-  const {data}=await db.from('profiles').select('id,username,display_name,avatar_url').ilike('username','%'+value+'%').limit(20);
-  if(!data||!data.length){
-   result.innerHTML='<p class="muted" style="text-align:center">No se encontraron usuarios.</p>';
-   return;
-  }
-  const fragment=document.createDocumentFragment();
-  data.forEach(profile=>{
-   profilesCache[profile.id]=profile;
-   const item=document.createElement('div');
-   item.className='public-user';
-   const av=createAvatarNode(profile, false);
-   const info=document.createElement('div');
-   info.className='public-user-info';
-   const name=document.createElement('strong');
-   name.textContent=profile.display_name||profile.username;
-   const username=document.createElement('small');
-   username.textContent='@'+profile.username;
-   info.append(name,username);
-   item.append(av,info);
-   item.onclick=()=>openPublicProfile(profile.id);
-   fragment.append(item);
+ searchTimer = setTimeout(async() => {
+  const {data} = await db.from('profiles').select('id, username, display_name, avatar_url').ilike('username', '%'+val+'%').limit(15);
+  if(!data || !data.length){ res.innerHTML = '<p class="muted" style="text-align:center">Sin resultados.</p>'; return; }
+  
+  const frag = document.createDocumentFragment();
+  data.forEach(p => {
+   profilesCache[p.id] = p;
+   const div = document.createElement('div');
+   div.className = 'public-user';
+   div.append(createAvatarNode(p));
+   const inf = document.createElement('div');
+   inf.className = 'public-user-info';
+   inf.innerHTML = `<strong>${p.display_name||p.username}</strong><small>@${p.username}</small>`;
+   div.append(inf);
+   div.onclick = () => openPublicProfile(p.id);
+   frag.append(div);
   });
-  result.replaceChildren(fragment);
- },300);
+  res.replaceChildren(frag);
+ }, 250);
 }
 
-db.auth.onAuthStateChange((event,session)=>{
- if(event==='INITIAL_SESSION')return;
- setTimeout(async()=>{
-  if(session?.user)await loadAccount(session.user);
-  else{
-   currentUser=null; myProfile=null; viewedProfile=null; myActiveStory=null;
-   updateStoryUI(); updateProfileUI(); await loadPosts();
-  }
- },0);
+db.auth.onAuthStateChange((event, session) => {
+ if(event === 'INITIAL_SESSION') return;
+ setTimeout(() => {
+  if(session?.user) loadAccount(session.user);
+  else { currentUser = null; myProfile = null; viewedProfile = null; myActiveStory = null; updateStoryUI(); updateProfileUI(); loadPosts(); }
+ }, 0);
 });
 
 async function init(){
- const {data}=await db.auth.getSession();
- if(data.session)await loadAccount(data.session.user);
- else{
-  updateProfileUI();
-  await loadPosts();
- }
+ const {data} = await db.auth.getSession();
+ if(data.session) await loadAccount(data.session.user);
+ else { updateProfileUI(); loadPosts(); }
 }
 
 init();
