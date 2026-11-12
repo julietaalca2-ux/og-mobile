@@ -21,8 +21,14 @@ header{
  position:sticky;top:0;background:#09090f;z-index:5;
 }
 .logo{font-size:32px;font-weight:900;letter-spacing:-2px}
-.icon{background:none;border:0;color:white;font-size:23px}
-.stories{display:flex;gap:16px;overflow-x:auto;padding:17px;border-bottom:1px solid #242430}
+.header-actions{display:flex;align-items:center;gap:15px}
+.icon{background:none;border:0;color:white;font-size:23px;cursor:pointer}
+.stories{
+ display:flex;gap:16px;overflow-x:auto;padding:17px;
+ border-bottom:1px solid #242430;
+ scrollbar-width:none;
+}
+.stories::-webkit-scrollbar{display:none}
 .story{text-align:center;min-width:60px;font-size:11px;color:#bbb}
 .avatar{
  width:55px;height:55px;border-radius:50%;
@@ -39,20 +45,23 @@ main{max-width:600px;margin:auto}
 .time{color:#888;font-size:12px;margin-top:3px}
 .posttext{font-size:15px;line-height:1.5;margin:14px 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .actions{display:flex;gap:20px;padding-top:13px;flex-wrap:wrap}
-.action{border:0;background:none;color:#ddd;font-size:14px;padding:5px 0}
+.action{border:0;background:none;color:#ddd;font-size:14px;padding:5px 0;cursor:pointer}
 .action:disabled{opacity:.5}
 .liked{color:#ff548b}
 nav{
- position:fixed;bottom:0;left:0;right:0;height:70px;
- background:#101019;border-top:1px solid #292936;
+ position:fixed;bottom:0;left:0;right:0;
+ min-height:70px;background:#101019;
+ border-top:1px solid #292936;
  display:flex;justify-content:space-around;align-items:center;
- z-index:10;padding-bottom:env(safe-area-inset-bottom);
+ z-index:10;padding:7px 2px env(safe-area-inset-bottom);
 }
 nav button{
- background:none;border:0;color:#aaa;font-size:23px;
- display:flex;flex-direction:column;align-items:center;gap:3px;
+ background:none;border:0;color:#aaa;font-size:21px;
+ display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:3px;min-width:0;flex:1;
+ cursor:pointer;
 }
-nav small{font-size:10px}
+nav small{font-size:9px}
 nav button.active{color:#a78bfa}
 .section{display:none;padding:20px}
 .section.active{display:block}
@@ -99,42 +108,42 @@ textarea{height:120px;resize:vertical}
 
 /* ACTIVIDAD */
 .activity-item{
- display:flex;
- align-items:center;
- gap:12px;
- padding:15px 0;
- border-bottom:1px solid #242430;
+ display:flex;align-items:center;gap:12px;
+ padding:15px 0;border-bottom:1px solid #242430;
 }
-.activity-item .avatar{
- width:45px;
- height:45px;
- min-width:45px;
- margin:0;
-}
+.activity-item .avatar{width:45px;height:45px;min-width:45px;margin:0}
 .activity-info{
- flex:1;
- min-width:0;
- font-size:14px;
- line-height:1.5;
- color:#fff;
- overflow-wrap:anywhere;
+ flex:1;min-width:0;font-size:14px;line-height:1.5;
+ color:#fff;overflow-wrap:anywhere;
 }
 .activity-info strong{color:white}
-.activity-info .activity-message{
- display:block;
- color:#fff;
- visibility:visible;
- opacity:1;
+.activity-info .activity-message{display:block;color:#fff;visibility:visible;opacity:1}
+.activity-date{color:#888;font-size:11px;margin-top:4px}
+.activity-empty{text-align:center;padding:35px 15px;color:#999}
+
+/* MENSAJES */
+.chat-header{
+ display:flex;align-items:center;justify-content:space-between;
+ margin-bottom:20px;
 }
-.activity-date{
- color:#888;
- font-size:11px;
- margin-top:4px;
-}
-.activity-empty{
- text-align:center;
- padding:35px 15px;
+.chat-empty{
+ text-align:center;padding:65px 20px;
  color:#999;
+}
+.chat-empty-icon{
+ width:75px;height:75px;border:2px solid #a78bfa;
+ border-radius:50%;display:grid;place-items:center;
+ font-size:32px;margin:0 auto 18px;color:#b99cff;
+}
+.chat-empty h3{color:white;margin-bottom:8px}
+.chat-search{margin-bottom:15px}
+.chat-note{
+ background:#17171f;border:1px solid #292936;
+ border-radius:12px;padding:13px;margin-top:20px;
+ font-size:12px;color:#aaa;line-height:1.5;
+}
+@media(min-width:700px){
+ nav{max-width:600px;left:50%;transform:translateX(-50%);border-radius:15px 15px 0 0}
 }
 </style>
 </head>
@@ -143,14 +152,15 @@ textarea{height:120px;resize:vertical}
 
 <header>
  <div class="logo">Ög<span style="color:#9872ff">.</span></div>
- <div>
-  <button class="icon" onclick="showTab('explore')">⌕</button>
-  <button class="icon" onclick="showTab('notifications')">♡</button>
+ <div class="header-actions">
+  <button class="icon" aria-label="Notificaciones" onclick="showTab('notifications')">♡</button>
+  <button class="icon" aria-label="Mensajes" onclick="showTab('messages')">✉</button>
  </div>
 </header>
 
 <main>
 
+<!-- INICIO -->
 <div id="feed" class="active">
  <div class="stories">
   <div class="story"><div class="avatar">＋</div>Tu historia</div>
@@ -160,6 +170,7 @@ textarea{height:120px;resize:vertical}
  <div id="posts"></div>
 </div>
 
+<!-- EXPLORAR -->
 <div id="explore" class="section">
  <h2>Explorar</h2>
  <p class="muted">Descubre personas en Ög.</p>
@@ -167,6 +178,7 @@ textarea{height:120px;resize:vertical}
  <div id="searchresult"></div>
 </div>
 
+<!-- CREAR -->
 <div id="create" class="section">
  <h2>Crear publicación</h2>
  <textarea id="newpost" placeholder="¿Qué quieres compartir?"></textarea>
@@ -174,14 +186,38 @@ textarea{height:120px;resize:vertical}
  <p class="muted">Tu publicación será visible para la comunidad.</p>
 </div>
 
+<!-- MENSAJES -->
+<div id="messages" class="section">
+ <div class="chat-header">
+  <h2>Mensajes</h2>
+  <button class="icon" onclick="showTab('explore')" aria-label="Buscar personas">＋</button>
+ </div>
+
+ <input class="field chat-search" placeholder="Buscar conversaciones..." disabled>
+
+ <div class="chat-empty">
+  <div class="chat-empty-icon">✉</div>
+  <h3>Tus mensajes</h3>
+  <p>Acá aparecerán tus conversaciones privadas de Ög.</p>
+  <button class="primary" onclick="showTab('explore')">Buscar personas</button>
+ </div>
+
+ <div class="chat-note">
+  Los mensajes privados todavía necesitan conectarse a Supabase.
+  Esta pantalla ya está separada del inicio y preparada para esa función.
+ </div>
+</div>
+
+<!-- NOTIFICACIONES -->
 <div id="notifications" class="section">
- <h2>Actividad</h2>
+ <h2>Notificaciones</h2>
  <p class="muted">Novedades e interacciones de tu cuenta.</p>
  <div id="activitylist">
   <p class="muted">Cargando actividad...</p>
  </div>
 </div>
 
+<!-- PERFIL -->
 <div id="profile" class="section">
  <div class="profilebox">
   <div class="profilecover" id="mycover"></div>
@@ -221,6 +257,7 @@ textarea{height:120px;resize:vertical}
  </div>
 </div>
 
+<!-- PERFIL PÚBLICO -->
 <div id="publicprofile" class="section">
  <button class="secondary back-button" onclick="showTab('explore')">← Volver a explorar</button>
 
@@ -247,6 +284,7 @@ textarea{height:120px;resize:vertical}
  <button class="active" onclick="showTab('feed',this)">⌂<small>Inicio</small></button>
  <button onclick="showTab('explore',this)">⌕<small>Explorar</small></button>
  <button onclick="showTab('create',this)">⊕<small>Crear</small></button>
+ <button onclick="showTab('messages',this)">✉<small>Chat</small></button>
  <button onclick="showTab('notifications',this)">♡<small>Actividad</small></button>
  <button onclick="showTab('profile',this)">◉<small>Perfil</small></button>
 </nav>
@@ -266,12 +304,15 @@ let searchTimer=null;
 
 function showTab(id,btn){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
- document.getElementById(id).classList.add('active');
+ const section=document.getElementById(id);
+ if(!section)return;
+ section.classList.add('active');
+
  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
 
  if(btn)btn.classList.add('active');
  else{
-  const index=['feed','explore','create','notifications','profile'].indexOf(id);
+  const index=['feed','explore','create','messages','notifications','profile'].indexOf(id);
   if(index>=0)document.querySelectorAll('nav button')[index].classList.add('active');
  }
 
@@ -522,7 +563,7 @@ function formatDate(date){
  });
 }
 
-// ACTIVIDAD CORREGIDA
+// NOTIFICACIONES
 async function loadActivity(){
  const container=document.getElementById('activitylist');
 
@@ -535,8 +576,7 @@ async function loadActivity(){
 
  try{
   const {data:ownPosts,error:postsError}=await db.from('posts')
-   .select('id,user_id')
-   .eq('user_id',currentUser.id);
+   .select('id,user_id').eq('user_id',currentUser.id);
 
   if(postsError)throw postsError;
 
@@ -546,23 +586,18 @@ async function loadActivity(){
    db.from('follows')
     .select('follower_id,following_id,created_at')
     .eq('following_id',currentUser.id)
-    .order('created_at',{ascending:false})
-    .limit(50),
+    .order('created_at',{ascending:false}).limit(50),
 
    postIds.length
-    ?db.from('likes')
-      .select('user_id,post_id,created_at')
+    ?db.from('likes').select('user_id,post_id,created_at')
       .in('post_id',postIds)
-      .order('created_at',{ascending:false})
-      .limit(100)
+      .order('created_at',{ascending:false}).limit(100)
     :Promise.resolve({data:[],error:null}),
 
    postIds.length
-    ?db.from('comments')
-      .select('id,user_id,post_id,content,created_at')
+    ?db.from('comments').select('id,user_id,post_id,content,created_at')
       .in('post_id',postIds)
-      .order('created_at',{ascending:false})
-      .limit(100)
+      .order('created_at',{ascending:false}).limit(100)
     :Promise.resolve({data:[],error:null})
   ]);
 
@@ -574,51 +609,30 @@ async function loadActivity(){
 
   (followsResult.data||[]).forEach(f=>{
    if(f.follower_id===currentUser.id)return;
-   events.push({
-    type:'follow',
-    user_id:f.follower_id,
-    created_at:f.created_at
-   });
+   events.push({type:'follow',user_id:f.follower_id,created_at:f.created_at});
   });
 
   (likesResult.data||[]).forEach(l=>{
    if(l.user_id===currentUser.id)return;
-   events.push({
-    type:'like',
-    user_id:l.user_id,
-    post_id:l.post_id,
-    created_at:l.created_at
-   });
+   events.push({type:'like',user_id:l.user_id,post_id:l.post_id,created_at:l.created_at});
   });
 
   (commentsResult.data||[]).forEach(c=>{
    if(c.user_id===currentUser.id)return;
-   events.push({
-    type:'comment',
-    user_id:c.user_id,
-    post_id:c.post_id,
-    content:c.content,
-    created_at:c.created_at
-   });
+   events.push({type:'comment',user_id:c.user_id,post_id:c.post_id,content:c.content,created_at:c.created_at});
   });
 
-  events.sort((a,b)=>
-   new Date(b.created_at||0)-new Date(a.created_at||0)
-  );
+  events.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
 
   if(!events.length){
-   container.innerHTML=
-    '<div class="activity-empty">Todavía no tenés actividad.<br>Cuando alguien te siga, dé Me gusta o comente tus publicaciones, aparecerá aquí.</div>';
+   container.innerHTML='<div class="activity-empty">Todavía no tenés actividad.<br>Cuando alguien te siga, dé Me gusta o comente tus publicaciones, aparecerá aquí.</div>';
    return;
   }
 
-  const userIds=[
-   ...new Set(events.map(e=>e.user_id).filter(Boolean))
-  ];
+  const userIds=[...new Set(events.map(e=>e.user_id).filter(Boolean))];
 
   const {data:profiles,error:profileError}=await db.from('profiles')
-   .select('id,username,display_name,avatar_url')
-   .in('id',userIds);
+   .select('id,username,display_name,avatar_url').in('id',userIds);
 
   if(profileError)throw profileError;
 
@@ -645,9 +659,7 @@ async function loadActivity(){
    message.className='activity-message';
 
    const name=document.createElement('strong');
-   name.textContent=
-    profile.display_name||profile.username||'Usuario';
-
+   name.textContent=profile.display_name||profile.username||'Usuario';
    message.append(name);
 
    if(event.type==='follow'){
@@ -658,7 +670,6 @@ async function loadActivity(){
     message.append(document.createTextNode(' comentó tu publicación 💬'));
    }
 
-   // IMPORTANTE: insertar el mensaje para TODOS los tipos de actividad
    info.append(message);
 
    if(event.type==='comment'){
@@ -671,23 +682,18 @@ async function loadActivity(){
 
    const date=document.createElement('div');
    date.className='activity-date';
-   date.textContent=event.created_at
-    ?formatDate(event.created_at)
-    :'Actividad reciente';
+   date.textContent=event.created_at?formatDate(event.created_at):'Actividad reciente';
 
    info.append(date);
    item.append(av,info);
-
    item.style.cursor='pointer';
    item.onclick=()=>openPublicProfile(profile.id);
-
    container.append(item);
   });
 
  }catch(error){
   console.error('Error al cargar actividad:',error);
-  container.textContent=
-   'No se pudo cargar la actividad: '+error.message;
+  container.textContent='No se pudo cargar la actividad: '+error.message;
  }
 }
 
@@ -898,9 +904,7 @@ async function viewComments(postId){
  const profileMap={};
  (profiles||[]).forEach(p=>profileMap[p.id]=p);
 
- alert(comments.map(c=>
-  '@'+(profileMap[c.user_id]?.username||'usuario')+': '+c.content
- ).join('\n\n'));
+ alert(comments.map(c=>'@'+(profileMap[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
 }
 
 // SEGUIR DESDE EL FEED
@@ -952,8 +956,7 @@ async function openPublicProfile(userId){
 
  viewedProfile=profile;
 
- document.getElementById('publicname').textContent=
-  profile.display_name||profile.username||'Usuario';
+ document.getElementById('publicname').textContent=profile.display_name||profile.username||'Usuario';
  document.getElementById('publicusername').textContent='@'+profile.username;
  document.getElementById('publicbio').textContent=profile.bio||'';
  document.getElementById('publicavatar').replaceChildren(avatar(profile));
@@ -973,8 +976,7 @@ async function openPublicProfile(userId){
   db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',userId),
   db.from('follows').select('follower_id')
    .eq('follower_id',currentUser.id)
-   .eq('following_id',userId)
-   .maybeSingle()
+   .eq('following_id',userId).maybeSingle()
  ]);
 
  if(followers.error||following.error||relation.error){
@@ -1021,7 +1023,6 @@ async function openPublicProfile(userId){
    time.className='time';
    time.textContent=formatDate(post.created_at);
    article.append(time);
-
    container.append(article);
   });
  }
@@ -1053,8 +1054,7 @@ async function toggleFollow(){
   error=result.error;
  }else{
   const result=await db.from('follows').insert({
-   follower_id:currentUser.id,
-   following_id:viewedProfile.id
+   follower_id:currentUser.id,following_id:viewedProfile.id
   });
   error=result.error;
  }
@@ -1070,10 +1070,8 @@ async function toggleFollow(){
  updateFollowButton();
 
  const [followers,following]=await Promise.all([
-  db.from('follows').select('*',{count:'exact',head:true})
-   .eq('following_id',viewedProfile.id),
-  db.from('follows').select('*',{count:'exact',head:true})
-   .eq('follower_id',viewedProfile.id)
+  db.from('follows').select('*',{count:'exact',head:true}).eq('following_id',viewedProfile.id),
+  db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',viewedProfile.id)
  ]);
 
  if(!followers.error&&!following.error){
@@ -1129,7 +1127,6 @@ async function searchUsers(){
 
    info.append(name,username);
    item.append(av,info);
-
    item.onclick=()=>openPublicProfile(profile.id);
    result.append(item);
   });
