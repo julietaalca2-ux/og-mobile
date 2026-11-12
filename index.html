@@ -198,7 +198,6 @@ textarea{height:120px;resize:none}
 
 <header>
  <div class="logo">Ög<span style="color:#3b82f6">.</span></div>
- <!-- Cabecera predeterminada (Lupa y Corazón) -->
  <div id="header-default-icons" style="display:flex;align-items:center;gap:4px">
   <button class="icon" onclick="showTab('explore')" aria-label="Explorar">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -207,7 +206,6 @@ textarea{height:120px;resize:none}
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
   </button>
  </div>
- <!-- Cabecera de Perfil (Tuerquita de Configuración) -->
  <div id="header-profile-icons" style="display:none;align-items:center;gap:4px">
   <button class="icon" onclick="toggleSettingsDrawer()" aria-label="Configuración">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -244,7 +242,7 @@ textarea{height:120px;resize:none}
 <!-- ACTIVIDAD -->
 <div id="notifications" class="section">
  <h2 style="margin-top:0">Actividad</h2>
- <p class="muted">Novedades e interacciones de tu cuenta.</p>
+ <p class="muted">Novedades e interacciones en tiempo real.</p>
  <div id="activitylist">
   <p class="muted">Cargando actividad...</p>
  </div>
@@ -378,7 +376,7 @@ textarea{height:120px;resize:none}
 
 </main>
 
-<!-- MENÚ LATERAL DESPLEGABLE DE CONFIGURACIÓN (ESTILO INSTAGRAM) -->
+<!-- MENÚ LATERAL CONFIGURACIÓN -->
 <div id="settingsOverlay" class="settings-overlay" onclick="toggleSettingsDrawer()">
  <div class="settings-drawer" onclick="event.stopPropagation()">
   <div class="settings-handle"></div>
@@ -437,6 +435,7 @@ let viewedProfile=null;
 let isFollowing=false;
 let searchTimer=null;
 let profilesCache={};
+let realtimeChannel=null;
 
 function showTab(id,btn){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
@@ -449,7 +448,6 @@ function showTab(id,btn){
   if(index>=0)document.querySelectorAll('nav button')[index].classList.add('active');
  }
 
- // Control de visibilidad de la barra superior según la pestaña
  const defaultIcons=document.getElementById('header-default-icons');
  const profileIcons=document.getElementById('header-profile-icons');
 
@@ -537,6 +535,7 @@ async function signOut(){
  const {error}=await db.auth.signOut();
  if(error)return alert(error.message);
 
+ if(realtimeChannel) db.removeChannel(realtimeChannel);
  currentUser=null;
  myProfile=null;
  viewedProfile=null;
@@ -574,6 +573,26 @@ async function loadAccount(user){
  profilesCache[user.id]=profile;
  updateProfileUI();
  await loadPosts();
+ setupRealtimeNotifications();
+}
+
+// CONFIGURAR ESCUCHA EN TIEMPO REAL (WEBSOCKETS)
+function setupRealtimeNotifications(){
+ if(realtimeChannel) db.removeChannel(realtimeChannel);
+
+ realtimeChannel=db.channel('public-notifications')
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows'},payload=>{
+   if(payload.new.following_id===currentUser?.id){
+    loadActivity();
+   }
+  })
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'likes'},payload=>{
+   loadActivity();
+  })
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'comments'},payload=>{
+   loadActivity();
+  })
+  .subscribe();
 }
 
 function updateProfileUI(){
