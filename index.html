@@ -65,10 +65,11 @@ main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active {padding: 0 !important;}
 
-/* CÁMARA A PANTALLA COMPLETA ESTILO INSTAGRAM */
+/* CÁMARA A PANTALLA COMPLETA OPTIMIZADA (GPU ACCELERATED) */
 #cameraModal{
  position:fixed;inset:0;background:#000;z-index:400;
  display:none;flex-direction:column;justify-content:space-between;
+ transform:translateZ(0); /* Forzar aceleración por hardware */
 }
 #cameraModal.active{display:flex}
 
@@ -81,6 +82,7 @@ main > div.active {display: block !important;}
 
 .camera-video-fullscreen{
  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#000;
+ -webkit-transform:translateZ(0);transform:translateZ(0);
 }
 #capturedImagePreview{z-index:2}
 
@@ -297,9 +299,9 @@ textarea{height:120px;resize:none}
  <div id="posts"></div>
 </div>
 
-<!-- CÁMARA A PANTALLA COMPLETA ESTILO INSTAGRAM -->
+<!-- CÁMARA A PANTALLA COMPLETA OPTIMIZADA -->
 <div id="cameraModal">
- <video id="cameraVideo" class="camera-video-fullscreen" autoplay playsinline muted></video>
+ <video id="cameraVideo" class="camera-video-fullscreen" autoplay playsinline muted webkit-playsinline></video>
  <img id="capturedImagePreview" class="camera-video-fullscreen" style="display:none" alt="Vista previa">
 
  <div class="camera-screen-container">
@@ -874,6 +876,9 @@ async function handleStoryClick(){
  }
 }
 
+/* ========================================================
+   CÁMARA OPTIMIZADA DE ALTO RENDIMIENTO (FLUJO NATIVO)
+   ======================================================== */
 async function openCameraModal(){
  capturedBlob = null;
  document.getElementById('capturedImagePreview').style.display = 'none';
@@ -887,21 +892,32 @@ async function openCameraModal(){
 }
 
 async function startCameraStream(){
+ // Limpieza absoluta de streams anteriores para evitar fugas de memoria RAM
  if(mediaStream){
-  mediaStream.getTracks().forEach(track=>track.stop());
+  mediaStream.getTracks().forEach(track => track.stop());
+  mediaStream = null;
  }
 
  try{
+  // Solicitud optimizada que se adapta al rendimiento del procesador móvil
   mediaStream = await navigator.mediaDevices.getUserMedia({
-   video:{facingMode: currentFacingMode},
-   audio:false
+   video: {
+    facingMode: currentFacingMode,
+    width: { ideal: 720 },
+    height: { ideal: 1280 }
+   },
+   audio: false
   });
+
   const videoElem = document.getElementById('cameraVideo');
   videoElem.srcObject = mediaStream;
-  await videoElem.play();
+  
+  // Reproducción segura optimizada para evitar excepciones de promesas en móviles
+  await videoElem.play().catch(e => console.warn("Autoplay bloqueado o demorado:", e));
  }catch(err){
-  console.error('Error al acceder a la cámara:', err);
-  alert('No se pudo acceder a la cámara. Asegúrate de dar permisos de cámara en tu navegador.');
+  console.error('Error al inicializar la cámara:', err);
+  alert('No se pudo acceder a la cámara. Revisa los permisos de tu navegador.');
+  closeCameraModal();
  }
 }
 
@@ -920,10 +936,13 @@ async function updateGalleryThumbIcon(){
 }
 
 function closeCameraModal(){
+ // Liberación estricta de recursos de video de hardware
  if(mediaStream){
-  mediaStream.getTracks().forEach(track=>track.stop());
-  mediaStream=null;
+  mediaStream.getTracks().forEach(track => track.stop());
+  mediaStream = null;
  }
+ const videoElem = document.getElementById('cameraVideo');
+ videoElem.srcObject = null;
  document.getElementById('cameraModal').classList.remove('active');
 }
 
@@ -935,13 +954,14 @@ function takePhoto(){
  const ctx = canvas.getContext('2d');
  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
- canvas.toBlob(blob=>{
+ // Compresión inteligente (0.8) para no saturar memoria ni ancho de banda
+ canvas.toBlob(blob => {
   capturedBlob = blob;
   const imageUrl = URL.createObjectURL(blob);
   
   if(mediaStream){
-   mediaStream.getTracks().forEach(track=>track.stop());
-   mediaStream=null;
+   mediaStream.getTracks().forEach(track => track.stop());
+   mediaStream = null;
   }
 
   const preview = document.getElementById('capturedImagePreview');
@@ -950,7 +970,7 @@ function takePhoto(){
   video.style.display = 'none';
   document.getElementById('captureBtn').style.display = 'none';
   document.getElementById('publishStoryBtn').style.display = 'block';
- }, 'image/jpeg', 0.9);
+ }, 'image/jpeg', 0.8);
 }
 
 async function handleGallerySelect(input){
@@ -967,8 +987,8 @@ async function handleGallerySelect(input){
  document.getElementById('publishStoryBtn').style.display = 'block';
 
  if(mediaStream){
-  mediaStream.getTracks().forEach(track=>track.stop());
-  mediaStream=null;
+  mediaStream.getTracks().forEach(track => track.stop());
+  mediaStream = null;
  }
  input.value = '';
 }
