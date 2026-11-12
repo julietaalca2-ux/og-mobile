@@ -74,7 +74,6 @@ main > div.active {
 .comment-text{color:#d4d4d8}
 .view-more-comments{color:#71717a;background:none;border:0;padding:0;font-size:13px;cursor:pointer;margin-top:4px}
 
-/* Oculto por defecto hasta hacer clic en el icono de comentario */
 .comment-input-box{display:none;align-items:center;border-top:1px solid #18181b;padding:8px 16px}
 .comment-input-box.open{display:flex}
 .comment-input{flex:1;background:none;border:0;color:#fff;font-size:13px;outline:none}
@@ -190,8 +189,6 @@ textarea{height:120px;resize:none}
 <div id="feed" class="active">
  <div class="stories">
   <div class="story"><div class="avatar"><div class="avatar-inner">＋</div></div>Tu historia</div>
-  <div class="story"><div class="avatar"><div class="avatar-inner">🌙</div></div>Ög</div>
-  <div class="story"><div class="avatar"><div class="avatar-inner">🎧</div></div>Comunidad</div>
  </div>
  <div id="posts"></div>
 </div>
@@ -771,7 +768,6 @@ async function loadActivity(){
  }
 }
 
-// FEED CON CAJA DE COMENTARIOS OCULTA HASTA PULSAR EL ICONO
 async function loadPosts(){
  const container=document.getElementById('posts');
  
@@ -844,13 +840,11 @@ async function loadPosts(){
    article.append(content);
   }
 
-  // CONTENEDOR DE COMENTARIOS INCRUSTADOS
   const commentsSec=document.createElement('div');
   commentsSec.className='post-comments-section';
   commentsSec.id=`comments-${post.id}`;
   article.append(commentsSec);
 
-  // CAJA PARA COMENTAR (OCULTA POR DEFECTO)
   const commentInputBox=document.createElement('div');
   commentInputBox.className='comment-input-box';
   commentInputBox.id=`commentbox-${post.id}`;
@@ -867,7 +861,6 @@ async function loadPosts(){
   commentInputBox.append(commentInput, commentSend);
   article.append(commentInputBox);
 
-  // BOTONES DE ACCIÓN
   const actions=document.createElement('div');
   actions.className='post-actions';
 
@@ -880,7 +873,6 @@ async function loadPosts(){
   commentIconBtn.className='post-action-btn';
   commentIconBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
   
-  // AL HACER CLIC EN EL ICONO DE COMENTARIOS, SE ABRE LA CAJA Y SE PONE EL FOCO
   commentIconBtn.onclick=()=>{
    const box=document.getElementById(`commentbox-${post.id}`);
    box.classList.toggle('open');
@@ -892,7 +884,6 @@ async function loadPosts(){
   actions.append(likeBtn, commentIconBtn);
   article.append(actions);
 
-  // CONTADOR DE LIKES
   const likesCountDiv=document.createElement('div');
   likesCountDiv.className='likes-count';
   likesCountDiv.textContent='0 Me gusta';
@@ -900,7 +891,6 @@ async function loadPosts(){
 
   fragment.append(article);
 
-  // CARGAR LIKES Y COMENTARIOS REALES
   loadPostLikes(post.id, likeBtn, likesCountDiv);
   loadPostComments(post.id, commentsSec);
  }
