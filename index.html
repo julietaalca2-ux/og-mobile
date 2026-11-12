@@ -12,6 +12,7 @@ body{
  margin:0;background:#000000;color:#f4f4f5;
  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
  padding-bottom:90px;
+ -webkit-font-smoothing:antialiased;
 }
 header{
  height:54px;padding:0 16px;display:flex;
@@ -23,7 +24,7 @@ header{
 }
 .logo{font-size:26px;font-weight:900;letter-spacing:-1.5px;color:#fff}
 .icon{background:none;border:0;color:#fff;font-size:22px;padding:8px;cursor:pointer}
-.stories{display:flex;gap:14px;overflow-x:auto;padding:12px 16px;border-bottom:1px solid #18181b;background:#000}
+.stories{display:flex;gap:14px;overflow-x:auto;padding:12px 16px;border-bottom:1px solid #18181b;background:#000;scrollbar-width:none}
 .stories::-webkit-scrollbar{display:none}
 .story{text-align:center;min-width:64px;font-size:11px;color:#a1a1aa;flex-shrink:0}
 .avatar{
@@ -39,10 +40,11 @@ header{
 .avatar img{width:100%;height:100%;object-fit:cover}
 main{max-width:470px;margin:auto}
 
-/* CORRECCIÓN: Ocultar todas las secciones por defecto y mostrar solo la activa */
+/* Renderizado ultra rápido y aislamiento de secciones */
 main > div {
  display: none !important;
  padding: 16px;
+ content-visibility: auto;
 }
 main > div.active {
  display: block !important;
@@ -59,7 +61,7 @@ main > div.active {
 .action:disabled{opacity:.5}
 .liked{color:#ef4444 !important}
 
-/* Navegación Inferior estilo iOS moderno */
+/* Navegación Inferior optimizada para iOS */
 nav{
  position:fixed;bottom:0;left:0;right:0;height:56px;
  background:rgba(0,0,0,0.9);backdrop-filter:blur(16px);
@@ -71,7 +73,7 @@ nav{
 nav button{
  background:none;border:0;color:#71717a;font-size:22px;
  display:flex;flex-direction:column;align-items:center;justify-content:center;
- width:100%;height:100%;cursor:pointer;transition:color 0.2s;
+ width:100%;height:100%;cursor:pointer;transition:color 0.15s ease;
 }
 nav small{display:none}
 nav button.active{color:#fff}
@@ -87,7 +89,7 @@ textarea{height:120px;resize:none}
 .primary{
  width:100%;padding:12px;background:#3b82f6;color:white;
  border:0;border-radius:10px;font-weight:600;margin-top:12px;font-size:14px;cursor:pointer;
- transition:background 0.2s;
+ transition:background 0.15s ease;
 }
 .primary:active{background:#2563eb}
 .secondary{background:#27272a;border:1px solid #3f3f46;color:white;padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer}
@@ -278,6 +280,7 @@ let myProfile=null;
 let viewedProfile=null;
 let isFollowing=false;
 let searchTimer=null;
+let profilesCache={}; // Caché en memoria para evitar consultas repetidas de perfiles
 
 function showTab(id,btn){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
@@ -305,6 +308,7 @@ function avatar(profile){
   const img=document.createElement('img');
   img.src=profile.avatar_url;
   img.alt='Avatar';
+  img.loading='lazy';
   inner.append(img);
  }else{
   inner.textContent='👤';
@@ -394,6 +398,7 @@ async function loadAccount(user){
  }
 
  myProfile=profile;
+ profilesCache[user.id]=profile;
  updateProfileUI();
  await loadPosts();
 }
@@ -429,13 +434,14 @@ function updateProfileUI(){
   const img=document.createElement('img');
   img.src=myProfile.cover_url;
   img.alt='Portada del perfil';
+  img.loading='lazy';
   cover.append(img);
  }
 
  loadFollowCounts();
 }
 
-// SUBIR FOTO DE PERFIL O PORTADA
+// SUBIR FOTO
 async function uploadImage(type,input){
  if(!currentUser){
   status('profilestatus','Iniciá sesión primero.');
@@ -447,7 +453,6 @@ async function uploadImage(type,input){
  if(!file)return;
 
  const allowed=['image/jpeg','image/png','image/webp'];
-
  if(!allowed.includes(file.type)){
   status('profilestatus','Formato no permitido. Usá JPG, PNG o WEBP.');
   input.value='';
@@ -462,16 +467,11 @@ async function uploadImage(type,input){
 
  status('profilestatus','Subiendo imagen...');
 
- const extension={
-  'image/jpeg':'jpg','image/png':'png','image/webp':'webp'
- }[file.type];
-
+ const extension={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
  const path=currentUser.id+'/'+type+'-'+Date.now()+'.'+extension;
 
  const {error:uploadError}=await db.storage.from('og-media')
-  .upload(path,file,{
-   cacheControl:'3600',upsert:false,contentType:file.type
-  });
+  .upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
 
  if(uploadError){
   status('profilestatus','No se pudo subir la imagen: '+uploadError.message);
@@ -494,6 +494,7 @@ async function uploadImage(type,input){
  }
 
  myProfile=data;
+ profilesCache[currentUser.id]=data;
  updateProfileUI();
  status('profilestatus',type==='avatar'?'¡Foto de perfil actualizada!':'¡Portada actualizada!');
  input.value='';
@@ -514,11 +515,12 @@ async function saveProfile(){
  if(error)return status('profilestatus',error.message);
 
  myProfile=data;
+ profilesCache[currentUser.id]=data;
  updateProfileUI();
  status('profilestatus','Perfil actualizado correctamente.');
 }
 
-// CONTADORES PROPIOS
+// CONTADORES
 async function loadFollowCounts(){
  if(!currentUser)return;
 
@@ -534,12 +536,10 @@ async function loadFollowCounts(){
 }
 
 function formatDate(date){
- return new Date(date).toLocaleString('es-AR',{
-  dateStyle:'short',timeStyle:'short'
- });
+ return new Date(date).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'});
 }
 
-// ACTIVIDAD
+// ACTIVIDAD OPTIMIZADA
 async function loadActivity(){
  const container=document.getElementById('activitylist');
 
@@ -551,81 +551,45 @@ async function loadActivity(){
  container.textContent='Cargando actividad...';
 
  try{
-  const {data:ownPosts,error:postsError}=await db.from('posts')
-   .select('id,user_id')
-   .eq('user_id',currentUser.id);
-
+  const {data:ownPosts,error:postsError}=await db.from('posts').select('id').eq('user_id',currentUser.id);
   if(postsError)throw postsError;
 
   const postIds=(ownPosts||[]).map(p=>p.id);
 
   const [followsResult,likesResult,commentsResult]=await Promise.all([
-   db.from('follows')
-    .select('follower_id,following_id,created_at')
-    .eq('following_id',currentUser.id)
-    .order('created_at',{ascending:false})
-    .limit(50),
-
-   postIds.length
-    ?db.from('likes')
-      .select('user_id,post_id,created_at')
-      .in('post_id',postIds)
-      .order('created_at',{ascending:false})
-      .limit(100)
-    :Promise.resolve({data:[],error:null}),
-
-   postIds.length
-    ?db.from('comments')
-      .select('id,user_id,post_id,content,created_at')
-      .in('post_id',postIds)
-      .order('created_at',{ascending:false})
-      .limit(100)
-    :Promise.resolve({data:[],error:null})
+   db.from('follows').select('follower_id,created_at').eq('following_id',currentUser.id).order('created_at',{ascending:false}).limit(30),
+   postIds.length?db.from('likes').select('user_id,post_id,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]}),
+   postIds.length?db.from('comments').select('id,user_id,post_id,content,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]})
   ]);
 
-  if(followsResult.error)throw followsResult.error;
-  if(likesResult.error)throw likesResult.error;
-  if(commentsResult.error)throw commentsResult.error;
-
   const events=[];
-
   (followsResult.data||[]).forEach(f=>{
-   if(f.follower_id===currentUser.id)return;
-   events.push({type:'follow',user_id:f.follower_id,created_at:f.created_at});
+   if(f.follower_id!==currentUser.id) events.push({type:'follow',user_id:f.follower_id,created_at:f.created_at});
   });
-
   (likesResult.data||[]).forEach(l=>{
-   if(l.user_id===currentUser.id)return;
-   events.push({type:'like',user_id:l.user_id,post_id:l.post_id,created_at:l.created_at});
+   if(l.user_id!==currentUser.id) events.push({type:'like',user_id:l.user_id,created_at:l.created_at});
   });
-
   (commentsResult.data||[]).forEach(c=>{
-   if(c.user_id===currentUser.id)return;
-   events.push({type:'comment',user_id:c.user_id,post_id:c.post_id,content:c.content,created_at:c.created_at});
+   if(c.user_id!==currentUser.id) events.push({type:'comment',user_id:c.user_id,content:c.content,created_at:c.created_at});
   });
 
   events.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
 
   if(!events.length){
-   container.innerHTML='<div class="activity-empty">Todavía no tenés actividad.<br>Cuando alguien interactúe contigo, aparecerá aquí.</div>';
+   container.innerHTML='<div class="activity-empty">Todavía no tenés actividad reciente.</div>';
    return;
   }
 
-  const userIds=[...new Set(events.map(e=>e.user_id).filter(Boolean))];
+  // Filtrar perfiles faltantes usando caché
+  const missingUserIds=[...new Set(events.map(e=>e.user_id))].filter(id=>!profilesCache[id]);
+  if(missingUserIds.length>0){
+   const {data:newProfiles}=await db.from('profiles').select('id,username,display_name,avatar_url').in('id',missingUserIds);
+   (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
+  }
 
-  const {data:profiles,error:profileError}=await db.from('profiles')
-   .select('id,username,display_name,avatar_url')
-   .in('id',userIds);
-
-  if(profileError)throw profileError;
-
-  const profileMap={};
-  (profiles||[]).forEach(p=>profileMap[p.id]=p);
-
-  container.replaceChildren();
-
+  const fragment=document.createDocumentFragment();
   events.forEach(event=>{
-   const profile=profileMap[event.user_id];
+   const profile=profilesCache[event.user_id];
    if(!profile)return;
 
    const item=document.createElement('div');
@@ -643,13 +607,9 @@ async function loadActivity(){
    name.textContent=profile.display_name||profile.username||'Usuario';
    message.append(name);
 
-   if(event.type==='follow'){
-    message.append(document.createTextNode(' comenzó a seguirte.'));
-   }else if(event.type==='like'){
-    message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
-   }else if(event.type==='comment'){
-    message.append(document.createTextNode(' comentó tu publicación.'));
-   }
+   if(event.type==='follow') message.append(document.createTextNode(' comenzó a seguirte.'));
+   else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
+   else if(event.type==='comment') message.append(document.createTextNode(' comentó tu publicación.'));
 
    info.append(message);
 
@@ -669,8 +629,10 @@ async function loadActivity(){
    item.append(av,info);
    item.onclick=()=>openPublicProfile(profile.id);
 
-   container.append(item);
+   fragment.append(item);
   });
+
+  container.replaceChildren(fragment);
 
  }catch(error){
   console.error('Error al cargar actividad:',error);
@@ -678,33 +640,33 @@ async function loadActivity(){
  }
 }
 
-// FEED
+// FEED OPTIMIZADO CON CACHÉ DE PERFILES
 async function loadPosts(){
  const container=document.getElementById('posts');
- container.replaceChildren();
-
+ 
  const {data:posts,error}=await db.from('posts')
-  .select('*').order('created_at',{ascending:false}).limit(50);
+  .select('*').order('created_at',{ascending:false}).limit(30);
 
  if(error){
   container.textContent='No se pudieron cargar las publicaciones.';
   return;
  }
 
- if(!posts||!posts.length)return;
+ if(!posts||!posts.length){
+  container.replaceChildren();
+  return;
+ }
 
- const userIds=[...new Set(posts.map(p=>p.user_id))];
+ const missingUserIds=[...new Set(posts.map(p=>p.user_id))].filter(id=>!profilesCache[id]);
+ if(missingUserIds.length>0){
+  const {data:newProfiles}=await db.from('profiles').select('id,username,display_name,avatar_url').in('id',missingUserIds);
+  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
+ }
 
- const {data:profiles,error:profileError}=await db.from('profiles')
-  .select('id,username,display_name,avatar_url').in('id',userIds);
-
- if(profileError)return;
-
- const profileMap={};
- (profiles||[]).forEach(p=>profileMap[p.id]=p);
+ const fragment=document.createDocumentFragment();
 
  for(const post of posts){
-  const profile=profileMap[post.user_id]||{username:'usuario'};
+  const profile=profilesCache[post.user_id]||{username:'usuario'};
 
   const article=document.createElement('article');
   article.className='post';
@@ -739,6 +701,7 @@ async function loadPosts(){
    img.className='postimage';
    img.src=post.image_url;
    img.alt='Imagen';
+   img.loading='lazy';
    article.append(img);
   }
 
@@ -770,19 +733,20 @@ async function loadPosts(){
 
   actions.append(likeButton,commentButton,viewButton);
   article.append(actions);
-  container.append(article);
-
+  
   if(currentUser){
-   const {data:like}=await db.from('likes')
-    .select('user_id').eq('post_id',post.id)
-    .eq('user_id',currentUser.id).maybeSingle();
-
-   if(like){
-    likeButton.classList.add('liked');
-    likeButton.innerHTML='♥ Me gusta';
-   }
+   db.from('likes').select('user_id').eq('post_id',post.id).eq('user_id',currentUser.id).maybeSingle().then(({data:like})=>{
+    if(like){
+     likeButton.classList.add('liked');
+     likeButton.innerHTML='♥ Me gusta';
+    }
+   });
   }
+
+  fragment.append(article);
  }
+
+ container.replaceChildren(fragment);
 }
 
 // PUBLICAR
@@ -796,10 +760,7 @@ async function publish(){
  const content=input.value.trim();
  if(!content)return alert('Escribí algo primero.');
 
- const {error}=await db.from('posts').insert({
-  user_id:currentUser.id,content
- });
-
+ const {error}=await db.from('posts').insert({user_id:currentUser.id,content});
  if(error)return alert('Error al publicar: '+error.message);
 
  input.value='';
@@ -814,18 +775,15 @@ async function toggleLike(postId,button){
   return showTab('profile');
  }
 
- const {data:existing}=await db.from('likes')
-  .select('user_id').eq('post_id',postId)
-  .eq('user_id',currentUser.id).maybeSingle();
-
- if(existing){
-  await db.from('likes').delete().eq('post_id',postId).eq('user_id',currentUser.id);
+ const isLiked=button.classList.contains('liked');
+ if(isLiked){
   button.classList.remove('liked');
   button.innerHTML='♡ Me gusta';
+  await db.from('likes').delete().eq('post_id',postId).eq('user_id',currentUser.id);
  }else{
-  await db.from('likes').insert({post_id:postId,user_id:currentUser.id});
   button.classList.add('liked');
   button.innerHTML='♥ Me gusta';
+  await db.from('likes').insert({post_id:postId,user_id:currentUser.id});
  }
 }
 
@@ -855,11 +813,13 @@ async function viewComments(postId){
  if(!comments.length)return alert('Todavía no hay comentarios.');
 
  const userIds=[...new Set(comments.map(c=>c.user_id))];
- const {data:profiles}=await db.from('profiles').select('id,username').in('id',userIds);
- const profileMap={};
- (profiles||[]).forEach(p=>profileMap[p.id]=p);
+ const missing=[...userIds].filter(id=>!profilesCache[id]);
+ if(missing.length>0){
+  const {data:newProfiles}=await db.from('profiles').select('id,username').in('id',missing);
+  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
+ }
 
- alert(comments.map(c=>'@'+(profileMap[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
+ alert(comments.map(c=>'@'+(profilesCache[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
 }
 
 // PERFIL PÚBLICO
@@ -874,8 +834,13 @@ async function openPublicProfile(userId){
  status('publicstatus','Cargando...');
  showTab('publicprofile');
 
- const {data:profile,error}=await db.from('profiles').select('*').eq('id',userId).maybeSingle();
- if(error||!profile)return status('publicstatus','No se encontró el perfil.');
+ let profile=profilesCache[userId];
+ if(!profile){
+  const {data,error}=await db.from('profiles').select('*').eq('id',userId).maybeSingle();
+  if(error||!data)return status('publicstatus','No se encontró el perfil.');
+  profile=data;
+  profilesCache[userId]=data;
+ }
 
  viewedProfile=profile;
  document.getElementById('publicname').textContent=profile.display_name||profile.username||'Usuario';
@@ -888,6 +853,7 @@ async function openPublicProfile(userId){
  if(profile.cover_url){
   const img=document.createElement('img');
   img.src=profile.cover_url;
+  img.loading='lazy';
   cover.append(img);
  }
 
@@ -908,6 +874,7 @@ async function openPublicProfile(userId){
  if(!posts||!posts.length){
   container.innerHTML='<p class="muted" style="text-align:center;padding:20px">Este usuario no tiene publicaciones.</p>';
  }else{
+  const fragment=document.createDocumentFragment();
   posts.forEach(post=>{
    const article=document.createElement('article');
    article.className='post';
@@ -915,6 +882,7 @@ async function openPublicProfile(userId){
     const img=document.createElement('img');
     img.className='postimage';
     img.src=post.image_url;
+    img.loading='lazy';
     article.append(img);
    }
    if(post.content){
@@ -923,8 +891,9 @@ async function openPublicProfile(userId){
     content.textContent=post.content;
     article.append(content);
    }
-   container.append(article);
+   fragment.append(article);
   });
+  container.replaceChildren(fragment);
  }
  status('publicstatus','');
 }
@@ -970,7 +939,9 @@ async function searchUsers(){
    result.innerHTML='<p class="muted" style="text-align:center">No se encontraron usuarios.</p>';
    return;
   }
+  const fragment=document.createDocumentFragment();
   data.forEach(profile=>{
+   profilesCache[profile.id]=profile;
    const item=document.createElement('div');
    item.className='public-user';
    const av=document.createElement('div');
@@ -985,8 +956,9 @@ async function searchUsers(){
    info.append(name,username);
    item.append(av,info);
    item.onclick=()=>openPublicProfile(profile.id);
-   result.append(item);
+   fragment.append(item);
   });
+  result.replaceChildren(fragment);
  },300);
 }
 
