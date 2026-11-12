@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Ög — Social & WhatsApp Style</title>
+<title>Ög — Social</title>
 
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -23,7 +23,7 @@ body.ios-glass-device header,
 body.ios-glass-device nav,
 body.ios-glass-device .settings-drawer,
 body.ios-glass-device .post-modal-card,
-body.ios-glass-device .wa-filter-bubble {
+body.ios-glass-device .wa-floating-bubble {
  backdrop-filter: blur(25px) saturate(180%);
  -webkit-backdrop-filter: blur(25px) saturate(180%);
  background: rgba(18, 18, 20, 0.78);
@@ -33,6 +33,46 @@ body.ios-glass-device .wa-filter-bubble {
 body:not(.ios-glass-device) header,
 body:not(.ios-glass-device) nav {
  background: rgba(0, 0, 0, 0.92);
+}
+
+/* ==========================================================
+   BURBUJA FLOTANTE ESTILO WHATSAPP (Con efecto Glass & Slide)
+   ========================================================== */
+.wa-floating-bubble {
+ position: fixed;
+ bottom: 85px;
+ right: 20px;
+ width: 56px;
+ height: 56px;
+ border-radius: 50%;
+ background: rgba(25, 25, 30, 0.85);
+ backdrop-filter: blur(20px) saturate(180%);
+ -webkit-backdrop-filter: blur(20px) saturate(180%);
+ border: 1px solid rgba(255, 255, 255, 0.18);
+ box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ z-index: 250;
+ transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+}
+.wa-floating-bubble:active {
+ transform: scale(0.9);
+}
+.wa-floating-bubble svg {
+ width: 26px;
+ height: 26px;
+ fill: url(#waBubbleGradient);
+}
+.wa-bubble-glow {
+ position: absolute;
+ inset: -2px;
+ border-radius: 50%;
+ background: linear-gradient(135deg, rgba(34,197,94,0.4), rgba(59,130,246,0.4), rgba(168,85,247,0.4));
+ z-index: -1;
+ filter: blur(4px);
+ opacity: 0.8;
 }
 
 /* HEADER */
@@ -47,34 +87,6 @@ header{
 .logo{font-size:26px;font-weight:900;letter-spacing:-1.5px;color:#fff}
 .icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 .icon svg{width:24px;height:24px}
-
-/* ==========================================================
-   BURBUJAS DESLIZABLES ESTILO WHATSAPP (Filtros de Chats/Secciones)
-   ========================================================== */
-.wa-filters-wrapper{
- padding:10px 16px 4px 16px;
- background:#000;
- border-bottom:1px solid rgba(255,255,255,0.06);
-}
-.wa-filters-container{
- display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;
- scrollbar-width:none;
- -webkit-overflow-scrolling:touch;
-}
-.wa-filters-container::-webkit-scrollbar{display:none}
-
-.wa-filter-bubble{
- padding:7px 16px;border-radius:18px;font-size:13px;font-weight:600;
- background:rgba(255,255,255,0.08);color:#d4d4d8;cursor:pointer;
- white-space:nowrap;border:1px solid rgba(255,255,255,0.06);
- transition:all 0.2s ease;flex-shrink:0;
- display:inline-flex;align-items:center;gap:6px;
-}
-.wa-filter-bubble.active{
- background:#22c55e;color:#000;border-color:#22c55e;
- font-weight:700;
- box-shadow:0 4px 12px rgba(34,197,94,0.3);
-}
 
 /* HISTORIAS ESTILO INSTAGRAM */
 .stories{
@@ -245,7 +257,7 @@ main > div.active {display: block !important;}
 .create-media-dropzone:active{background:rgba(255,255,255,0.05);border-color:#3b82f6}
 .create-media-dropzone svg{width:32px;height:32px;color:#a1a1aa}
 
-/* NAVEGACIÓN INFERIOR FLOTANTE ESTILO WHATSAPP */
+/* NAVEGACIÓN INFERIOR FLOTANTE */
 nav{
  position:fixed;bottom:0;left:0;right:0;height:64px;
  border-top:1px solid rgba(255,255,255,0.1);
@@ -260,9 +272,9 @@ nav button{
  width:100%;height:100%;cursor:pointer;transition:color 0.15s ease, transform 0.1s ease;
 }
 nav button:active{transform:scale(0.92)}
-nav button svg{width:24px;height:24px}
-nav small{display:block;font-size:10px;margin-top:3px}
-nav button.active{color:#22c55e}
+nav button svg{width:25px;height:25px}
+nav small{display:none}
+nav button.active{color:#fff}
 nav button.active svg{stroke-width:2.4}
 
 textarea,.field{
@@ -405,8 +417,23 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 <body id="appBody">
 
+<!-- BURBUJA FLOTANTE ESTILO WHATSAPP (Con efecto Glassmorphism) -->
+<div class="wa-floating-bubble" onclick="openCameraModal()" aria-label="Acceso rápido AI / Cámara">
+ <div class="wa-bubble-glow"></div>
+ <svg viewBox="0 0 24 24">
+  <defs>
+   <linearGradient id="waBubbleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#3b82f6" />
+    <stop offset="50%" stop-color="#a855f7" />
+    <stop offset="100%" stop-color="#22c55e" />
+   </linearGradient>
+  </defs>
+  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14h-2v-2h2zm0-4h-2V7h2z" fill="url(#waBubbleGradient)"/>
+ </svg>
+</div>
+
 <header>
- <div class="logo">Ög<span style="color:#22c55e">.</span></div>
+ <div class="logo">Ög<span style="color:#3b82f6">.</span></div>
  <div id="header-default-icons" style="display:flex;align-items:center;gap:4px">
   <button class="icon" onclick="openCameraModal()" aria-label="Cámara">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -426,16 +453,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 <!-- FEED -->
 <div id="feed" class="active">
- <!-- BURBUJAS DESLIZABLES HORIZONTALMENTE ESTILO WHATSAPP -->
- <div class="wa-filters-wrapper">
-  <div class="wa-filters-container">
-   <div class="wa-filter-bubble active" onclick="filterFeedTab('all', this)">Todos</div>
-   <div class="wa-filter-bubble" onclick="filterFeedTab('unread', this)">No leídos <span style="background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:10px;font-size:10px">4</span></div>
-   <div class="wa-filter-bubble" onclick="filterFeedTab('favorites', this)">Favoritos</div>
-   <div class="wa-filter-bubble" onclick="filterFeedTab('groups', this)">Grupos</div>
-  </div>
- </div>
-
  <div class="stories" id="storiescontainer">
   <div class="story" id="mystorybtn" onclick="handleStoryClick()">
    <div class="story-avatar-container" id="mystoryavatar-container">
@@ -791,23 +808,23 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- NAVEGACIÓN INFERIOR ESTILO WHATSAPP (4 Pestañas) -->
+<!-- NAVEGACIÓN INFERIOR -->
 <nav>
- <button class="active" onclick="showTab('feed',this)" aria-label="Chats">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-  <small>Chats</small>
+ <button class="active" onclick="showTab('feed',this)" aria-label="Inicio">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  <small>Inicio</small>
  </button>
- <button onclick="showTab('explore',this)" aria-label="Novedades">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-  <small>Novedades</small>
+ <button onclick="showTab('explore',this)" aria-label="Explorar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  <small>Explorar</small>
  </button>
- <button onclick="showTab('create',this)" aria-label="Comunidades">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-  <small>Comunidades</small>
+ <button onclick="showTab('create',this)" aria-label="Crear">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+  <small>Crear</small>
  </button>
- <button onclick="showTab('profile',this)" aria-label="Llamadas">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-  <small>Llamadas</small>
+ <button onclick="showTab('profile',this)" aria-label="Perfil">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  <small>Perfil</small>
  </button>
 </nav>
 
@@ -832,9 +849,6 @@ let postImageBlob = null;
 let currentFacingMode = 'user';
 let currentZoom = 1;
 
-// ==========================================================
-// DETECTOR AUTOMÁTICO DE COMPATIBILIDAD IPHONE (11 al 18 Pro Max)
-// ==========================================================
 function detectiPhoneGlassCompatibility() {
  const ua = navigator.userAgent;
  const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform && /iPhone|iPad|iPod/.test(navigator.platform));
@@ -852,17 +866,11 @@ function detectiPhoneGlassCompatibility() {
   } else if (screenH === 896) {
    modelName = "iPhone 11 / 11 Pro Max / XR";
   }
-  
   return `Activo (${modelName} con Glassmorphism nativo)`;
  } else {
   document.getElementById('appBody').classList.add('ios-glass-device');
   return "Navegador Web Moderno (Glass Activo)";
  }
-}
-
-function filterFeedTab(category, element){
- document.querySelectorAll('.wa-filter-bubble').forEach(el => el.classList.remove('active'));
- element.classList.add('active');
 }
 
 let touchStartX = 0;
@@ -1053,7 +1061,7 @@ async function signOut(){
  document.getElementById('accountbox').classList.remove('open');
  updateProfileUI();
  await loadPosts();
- showTab('feed');
+ showTab('profile');
 }
 
 async function loadAccount(user){
@@ -1156,7 +1164,7 @@ async function loadStoriesData(){
   badge.className = 'story-plus-badge';
   badge.id = 'mystorybadge';
   badge.textContent = '+';
-  badge.style.background = '#22c55e';
+  badge.style.background = '#3b82f6';
   myAvatarContainer.append(badge);
  }
 
