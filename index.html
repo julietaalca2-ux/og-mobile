@@ -13,6 +13,7 @@ body{
  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
  padding-bottom:90px;
  -webkit-font-smoothing:antialiased;
+ overflow-x:hidden;
 }
 header{
  height:54px;padding:0 16px;display:flex;
@@ -64,29 +65,47 @@ main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active {padding: 0 !important;}
 
-/* CÁMARA EN TIEMPO REAL CON GALERÍA INTEGRADA (MODAL) */
+/* CÁMARA A PANTALLA COMPLETA ESTILO INSTAGRAM */
 #cameraModal{
  position:fixed;inset:0;background:#000;z-index:400;
  display:none;flex-direction:column;justify-content:space-between;
- padding:20px 16px env(safe-area-inset-bottom, 20px) 16px;
- transform:translateX(-100%);
- transition:transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+ padding:env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 24px) 16px;
 }
-#cameraModal.active{display:flex;transform:translateX(0)}
-.camera-preview-area{flex:1;position:relative;border-radius:16px;overflow:hidden;background:#121214;display:grid;place-items:center;max-height:68vh}
-.camera-preview-area video, .camera-preview-area img{width:100%;height:100%;object-fit:cover}
-.camera-controls{display:flex;align-items:center;justify-content:space-around;padding:16px 0}
-.capture-btn{
- width:72px;height:72px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,0.3);
- cursor:pointer;transition:transform 0.1s ease;
-}
-.capture-btn:active{transform:scale(0.9)}
+#cameraModal.active{display:flex}
 
-/* BANDEJA INFERIOR DE GALERÍA (ESTILO INSTAGRAM) */
-.gallery-tray{display:flex;gap:8px;overflow-x:auto;padding:8px 0;scrollbar-width:none;max-height:90px}
-.gallery-tray::-webkit-scrollbar{display:none}
-.gallery-thumb{width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;border:2px solid transparent}
-.gallery-thumb:active{border-color:#3b82f6}
+.camera-screen-container{
+ position:absolute;inset:0;background:#000;z-index:1;
+ display:flex;flex-direction:column;justify-content:space-between;
+ padding:50px 16px 40px 16px;
+}
+.camera-video-fullscreen{
+ position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;
+}
+.camera-top-bar{
+ display:flex;align-items:center;justify-content:space-between;position:relative;z-index:3;color:#fff;
+ width:100%;max-width:430px;margin:0 auto;
+}
+.camera-bottom-ui{
+ position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:20px;
+ width:100%;max-width:430px;margin:0 auto;
+}
+.capture-btn{
+ width:78px;height:78px;border-radius:50%;background:transparent;border:4px solid #fff;
+ cursor:pointer;display:grid;place-items:center;transition:transform 0.1s ease;
+}
+.capture-btn::after{
+ content:'';width:64px;height:64px;border-radius:50%;background:#fff;display:block;
+}
+.capture-btn:active{transform:scale(0.92)}
+
+.camera-actions-row{
+ display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 24px;
+}
+.camera-gallery-icon{
+ width:44px;height:44px;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,0.8);
+ background:#27272a;cursor:pointer;display:grid;place-items:center;
+}
+.camera-gallery-icon img{width:100%;height:100%;object-fit:cover}
 
 /* VISOR DE HISTORIAS A PANTALLA COMPLETA */
 #storyViewer{
@@ -95,7 +114,7 @@ main > div.active {display: block !important;}
  padding:20px 16px;
 }
 #storyViewer.active{display:flex}
-.story-top-bar{display:flex;align-items:center;justify-content:space-between;color:#fff}
+.story-top-bar{display:flex;align-items:center;justify-content:space-between;color:#fff;position:relative;z-index:2}
 .story-content-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;margin:12px 0}
 .story-content-area img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
 
@@ -275,29 +294,31 @@ textarea{height:120px;resize:none}
  <div id="posts"></div>
 </div>
 
-<!-- CÁMARA EN TIEMPO REAL & SELECTOR DE FOTOS (MODAL ESTILO INSTAGRAM) -->
+<!-- CÁMARA A PANTALLA COMPLETA ESTILO INSTAGRAM -->
 <div id="cameraModal">
- <div class="story-top-bar">
-  <strong>Crear historia</strong>
-  <button class="icon" onclick="closeCameraModal()">✕</button>
- </div>
- <div class="camera-preview-area" id="cameraPreviewArea">
-  <video id="cameraVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover"></video>
-  <img id="capturedImagePreview" style="display:none;width:100%;height:100%;object-fit:cover" alt="Vista previa">
- </div>
+ <video id="cameraVideo" class="camera-video-fullscreen" autoplay playsinline muted></video>
+ <img id="capturedImagePreview" class="camera-video-fullscreen" style="display:none;z-index:2" alt="Vista previa">
 
- <!-- Galería reciente integrada estilo Instagram -->
- <div style="padding:4px 0">
-  <div style="font-size:11px;color:#a1a1aa;margin-bottom:4px">Galería reciente</div>
-  <div class="gallery-tray" id="galleryTray">
-   <div class="muted" style="font-size:12px;padding:10px">Cargando fotos del dispositivo...</div>
+ <div class="camera-screen-container">
+  <div class="camera-top-bar">
+   <button class="icon" onclick="closeCameraModal()" aria-label="Cerrar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+   </button>
+   <button class="icon" onclick="switchCamera()" aria-label="Girar cámara">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 4v5h-.582m0 0a8.001 8.001 0 0 0-14.356-2m15.356 2A8.001 8.001 0 0 1 4 15m0 0v-5h.582m0 0a8.001 8.001 0 0 0 14.356 2"/></svg>
+   </button>
   </div>
- </div>
 
- <div class="camera-controls">
-  <button class="secondary" onclick="document.getElementById('galleryFileInput').click()">📁 Archivo</button>
-  <button class="capture-btn" id="captureBtn" onclick="takePhoto()"></button>
-  <button class="primary" id="publishStoryBtn" style="display:none;width:auto;padding:10px 20px" onclick="uploadCapturedStory()">Compartir</button>
+  <div class="camera-bottom-ui">
+   <div class="camera-actions-row">
+    <div class="camera-gallery-icon" onclick="document.getElementById('galleryFileInput').click()" id="galleryThumbIcon">
+     📁
+    </div>
+    <button class="capture-btn" id="captureBtn" onclick="takePhoto()"></button>
+    <div style="width:44px"></div> <!-- Espaciador simétrico -->
+   </div>
+   <button class="primary" id="publishStoryBtn" style="display:none;width:90%;margin:auto;padding:12px 20px;font-size:15px;border-radius:24px;" onclick="uploadCapturedStory()">Compartir en tu historia</button>
+  </div>
  </div>
  <input type="file" id="galleryFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handleGallerySelect(this)">
 </div>
@@ -533,6 +554,7 @@ let realtimeChannel=null;
 let myActiveStory=null;
 let mediaStream=null;
 let capturedBlob=null;
+let currentFacingMode = 'user'; // 'user' para frontal, 'environment' para trasera
 
 // GESTOS TIPO INSTAGRAM (Deslizar a la derecha para abrir cámara)
 let touchStartX = 0;
@@ -550,7 +572,6 @@ feedElement.addEventListener('touchend', e => {
 
 function handleSwipeGesture(){
  const swipeDistance = touchEndX - touchStartX;
- // Si deslizas hacia la derecha de forma clara (> 70px)
  if(swipeDistance > 70){
   openCameraModal();
  }
@@ -742,7 +763,6 @@ async function loadStoriesData(){
  const container = document.getElementById('storiescontainer');
  const fragment = document.createDocumentFragment();
 
- // 1. Tu historia
  const myStoryDiv = document.createElement('div');
  myStoryDiv.className = myActiveStory ? 'story has-story' : 'story';
  myStoryDiv.id = 'mystorybtn';
@@ -786,7 +806,6 @@ async function loadStoriesData(){
  myStoryDiv.append(myAvatarContainer, myLabel);
  fragment.append(myStoryDiv);
 
- // 2. Historias de seguidos
  const followingData = followingRes.data;
  if(followingData && followingData.length > 0){
   const followingIds = followingData.map(f => f.following_id);
@@ -860,73 +879,38 @@ async function openCameraModal(){
  document.getElementById('publishStoryBtn').style.display = 'none';
  document.getElementById('cameraModal').classList.add('active');
 
- loadRecentGalleryPhotos();
+ updateGalleryThumbIcon();
+ await startCameraStream();
+}
+
+async function startCameraStream(){
+ if(mediaStream){
+  mediaStream.getTracks().forEach(track=>track.stop());
+ }
 
  try{
-  mediaStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}, audio:false});
+  mediaStream = await navigator.mediaDevices.getUserMedia({
+   video:{facingMode: currentFacingMode},
+   audio:false
+  });
   document.getElementById('cameraVideo').srcObject = mediaStream;
  }catch(err){
   console.error('Error al acceder a la cámara:', err);
-  alert('No se pudo acceder a la cámara. Selecciona una foto de la galería.');
+  alert('No se pudo acceder a la cámara. Asegúrate de dar permisos.');
  }
 }
 
-async function loadRecentGalleryPhotos(){
- const tray = document.getElementById('galleryTray');
- tray.replaceChildren();
-
- try{
-  const {data, error} = await db.storage.from('og-media').list(currentUser.id+'/', {
-   limit: 15,
-   sortBy: {column: 'created_at', order: 'desc'}
-  });
-
-  if(error || !data || data.length === 0){
-   tray.innerHTML='<span class="muted" style="font-size:12px;padding:10px">No hay fotos recientes en tu nube. Usa el botón Archivo.</span>';
-   return;
-  }
-
-  const fragment = document.createDocumentFragment();
-  data.forEach(file => {
-   if(file.name.match(/\.(jpg|jpeg|png|webp)$/i)){
-    const {data: urlData} = db.storage.from('og-media').getPublicUrl(currentUser.id+'/'+file.name);
-    
-    const img = document.createElement('img');
-    img.className = 'gallery-thumb';
-    img.src = urlData.publicUrl;
-    img.onclick = () => selectGalleryPhoto(urlData.publicUrl);
-    fragment.append(img);
-   }
-  });
-
-  if(fragment.children.length === 0){
-   tray.innerHTML='<span class="muted" style="font-size:12px;padding:10px">Sube o toma fotos para verlas aquí.</span>';
-  }else{
-   tray.replaceChildren(fragment);
-  }
- }catch(e){
-  tray.innerHTML='<span class="muted" style="font-size:12px;padding:10px">Error al cargar galería.</span>';
- }
+async function switchCamera(){
+ currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+ await startCameraStream();
 }
 
-async function selectGalleryPhoto(url){
- try{
-  const response = await fetch(url);
-  capturedBlob = await response.blob();
-  
-  const preview = document.getElementById('capturedImagePreview');
-  preview.src = url;
-  preview.style.display = 'block';
-  document.getElementById('cameraVideo').style.display = 'none';
-  document.getElementById('captureBtn').style.display = 'none';
-  document.getElementById('publishStoryBtn').style.display = 'block';
-
-  if(mediaStream){
-   mediaStream.getTracks().forEach(track=>track.stop());
-   mediaStream=null;
-  }
- }catch(err){
-  alert('No se pudo seleccionar la imagen.');
+async function updateGalleryThumbIcon(){
+ const iconDiv = document.getElementById('galleryThumbIcon');
+ if(myProfile?.avatar_url){
+  iconDiv.innerHTML = `<img src="${myProfile.avatar_url}" alt="Galería">`;
+ }else{
+  iconDiv.innerHTML = '📁';
  }
 }
 
@@ -961,7 +945,7 @@ function takePhoto(){
   video.style.display = 'none';
   document.getElementById('captureBtn').style.display = 'none';
   document.getElementById('publishStoryBtn').style.display = 'block';
- }, 'image/jpeg', 0.85);
+ }, 'image/jpeg', 0.9);
 }
 
 async function handleGallerySelect(input){
