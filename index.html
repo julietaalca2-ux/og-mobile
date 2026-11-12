@@ -16,14 +16,30 @@ body{
  overflow-x:hidden;
 }
 
-/* HEADER CON GLASSMORPHISM AVANZADO (Compatible iPhone 11 al 18 Pro Max) */
+/* ==========================================================
+   MOTOR DE GLASSMORPHISM DINÁMICO (Compatible iPhone 11 al 18 Pro Max)
+   ========================================================== */
+body.ios-glass-device header,
+body.ios-glass-device nav,
+body.ios-glass-device .settings-drawer,
+body.ios-glass-device .post-modal-card {
+ backdrop-filter: blur(25px) saturate(180%);
+ -webkit-backdrop-filter: blur(25px) saturate(180%);
+ background: rgba(18, 18, 20, 0.78);
+ border-color: rgba(255, 255, 255, 0.12);
+}
+
+body:not(.ios-glass-device) header,
+body:not(.ios-glass-device) nav {
+ background: rgba(0, 0, 0, 0.92);
+}
+
+/* HEADER */
 header{
  height:56px;padding:0 16px;display:flex;
  align-items:center;justify-content:space-between;
  border-bottom:1px solid rgba(255,255,255,0.08);
  position:sticky;top:0;
- background:rgba(0,0,0,0.75);
- backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
  z-index:50;
  padding-top:env(safe-area-inset-top);
 }
@@ -168,14 +184,14 @@ main > div.active {display: block !important;}
 .comment-input::placeholder{color:#71717a}
 .comment-send-btn{background:none;border:0;color:#3b82f6;font-weight:600;font-size:13px;cursor:pointer;padding:4px}
 
-/* MODAL VISOR DE PUBLICACIÓN CON GLASS */
+/* MODAL VISOR DE PUBLICACIÓN */
 #postDetailModal{
- position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+ position:fixed;inset:0;background:rgba(0,0,0,0.8);
  z-index:500;display:none;align-items:center;justify-content:center;padding:16px;
 }
 #postDetailModal.active{display:flex}
 .post-modal-card{
- background:rgba(18,18,20,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+ background:rgba(18,18,20,0.92);
  width:100%;max-width:430px;max-height:85vh;
  border-radius:20px;border:1px solid rgba(255,255,255,0.12);
  box-shadow:0 16px 40px rgba(0,0,0,0.5);
@@ -186,9 +202,9 @@ main > div.active {display: block !important;}
 }
 .post-modal-body{overflow-y:auto;flex:1}
 
-/* SECCIÓN CREAR PUBLICACIÓN CON TARJETA GLASS */
+/* SECCIÓN CREAR PUBLICACIÓN */
 .create-card{
- background:rgba(18,18,20,0.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+ background:rgba(18,18,20,0.7);
  border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:20px 16px;margin-top:10px;
  box-shadow:0 8px 32px rgba(0,0,0,0.3);
 }
@@ -200,11 +216,9 @@ main > div.active {display: block !important;}
 .create-media-dropzone:active{background:rgba(255,255,255,0.05);border-color:#3b82f6}
 .create-media-dropzone svg{width:32px;height:32px;color:#a1a1aa}
 
-/* NAVEGACIÓN INFERIOR CON EFECTO GLASS FLOTANTE (iOS Nativo) */
+/* NAVEGACIÓN INFERIOR FLOTANTE */
 nav{
  position:fixed;bottom:0;left:0;right:0;height:64px;
- background:rgba(0,0,0,0.75);
- backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
  border-top:1px solid rgba(255,255,255,0.1);
  display:flex;justify-content:space-around;align-items:center;
  z-index:100;
@@ -227,7 +241,6 @@ textarea,.field{
  border:1px solid rgba(255,255,255,0.12);border-radius:12px;
  padding:12px 14px;font:inherit;margin-top:6px;font-size:14px;
  outline:none;transition:border-color 0.2s, background 0.2s;
- backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
 textarea:focus,.field:focus{border-color:#3b82f6;background:rgba(255,255,255,0.08)}
 textarea{height:110px;resize:none}
@@ -241,7 +254,6 @@ textarea{height:110px;resize:none}
 .secondary{
  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:white;
  padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;
- backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
 .secondary:active{background:rgba(255,255,255,0.15)}
 .status{font-size:13px;color:#60a5fa;margin:10px 0;overflow-wrap:anywhere;text-align:center}
@@ -269,7 +281,7 @@ textarea{height:110px;resize:none}
 .ig-action-buttons{display:flex;gap:8px}
 .ig-action-buttons button{flex:1}
 .ig-edit-panel{
- background:rgba(18,18,20,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+ background:rgba(18,18,20,0.9);
  border-bottom:1px solid rgba(255,255,255,0.08);padding:16px;display:none;
 }
 .ig-edit-panel.open{display:block}
@@ -282,15 +294,15 @@ textarea{height:110px;resize:none}
 .ig-grid-item{aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid rgba(255,255,255,0.08);cursor:pointer}
 .ig-grid-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
-/* MENÚ LATERAL CONFIGURACIÓN CON GLASS */
+/* MENÚ LATERAL CONFIGURACIÓN */
 .settings-overlay{
- position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+ position:fixed;inset:0;background:rgba(0,0,0,0.65);
  z-index:200;display:none;opacity:0;transition:opacity 0.2s ease;
 }
 .settings-overlay.open{display:block;opacity:1}
 .settings-drawer{
  position:fixed;bottom:0;left:0;right:0;
- background:rgba(18,18,20,0.88);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);
+ background:rgba(18,18,20,0.92);
  border-top-left-radius:24px;border-top-right-radius:24px;
  border-top:1px solid rgba(255,255,255,0.15);
  z-index:201;padding:20px 16px calc(env(safe-area-inset-bottom) + 24px) 16px;
@@ -314,7 +326,7 @@ textarea{height:110px;resize:none}
 .settings-header{
  padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);
  display:flex;align-items:center;gap:12px;
- position:sticky;top:56px;background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:10;
+ position:sticky;top:56px;background:rgba(0,0,0,0.85);z-index:10;
 }
 .settings-group{
  padding:16px;border-bottom:1px solid rgba(255,255,255,0.08);
@@ -454,7 +466,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div id="searchresult" style="margin-top:15px"></div>
 </div>
 
-<!-- CREAR PUBLICACIÓN REDISEÑADA Y PROFESIONAL -->
+<!-- CREAR PUBLICACIÓN -->
 <div id="create" class="section">
  <h2 style="margin-top:0">Nueva publicación</h2>
  <p class="muted">Comparte momentos con tu comunidad usando fotos y emojis.</p>
@@ -640,8 +652,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <h4 class="settings-group-title">Información de la aplicación</h4>
   <div class="settings-row">
    <div class="settings-row-info">
-    <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.5.0 (iOS Glass Liquid Engine)</p>
+    <p class="settings-row-title">Estado de Compatibilidad iPhone</p>
+    <p class="settings-row-desc" id="iphoneCompatStatus">Detectando dispositivo...</p>
    </div>
   </div>
   <div class="settings-row">
@@ -706,7 +718,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 </main>
 
-<!-- MODAL PARA VER PUBLICACIÓN DESDE EL PERFIL -->
+<!-- MODAL PARA VER PUBLICACIÓN -->
 <div id="postDetailModal" onclick="closePostDetailModal()">
  <div class="post-modal-card" onclick="event.stopPropagation()">
   <div class="post-modal-header">
@@ -740,7 +752,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- NAVEGACIÓN INFERIOR GLASS -->
+<!-- NAVEGACIÓN INFERIOR -->
 <nav>
  <button class="active" onclick="showTab('feed',this)" aria-label="Inicio">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -780,6 +792,39 @@ let capturedBlob=null;
 let postImageBlob = null;
 let currentFacingMode = 'user';
 let currentZoom = 1;
+
+// ==========================================================
+// DETECTOR AUTOMÁTICO DE COMPATIBILIDAD IPHONE (11 al 18 Pro Max)
+// ==========================================================
+function detectiPhoneGlassCompatibility() {
+ const ua = navigator.userAgent;
+ const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform && /iPhone|iPad|iPod/.test(navigator.platform));
+ 
+ if (isIOS) {
+  // Aplicamos clase Glass para toda la gama iPhone compatible
+  document.getElementById('appBody').classList.add('ios-glass-device');
+  
+  // Intentamos estimar el modelo exacto según resolución de pantalla de hardware
+  const screenW = window.screen.width;
+  const screenH = window.screen.height;
+  let modelName = "iPhone compatible (iOS)";
+
+  // Ejemplos de detección por resolución lógica de pantalla de Apple
+  if (screenH >= 844 || screenW >= 390) {
+   modelName = "iPhone 12 / 13 / 14 / 15 / 16 / 17 / 18 Pro Max o estándar";
+  } else if (screenH === 812 || screenW === 375) {
+   modelName = "iPhone 11 Pro / X / XS / SE";
+  } else if (screenH === 896) {
+   modelName = "iPhone 11 / 11 Pro Max / XR";
+  }
+  
+  return `Activo (${modelName} con Glassmorphism nativo)`;
+ } else {
+  // Si no es iPhone, igual permitimos glass general si es navegador web moderno compatible
+  document.getElementById('appBody').classList.add('ios-glass-device');
+  return "Navegador Web Moderno (Glass Activo)";
+ }
+}
 
 let touchStartX = 0;
 let touchEndX = 0;
@@ -843,6 +888,7 @@ function openSettingsPage(){
  }
  document.getElementById('settingsEmailText').textContent = currentUser.email || 'No disponible';
  document.getElementById('settingsUserIdText').textContent = currentUser.id;
+ document.getElementById('iphoneCompatStatus').textContent = detectiPhoneGlassCompatibility();
  document.getElementById('passwordStatus').textContent = '';
  document.getElementById('newPasswordInput').value = '';
  loadLocalSettings();
@@ -2128,6 +2174,9 @@ db.auth.onAuthStateChange((event,session)=>{
 });
 
 async function init(){
+ // Ejecutar detección automática al arrancar la app
+ detectiPhoneGlassCompatibility();
+
  const {data}=await db.auth.getSession();
  if(data.session)await loadAccount(data.session.user);
  else{
