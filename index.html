@@ -1663,6 +1663,17 @@ async function sendChatMessage(){
 
  input.value = '';
 
+ // Creamos objeto temporal para pintar inmediatamente en pantalla (¡Adiós lentitud!)
+ const tempMsg = {
+  conversation_id: activeConversationId,
+  sender_id: currentUser.id,
+  content: text,
+  created_at: new Date().toISOString()
+ };
+
+ appendChatMessageNode(tempMsg);
+ scrollToBottomChat();
+
  const { error } = await db.from('messages').insert({
   conversation_id: activeConversationId,
   sender_id: currentUser.id,
