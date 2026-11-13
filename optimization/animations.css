@@ -1,0 +1,58 @@
+/* ========================================================================= */
+/* MÓDULO INDEPENDIENTE DE ANIMACIONES ÖG - CSS                              */
+/* ========================================================================= */
+
+/* 1. Transición entre secciones */
+.section {
+  transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+/* 2. Entrada al Chat y Paneles flotantes */
+@keyframes ogSlideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+#chatRoomPage.active, #chatDetailsPage.active, #chatSubSettingsPage.active, .fullscreen-menu-view.active {
+  animation: ogSlideUp 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+/* 3. Microanimaciones de botones y Me gusta */
+button, .post-action-btn, .menu-list-btn, .chat-action-pill {
+  transition: transform 0.1s ease, background-color 0.15s ease;
+}
+button:active, .post-action-btn:active, .menu-list-btn:active {
+  transform: scale(0.96);
+}
+
+@keyframes ogLikePop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.post-action-btn.liked svg {
+  animation: ogLikePop 0.25s ease;
+}
+
+/* 4. Entrada de publicaciones */
+@keyframes ogFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.post {
+  animation: ogFadeIn 0.3s ease forwards;
+}
+
+/* 5. Apertura de modales y ventanas secundarias */
+#editProfileModal.active, #postDetailModal.active, #followListModal.open {
+  animation: ogFadeIn 0.2s ease forwards;
+}
+
+/* Accesibilidad: Respetar preferencias del sistema */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
