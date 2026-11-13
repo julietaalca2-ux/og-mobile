@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Ög — Social (Etapa 5 - Splash Screen Instagram)</title>
+<title>Ög — Social (Etapa 7 - Scrollbars Invisibles)</title>
 
 <!-- CONFIGURACIÓN PWA -->
 <link rel="manifest" href="manifest.json">
@@ -15,15 +15,31 @@
 
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+/* OCULTAR COMPLETAMENTE LAS BARRAS DE DESPLAZAMIENTO (WEBKIT / CHROME / SAFARI / IOS PWA) */
+::-webkit-scrollbar {
+ display: none !important;
+ width: 0px !important;
+ height: 0px !important;
+ background: transparent !important;
+}
+
 body{
  margin:0;background:#000000;color:#f4f4f5;
  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
  padding-bottom:95px;
  -webkit-font-smoothing:antialiased;
  overflow-x:hidden;
+ /* OCULTAR SCROLLBAR EN FIREFOX */
+ scrollbar-width: none !important;
 }
 
-/* SPLASH SCREEN ESTILO INSTAGRAM */
+/* ASEGURAR QUE CUALQUIER CONTENEDOR CON SCROLL SEA INVISIBLE PERO FUNCIONAL */
+* {
+ scrollbar-width: none !important;
+}
+
+/* SPLASH SCREEN (PANTALLA DE INICIO) ESTILO INSTAGRAM */
 #appSplashScreen{
  position:fixed;inset:0;background:#000000;z-index:9999;
  display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -93,6 +109,7 @@ header{
  display:flex;gap:14px;overflow-x:auto;padding:14px 16px;
  border-bottom:1px solid rgba(255,255,255,0.08);background:#000;scrollbar-width:none;
  align-items:center;
+ -webkit-overflow-scrolling:touch;
 }
 .stories::-webkit-scrollbar{display:none}
 .story{
@@ -628,7 +645,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <p id="authOverlayStatus" class="status" style="margin-top:8px"></p>
   </div>
  </div>
- <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine (Etapa 6 - Con Splash Screen)</div>
+ <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine (Etapa 7 - Scrollbars Invisibles)</div>
 </div>
 
 <header>
@@ -949,7 +966,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">2.0.0 (Splash Screen Instagram)</p>
+    <p class="settings-row-desc">2.1.0 (Scrollbars Invisibles)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -1220,7 +1237,6 @@ function hideAuthOverlay(){
  document.getElementById('authWelcomeOverlay').classList.remove('visible');
 }
 
-// Función para ocultar la Pantalla de Inicio (Splash Screen) con transición suave
 function hideSplashScreen(){
  const splash = document.getElementById('appSplashScreen');
  if(splash){
@@ -3393,7 +3409,6 @@ window.addEventListener('DOMContentLoaded', async () => {
  } catch(e) {
   showAuthOverlay();
  } finally {
-  // Una vez inicializada la sesión y las tareas iniciales, retiramos el Splash Screen suavemente
   setTimeout(() => {
    hideSplashScreen();
   }, 350);
