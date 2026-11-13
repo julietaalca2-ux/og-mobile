@@ -93,172 +93,8 @@ header{
 main{max-width:470px;margin:auto}
 main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
-#feed.active, #profile.active, #publicprofile.active, #settingsPage.active, #messagesPage.active {padding: 0 !important;}
+#feed.active, #profile.active, #publicprofile.active, #settingsPage.active, #messagesPage.active, #chatRoomPage.active {padding: 0 !important;}
 #explore.active {padding: 0 !important;}
-
-/* SALA DE CHAT PRIVADO INDependiente (FUERA DE MAIN PARA OCUPAR TODA LA PANTALLA PERFECTAMENTE) */
-#chatRoomPage{
- display:none;
- flex-direction:column;
- position:fixed;
- inset:0;
- width: 100vw;
- height: 100dvh; /* Altura dinámica real para iOS y Android */
- height: 100vh;  /* Fallback */
- background:#000;
- z-index: 300;
-}
-#chatRoomPage.active{
- display:flex !important;
-}
-
-/* CABECERA DEL CHAT LIMPIA Y ALINEADA */
-.chat-room-header {
- padding: calc(env(safe-area-inset-top) + 10px) 16px 10px 16px;
- border-bottom: 1px solid rgba(255,255,255,0.08);
- display: flex;
- align-items: center;
- gap: 12px;
- background: rgba(0,0,0,0.85);
- backdrop-filter: blur(20px);
- -webkit-backdrop-filter: blur(20px);
- z-index: 40;
- width: 100%;
- flex-shrink: 0;
-}
-
-.chat-room-header-avatar {
- width: 36px;
- height: 36px;
- min-width: 36px;
- border-radius: 50%;
- overflow: hidden;
- display: flex;
- align-items: center;
- justify-content: center;
- background: #27272a;
- position: relative;
- margin: 0;
-}
-.chat-room-header-avatar .story-avatar-container {
- width: 100% !important;
- height: 100% !important;
- margin: 0 !important;
- padding: 0 !important;
- background: none !important;
-}
-.chat-room-header-avatar img {
- width: 100%;
- height: 100%;
- object-fit: cover;
-}
-
-/* CONTENEDOR DE MENSAJES CON SCROLL FLUIDO */
-.chat-messages-container{
- flex: 1;
- overflow-y: auto;
- padding: 16px;
- display: flex;
- flex-direction: column;
- gap: 12px;
- background: #000;
- -webkit-overflow-scrolling: touch;
-}
-.chat-bubble{
- max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;overflow-wrap:anywhere;position:relative;
-}
-.chat-bubble.sent{
- background:#3b82f6;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;
-}
-.chat-bubble.received{
- background:#27272a;color:#f4f4f5;align-self:flex-start;border-bottom-left-radius:4px;
-}
-.chat-bubble-time{font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;text-align:right}
-
-/* BARRA INFERIOR EXACTA A INSTAGRAM DIRECT (FIJA Y SIMÉTRICA) */
-.chat-input-footer{
- padding: 10px 16px calc(env(safe-area-inset-bottom) + 14px) 16px;
- background: rgba(0,0,0,0.95);
- backdrop-filter: blur(20px);
- -webkit-backdrop-filter: blur(20px);
- border-top: 1px solid rgba(255,255,255,0.08);
- display: flex;
- align-items: center;
- gap: 10px;
- width: 100%;
- z-index: 350;
- flex-shrink: 0;
-}
-
-/* CONTENEDOR TIPO PASTILLA PARA EL INPUT DE MENSAJE */
-.chat-input-pill{
- flex: 1;
- display: flex;
- align-items: center;
- background: #121214;
- border: 1px solid rgba(255,255,255,0.15);
- border-radius: 26px;
- padding: 4px 6px 4px 12px;
- gap: 8px;
-}
-
-.chat-input-pill input{
- flex: 1;
- background: transparent;
- border: none;
- color: #fff;
- font-size: 14px;
- outline: none;
- padding: 8px 0;
-}
-.chat-input-pill input::placeholder{
- color: #71717a;
-}
-
-/* BOTONES ICONOS DE LA BARRA DE CHAT */
-.chat-icon-action{
- background: none;
- border: none;
- color: #fff;
- cursor: pointer;
- display: flex;
- align-items: center;
- justify-content: center;
- padding: 6px;
- flex-shrink: 0;
- transition: transform 0.1s ease;
-}
-.chat-icon-action:active{
- transform: scale(0.85);
-}
-.chat-icon-action svg{
- width: 24px;
- height: 24px;
- stroke: #fff;
- fill: none;
- stroke-width: 2;
-}
-
-/* BOTÓN REDONDO DE CÁMARA (ESTILO IG) */
-.chat-camera-btn{
- width: 38px;
- height: 38px;
- min-width: 38px;
- border-radius: 50%;
- background: linear-gradient(135deg, #3b82f6, #8134af);
- border: none;
- display: grid;
- place-items: center;
- cursor: pointer;
- flex-shrink: 0;
-}
-.chat-camera-btn svg {
- width: 18px;
- height: 18px;
- stroke: #fff;
- fill: none;
- stroke-width: 2;
-}
 
 /* CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM */
 #cameraModal{
@@ -364,15 +200,49 @@ main > div.active {display: block !important;}
 }
 .dm-conv-item:active{background:rgba(255,255,255,0.06)}
 .dm-conv-avatar{width:54px;height:54px;min-width:54px;margin:0}
-.dm-conv-avatar .story-avatar-inner{
- width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#18181b;
-}
-.dm-conv-avatar .story-avatar-inner img{width:100%;height:100%;object-fit:cover}
 .dm-conv-info{flex:1;min-width:0}
 .dm-conv-name{font-weight:600;font-size:14px;color:#fff;display:flex;justify-content:space-between;align-items:center}
 .dm-conv-snippet{font-size:13px;color:#a1a1aa;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dm-conv-time{font-size:11px;color:#71717a;font-weight:normal}
 .dm-unread-dot{width:8px;height:8px;background:#3b82f6;border-radius:50%;display:inline-block}
+
+/* SALA DE CHAT PRIVADO MEJORADA Y FIJA */
+#chatRoomPage{
+ display:none;flex-direction:column;height:100vh;height:100dvh;position:fixed;inset:0;background:#000;z-index:250;
+}
+#chatRoomPage.active{display:flex !important}
+
+.chat-room-header{
+ padding:calc(env(safe-area-inset-top) + 10px) 16px 10px 16px;
+ border-bottom:1px solid rgba(255,255,255,0.08);
+ display:flex;align-items:center;gap:12px;
+ background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);
+ z-index:40;flex-shrink:0;
+}
+
+.chat-messages-container{
+ flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;
+ background:#000;-webkit-overflow-scrolling:touch;
+}
+
+.chat-bubble{
+ max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;overflow-wrap:anywhere;position:relative;
+}
+.chat-bubble.sent{
+ background:#3b82f6;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;
+}
+.chat-bubble.received{
+ background:#27272a;color:#f4f4f5;align-self:flex-start;border-bottom-left-radius:4px;
+}
+.chat-bubble-time{font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;text-align:right}
+
+.chat-input-footer{
+ padding:10px 16px calc(env(safe-area-inset-bottom) + 12px) 16px;
+ background:rgba(0,0,0,0.95);backdrop-filter:blur(20px);
+ border-top:1px solid rgba(255,255,255,0.08);
+ display:flex;align-items:center;gap:10px;
+ flex-shrink:0;z-index:50;
+}
 
 /* ESTILO DE PUBLICACIONES */
 .post{background:#000;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
@@ -734,6 +604,74 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
+<!-- CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM -->
+<div id="cameraModal">
+ <video id="cameraVideo" class="camera-video-fullscreen" autoplay playsinline muted></video>
+ <img id="capturedImagePreview" class="camera-video-fullscreen" style="display:none" alt="Vista previa">
+
+ <div class="camera-screen-container">
+  <div class="camera-top-bar">
+   <button class="icon" onclick="closeCameraModal()" aria-label="Cerrar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+   </button>
+   
+   <div class="camera-zoom-container">
+    <span class="camera-zoom-label">🔍</span>
+    <input type="range" id="zoomRangeInput" min="1" max="4" step="0.1" value="1" oninput="adjustZoom(this.value)">
+    <span class="camera-zoom-label" id="zoomValueText">1x</span>
+   </div>
+
+   <button class="icon" onclick="switchCamera()" aria-label="Girar cámara">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 4v5h-.582m0 0a8.001 8.001 0 0 0-14.356-2m15.356 2A8.001 8.001 0 0 1 4 15m0 0v-5h.582m0 0a8.001 8.001 0 0 0 14.356 2"/></svg>
+   </button>
+  </div>
+
+  <div class="camera-bottom-ui">
+   <div class="camera-actions-row">
+    <div class="camera-gallery-icon" onclick="document.getElementById('galleryFileInput').click()" id="galleryThumbIcon">
+     📁
+    </div>
+    <button class="capture-btn" id="captureBtn" onclick="takePhoto()"></button>
+    <div style="width:44px"></div>
+   </div>
+   <button class="primary" id="publishStoryBtn" style="display:none;width:90%;margin:auto;padding:12px 20px;font-size:15px;border-radius:24px;" onclick="uploadCapturedStory()">Compartir en tu historia</button>
+  </div>
+ </div>
+ <input type="file" id="galleryFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handleGallerySelect(this)">
+</div>
+
+<!-- VISOR DE HISTORIAS ESTILO INSTAGRAM (Con Likes y Barra inferior) -->
+<div id="storyViewer">
+ <div class="story-top-bar">
+  <div class="story-user-info">
+   <div id="storyViewerAvatarContainer" class="story-avatar-container">
+    <div class="story-avatar-inner" id="storyViewerAvatarInner">👤</div>
+   </div>
+   <div>
+    <span id="storyUsername" class="story-username-text">@usuario</span>
+    <span id="storyTimeAgo" class="story-time-text">6 h</span>
+   </div>
+  </div>
+  <button class="icon" onclick="closeStoryViewer()">✕</button>
+ </div>
+
+ <div class="story-content-area" id="storyContentAreaContainer">
+  <img id="storyImage" src="" alt="Historia">
+ </div>
+
+ <div class="story-bottom-bar">
+  <input type="text" class="story-reply-input" placeholder="Enviar mensaje..." id="storyReplyInput">
+  
+  <button class="story-action-icon-btn" id="storyLikeBtn" onclick="toggleStoryLikeAction()" aria-label="Me gusta">
+   <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+  </button>
+
+  <button class="story-action-icon-btn" onclick="sendStoryReply()" aria-label="Enviar mensaje">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+  </button>
+ </div>
+</div>
+
 <!-- EXPLORAR ESTILO INSTAGRAM -->
 <div id="explore" class="section">
  <div class="explore-top-bar">
@@ -921,7 +859,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.8.5 (Supabase Direct + RLS Messaging)</p>
+    <p class="settings-row-desc">1.8.6 (Supabase Direct + RLS Messaging)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -985,116 +923,28 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div class="ig-posts-grid" id="publicposts"></div>
 </div>
 
-</main>
-
-<!-- SALA DE CHAT PRIVADO INDEPENDIENTE Y FUERA DE MAIN (CORREGIDA Y SIMÉTRICA PARA iOS Y ANDROID) -->
-<div id="chatRoomPage">
+<!-- SALA DE CHAT PRIVADO FIJA Y FUNCIONAL -->
+<div id="chatRoomPage" class="section">
  <div class="chat-room-header">
-  <button class="secondary" style="padding:6px 12px; font-size:13px;" onclick="showTab('messagesPage')">← Volver</button>
-  <div class="chat-room-header-avatar" id="chatRoomHeaderAvatar"></div>
-  <div style="min-width:0; flex:1;">
-   <strong id="chatRoomTitle" style="font-size:14px; display:block; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Chat</strong>
-   <small style="color:#71717a; font-size:11px;">En línea</small>
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('messagesPage')">← Volver</button>
+  <div id="chatRoomHeaderAvatar" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:#27272a;display:grid;place-items:center;"></div>
+  <div style="min-width:0;flex:1;">
+   <strong id="chatRoomTitle" style="font-size:14px;display:block;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chat</strong>
+   <small style="color:#71717a;font-size:11px;">En línea</small>
   </div>
  </div>
 
  <div class="chat-messages-container" id="chatMessagesContainer"></div>
 
  <div class="chat-input-footer">
-  <button class="chat-camera-btn" onclick="openCameraModal()" aria-label="Cámara">
-   <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-  </button>
-
-  <div class="chat-input-pill">
-   <input type="text" id="chatMessageInput" placeholder="Mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
-   
-   <button class="chat-icon-action" aria-label="Audio">
-    <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-   </button>
-
-   <button class="chat-icon-action" onclick="document.getElementById('chatImageFileInput').click()" aria-label="Galería">
-    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-   </button>
-
-   <button class="chat-icon-action" aria-label="Stickers">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-   </button>
-  </div>
-
-  <button class="chat-icon-action" onclick="sendChatMessage()" aria-label="Enviar mensaje">
-   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-  </button>
- </div>
- <input type="file" id="chatImageFileInput" class="hidden-file" accept="image/*">
-</div>
-
-<!-- CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM -->
-<div id="cameraModal">
- <video id="cameraVideo" class="camera-video-fullscreen" autoplay playsinline muted></video>
- <img id="capturedImagePreview" class="camera-video-fullscreen" style="display:none" alt="Vista previa">
-
- <div class="camera-screen-container">
-  <div class="camera-top-bar">
-   <button class="icon" onclick="closeCameraModal()" aria-label="Cerrar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-   </button>
-   
-   <div class="camera-zoom-container">
-    <span class="camera-zoom-label">🔍</span>
-    <input type="range" id="zoomRangeInput" min="1" max="4" step="0.1" value="1" oninput="adjustZoom(this.value)">
-    <span class="camera-zoom-label" id="zoomValueText">1x</span>
-   </div>
-
-   <button class="icon" onclick="switchCamera()" aria-label="Girar cámara">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 4v5h-.582m0 0a8.001 8.001 0 0 0-14.356-2m15.356 2A8.001 8.001 0 0 1 4 15m0 0v-5h.582m0 0a8.001 8.001 0 0 0 14.356 2"/></svg>
-   </button>
-  </div>
-
-  <div class="camera-bottom-ui">
-   <div class="camera-actions-row">
-    <div class="camera-gallery-icon" onclick="document.getElementById('galleryFileInput').click()" id="galleryThumbIcon">
-     📁
-    </div>
-    <button class="capture-btn" id="captureBtn" onclick="takePhoto()"></button>
-    <div style="width:44px"></div>
-   </div>
-   <button class="primary" id="publishStoryBtn" style="display:none;width:90%;margin:auto;padding:12px 20px;font-size:15px;border-radius:24px;" onclick="uploadCapturedStory()">Compartir en tu historia</button>
-  </div>
- </div>
- <input type="file" id="galleryFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handleGallerySelect(this)">
-</div>
-
-<!-- VISOR DE HISTORIAS ESTILO INSTAGRAM (Con Likes y Barra inferior) -->
-<div id="storyViewer">
- <div class="story-top-bar">
-  <div class="story-user-info">
-   <div id="storyViewerAvatarContainer" class="story-avatar-container">
-    <div class="story-avatar-inner" id="storyViewerAvatarInner">👤</div>
-   </div>
-   <div>
-    <span id="storyUsername" class="story-username-text">@usuario</span>
-    <span id="storyTimeAgo" class="story-time-text">6 h</span>
-   </div>
-  </div>
-  <button class="icon" onclick="closeStoryViewer()">✕</button>
- </div>
-
- <div class="story-content-area" id="storyContentAreaContainer">
-  <img id="storyImage" src="" alt="Historia">
- </div>
-
- <div class="story-bottom-bar">
-  <input type="text" class="story-reply-input" placeholder="Enviar mensaje..." id="storyReplyInput">
-  
-  <button class="story-action-icon-btn" id="storyLikeBtn" onclick="toggleStoryLikeAction()" aria-label="Me gusta">
-   <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-  </button>
-
-  <button class="story-action-icon-btn" onclick="sendStoryReply()" aria-label="Enviar mensaje">
-   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+  <input type="text" class="story-reply-input" id="chatMessageInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+  <button class="primary" style="width:auto;padding:10px 20px;border-radius:24px;" onclick="sendChatMessage()">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
   </button>
  </div>
 </div>
+
+</main>
 
 <!-- MODAL PARA VER PUBLICACIÓN -->
 <div id="postDetailModal" onclick="closePostDetailModal()">
@@ -1176,6 +1026,7 @@ let currentFacingMode = 'user';
 let currentZoom = 1;
 let currentActiveStoryId = null;
 
+// Variables de Chat Activo
 let activeConversationId = null;
 let activeRecipientProfile = null;
 
@@ -1208,6 +1059,7 @@ function handleSwipeGesture(){
  }
 }
 
+/* GESTIÓN DE PANTALLA DE BIENVENIDA Y AUTH (ESTILO INSTAGRAM) */
 function switchAuthSubView(viewName){
  document.getElementById('authWelcomePanel').classList.remove('active');
  document.getElementById('authSignupPanel').classList.remove('active');
@@ -1276,12 +1128,7 @@ function showTab(id,btn){
  }
 
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
- const chatPage = document.getElementById('chatRoomPage');
- if(id !== 'chatRoomPage') chatPage.classList.remove('active');
-
- const target = document.getElementById(id);
- if(target) target.classList.add('active');
-
+ document.getElementById(id).classList.add('active');
  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
 
  if(btn)btn.classList.add('active');
@@ -1540,6 +1387,7 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('headerUnreadDot').classList.remove('active');
 }
 
+/* SISTEMA DE MENSAJERÍA PRIVADA (DIRECTS) */
 async function loadConversations(){
  const container = document.getElementById('dmConversationsList');
  if(!currentUser) return;
@@ -1615,7 +1463,7 @@ async function loadConversations(){
   row.onclick = () => openChatRoom(item.conversationId, item.profile);
 
   const av = createAvatarNode(item.profile, false);
-  av.classList.add('dm-conv-avatar');
+  av.className += ' dm-conv-avatar';
 
   const info = document.createElement('div');
   info.className = 'dm-conv-info';
@@ -1719,9 +1567,7 @@ async function openChatRoom(conversationId, recipientProfile){
  document.getElementById('chatRoomTitle').textContent = recipientProfile.display_name || recipientProfile.username;
  document.getElementById('chatRoomHeaderAvatar').replaceChildren(createAvatarNode(recipientProfile, false));
 
- document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
- document.getElementById('chatRoomPage').classList.add('active');
-
+ showTab('chatRoomPage');
  await loadChatMessages(conversationId);
  markConversationAsRead(conversationId);
 }
