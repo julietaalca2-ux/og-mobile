@@ -1,4 +1,4 @@
-name: Generar APK Web (React + Capacitor)
+name: Generar APK Web
 
 on:
   push:
@@ -18,32 +18,31 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Configurar Java 17
-        uses: actions/setup-java@v4
+      - name: Configurar Java 21
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
-      - name: Instalar dependencias y compilar Web (Vite)
+      - name: Instalar dependencias y compilar web
         run: |
           npm install
           npm run build
 
-      - name: Configurar Capacitor y crear proyecto Android
+      - name: Agregar Capacitor y sincronizar Android
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "MiApp" "com.miapp.web" --web-dir=dist
-          npx cap add android
+          npx cap add android --force || true
           npx cap sync android
 
-      - name: Compilar APK Debug
+      - name: Compilar APK en modo Debug
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Subir APK listo
+      - name: Subir APK final
         uses: actions/upload-artifact@v4
         with:
-          name: app-web-apk
+          name: app-kika-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
