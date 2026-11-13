@@ -13,17 +13,10 @@
 <meta name="apple-mobile-web-app-title" content="Ög">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<!-- Sistema Independiente de Optimización y Animaciones ÖG -->
-<link rel="stylesheet" href="./optimization/animation.css">
+<!-- Sistema Independiente de Optimización ÖG -->
 <script type="module">
   import { ÖGOptimizer } from './optimization/optimizer.js';
-  import { ÖGAnimationEngine } from './optimization/animation.js';
-  
   ÖGOptimizer.init();
-  document.addEventListener('DOMContentLoaded', () => {
-    ÖGAnimationEngine.init();
-    window.ÖGAnimationEngine = ÖGAnimationEngine;
-  });
 </script>
 
 <style>
@@ -44,11 +37,137 @@ body{
  -webkit-font-smoothing:antialiased;
  overflow-x:hidden;
  scrollbar-width: none !important;
+ /* IMPORTANTE: Desactivar gestos por defecto del navegador para control táctil fluido */
+ overscroll-behavior-x: none;
+ touch-action: pan-y pinch-zoom;
 }
 
 * {
  scrollbar-width: none !important;
 }
+
+/* ========================================================================= */
+/* MÓDULO DE ANIMACIONES INTEGRADO ÖG Y NAVEGACIÓN POR GESTOS TÁCTILES        */
+/* ========================================================================= */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOutScale {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDownModal {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(100%); opacity: 0; }
+}
+
+/* Contenedor principal de pantallas con soporte de transiciones fluidas */
+main {
+  max-width: 470px;
+  margin: auto;
+  position: relative;
+  overflow: hidden;
+  /* Contenedor de deslizamiento horizontal */
+  display: flex;
+  width: 100vw;
+  will-change: transform;
+}
+
+main > div {
+  flex: 0 0 100vw;
+  width: 100vw;
+  min-width: 100vw;
+  display: block !important;
+  padding: 16px;
+  box-sizing: border-box;
+  opacity: 1;
+  transition: opacity 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100vh - 56px - 64px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+#feed, #messagesPage, #explore, #profile {
+  display: block !important;
+}
+
+#feed.active, #profile.active, #messagesPage.active, #explore.active {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Ocultar pantallas independientes que no forman parte del flujo horizontal principal */
+#publicprofile, #chatRoomPage, #chatDetailsPage, #chatSubSettingsPage, #menuSectionPage, 
+#menuConfigPage, #menuPrivacyPage, #menuNotifPage, #menuActivityPage, #menuSavedPage, #menuHelpPage, #menuAccountsPage, #create, #notifications {
+  display: none !important;
+  position: fixed !important;
+  inset: 0;
+  z-index: 250;
+  background: #000;
+  max-width: 100vw !important;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+}
+
+#publicprofile.active, #chatRoomPage.active, #chatDetailsPage.active, #chatSubSettingsPage.active, 
+#menuSectionPage.active, #menuConfigPage.active, #menuPrivacyPage.active, #menuNotifPage.active, 
+#menuActivityPage.active, #menuSavedPage.active, #menuHelpPage.active, #menuAccountsPage.active, #create.active, #notifications.active {
+  display: flex !important;
+  flex-direction: column;
+}
+
+/* Transiciones de pantallas y modales */
+#postDetailModal, #editProfileModal, #storyViewer, #cameraModal, #logoutConfirmModal, #followListModal {
+  transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#postDetailModal.active, #editProfileModal.active, #storyViewer.active, #cameraModal.active, #logoutConfirmModal.active, #followListModal.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#postDetailModal.active .post-modal-card,
+#editProfileModal.active .edit-modal-card,
+#logoutConfirmModal.active .confirm-card {
+  animation: fadeInScale 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+#followListModal.open .settings-drawer {
+  animation: slideUpModal 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+/* Efectos de rebote y pulso en interacciones */
+button, .story, .post-action-btn, .chat-action-pill, .menu-list-btn, .explore-grid-item, .ig-grid-item {
+  transition: transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.15s ease, background-color 0.15s ease;
+}
+
+button:active, .post-action-btn:active, .story:active {
+  transform: scale(0.94);
+}
+
+/* Microanimación de carga */
+@keyframes pulseLoader {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.activity-empty {
+  animation: pulseLoader 1.5s ease-in-out infinite;
+}
+/* ========================================================================= */
 
 /* SPLASH SCREEN */
 #appSplashScreen{
@@ -633,32 +752,15 @@ textarea{height:110px;resize:none}
 input:checked + .toggle-slider{background:#3b82f6}
 input:checked + .toggle-slider:before{transform:translateX(20px)}
 
-/* MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN (CORREGIDO Y OPTIMIZADO) */
+/* MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN */
 #logoutConfirmModal{
  position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
  z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;
- pointer-events: none;
- opacity: 0;
- visibility: hidden;
- transition: opacity 0.2s ease, visibility 0.2s ease;
-}
-#logoutConfirmModal.active{
- pointer-events: auto;
- opacity: 1;
- visibility: visible;
 }
 .confirm-card{
  background:#18181b;border:1px solid rgba(255,255,255,0.12);border-radius:22px;
  padding:24px 20px;width:100%;max-width:340px;text-align:center;
  box-shadow:0 20px 40px rgba(0,0,0,0.6);
- position: relative;
- z-index: 701;
- pointer-events: auto;
-}
-.confirm-card button {
- pointer-events: auto;
- cursor: pointer;
- -webkit-tap-highlight-color: transparent;
 }
 
 .public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer}
@@ -760,9 +862,9 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </header>
 
-<main>
+<main id="mainSectionsContainer">
 
-<!-- FEED -->
+<!-- FEED (ÍNDICE 0) -->
 <div id="feed" class="active">
  <div class="stories" id="storiescontainer">
   <div class="story" id="mystorybtn" onclick="handleStoryClick()">
@@ -779,7 +881,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div id="feedLoader" style="text-align:center;padding:20px;color:#71717a;font-size:13px;display:none;">Cargando más publicaciones...</div>
 </div>
 
-<!-- MENSAJES / CHAT -->
+<!-- MENSAJES / CHAT (ÍNDICE 1) -->
 <div id="messagesPage" class="section">
  <div style="padding:16px;border-bottom:1px solid rgba(255,255,255,0.08)">
   <h2 style="margin:0 0 10px 0">Chat</h2>
@@ -793,6 +895,67 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="activity-empty">Cargando conversaciones...</div>
  </div>
 </div>
+
+<!-- EXPLORE (ÍNDICE 2) -->
+<div id="explore" class="section">
+ <div class="explore-top-bar">
+  <div class="explore-search-wrapper">
+   <svg class="explore-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+   <input class="explore-search-input" id="search" placeholder="Buscar..." oninput="searchUsers()">
+  </div>
+ </div>
+ <div id="searchresult" style="padding: 12px 16px;"></div>
+ <div class="explore-grid" id="exploreGrid"></div>
+</div>
+
+<!-- PERFIL (ÍNDICE 3) -->
+<div id="profile" class="section">
+ <div class="ig-cover" id="mycover"></div>
+ 
+ <div class="ig-header-container">
+  <div class="ig-top-row">
+   <div class="ig-avatar-wrap">
+    <div class="story-avatar-container" style="width:86px;height:86px">
+     <div class="story-avatar-inner" id="myavatar"><div style="font-size:28px">👤</div></div>
+    </div>
+   </div>
+   
+   <div class="ig-stats">
+    <div class="ig-stat-item">
+     <span class="ig-stat-num" id="mypostscount">0</span>
+     <span class="ig-stat-label">publicaciones</span>
+    </div>
+    <div class="ig-stat-item">
+     <span class="ig-stat-num" id="myfollowerscount" onclick="openFollowersModal(currentUser?.id)" style="cursor:pointer">0</span>
+     <span class="ig-stat-label">seguidores</span>
+    </div>
+    <div class="ig-stat-item">
+     <span class="ig-stat-num" id="myfollowingcount" onclick="openFollowingModal(currentUser?.id)" style="cursor:pointer">0</span>
+     <span class="ig-stat-label">seguidos</span>
+    </div>
+   </div>
+  </div>
+
+  <div class="ig-bio-section">
+   <h2 class="ig-display-name">
+    <span id="myname">Mi perfil</span>
+    <span id="mypronouns" class="ig-pronouns-tag"></span>
+   </h2>
+   <p class="ig-username-tag" id="myusername">@usuario</p>
+   <p class="ig-bio-text" id="mybio">Bienvenido à Ög.</p>
+  </div>
+
+  <div class="ig-action-buttons" id="profile-actions">
+   <button class="secondary" onclick="openEditProfileModal()">Editar</button>
+  </div>
+ </div>
+
+ <div id="my-grid-section">
+  <div class="ig-posts-grid" id="mypostsgrid"></div>
+ </div>
+</div>
+
+</main>
 
 <!-- CÁMARA -->
 <div id="cameraModal">
@@ -860,21 +1023,12 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- EXPLORAR -->
-<div id="explore" class="section">
- <div class="explore-top-bar">
-  <div class="explore-search-wrapper">
-   <svg class="explore-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-   <input class="explore-search-input" id="search" placeholder="Buscar..." oninput="searchUsers()">
-  </div>
- </div>
- <div id="searchresult" style="padding: 12px 16px;"></div>
- <div class="explore-grid" id="exploreGrid"></div>
-</div>
-
 <!-- CREAR PUBLICACIÓN -->
 <div id="create" class="section" style="padding: 16px;">
- <h2 style="margin-top:0">Nueva publicación</h2>
+ <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('profile')">← Volver</button>
+  <h2 style="margin:0">Nueva publicación</h2>
+ </div>
  <p class="muted">Comparte momentos con tu comunidad usando fotos y emojis.</p>
 
  <div class="create-card">
@@ -900,57 +1054,13 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 <!-- ACTIVIDAD (DESDE HEADER) -->
 <div id="notifications" class="section" style="padding: 16px;">
- <h2 style="margin-top:0">Actividad</h2>
+ <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('feed')">← Volver</button>
+  <h2 style="margin:0">Actividad</h2>
+ </div>
  <p class="muted">Novedades e interacciones en tiempo real.</p>
  <div id="activitylist">
   <p class="muted">Cargando actividad...</p>
- </div>
-</div>
-
-<!-- PERFIL -->
-<div id="profile" class="section">
- <div class="ig-cover" id="mycover"></div>
- 
- <div class="ig-header-container">
-  <div class="ig-top-row">
-   <div class="ig-avatar-wrap">
-    <div class="story-avatar-container" style="width:86px;height:86px">
-     <div class="story-avatar-inner" id="myavatar"><div style="font-size:28px">👤</div></div>
-    </div>
-   </div>
-   
-   <div class="ig-stats">
-    <div class="ig-stat-item">
-     <span class="ig-stat-num" id="mypostscount">0</span>
-     <span class="ig-stat-label">publicaciones</span>
-    </div>
-    <div class="ig-stat-item">
-     <span class="ig-stat-num" id="myfollowerscount" onclick="openFollowersModal(currentUser?.id)" style="cursor:pointer">0</span>
-     <span class="ig-stat-label">seguidores</span>
-    </div>
-    <div class="ig-stat-item">
-     <span class="ig-stat-num" id="myfollowingcount" onclick="openFollowingModal(currentUser?.id)" style="cursor:pointer">0</span>
-     <span class="ig-stat-label">seguidos</span>
-    </div>
-   </div>
-  </div>
-
-  <div class="ig-bio-section">
-   <h2 class="ig-display-name">
-    <span id="myname">Mi perfil</span>
-    <span id="mypronouns" class="ig-pronouns-tag"></span>
-   </h2>
-   <p class="ig-username-tag" id="myusername">@usuario</p>
-   <p class="ig-bio-text" id="mybio">Bienvenido à Ög.</p>
-  </div>
-
-  <div class="ig-action-buttons" id="profile-actions">
-   <button class="secondary" onclick="openEditProfileModal()">Editar</button>
-  </div>
- </div>
-
- <div id="my-grid-section">
-  <div class="ig-posts-grid" id="mypostsgrid"></div>
  </div>
 </div>
 
@@ -1350,7 +1460,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- MODAL CONFIRMACIÓN CERRAR SESIÓN (CORREGIDO) -->
+<!-- MODAL CONFIRMACIÓN CERRAR SESIÓN -->
 <div id="logoutConfirmModal" onclick="closeLogoutConfirmation()">
  <div class="confirm-card" onclick="event.stopPropagation()">
   <h3 style="margin:0 0 8px 0;font-size:18px;color:#fff;">¿Cerrar sesión en Ög?</h3>
@@ -1542,8 +1652,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-</main>
-
 <!-- MODAL SEGUIDORES / SEGUIDOS -->
 <div id="followListModal" class="settings-overlay" onclick="closeFollowListModal()">
  <div class="settings-drawer" style="max-height: 80vh; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
@@ -1631,6 +1739,9 @@ let currentActiveStoryId = null;
 let stagedAvatarBlob = null;
 let stagedCoverBlob = null;
 
+/* ========================================================================= */
+/* VARIABLES DE OPTIMIZACIÓN Y CACHÉ DEL SISTEMA DE PUBLICACIONES           */
+/* ========================================================================= */
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedLoading = false;
@@ -1656,17 +1767,100 @@ if (!visitorId) {
  localStorage.setItem('og_visitor_uuid', visitorId);
 }
 
-let touchStartX = 0;
-let touchEndX = 0;
+/* ========================================================================= */
+/* IMPLEMENTACIÓN DE NAVEGACIÓN TÁCTIL Y GESTOS (SWIPE, SPRING, DEPTH)        */
+/* ========================================================================= */
+const sectionsOrder = ['feed', 'messagesPage', 'explore', 'profile'];
+let currentSectionIndex = 0;
 
-const feedElement = document.getElementById('feed');
-feedElement.addEventListener('touchstart', e => {
- touchStartX = e.changedTouches[0].screenX;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchCurrentX = 0;
+let isSwiping = false;
+const mainContainer = document.getElementById('mainSectionsContainer');
+
+// Inicializar posición horizontal de las secciones
+function updateMainContainerPosition(instant = false, offsetX = 0) {
+  if (!mainContainer) return;
+  if (instant) {
+    mainContainer.style.transition = 'none';
+  } else {
+    mainContainer.style.transition = 'transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1)';
+  }
+  const baseTranslate = -currentSectionIndex * window.innerWidth;
+  mainContainer.style.transform = `translateX(${baseTranslate + offsetX}px)`;
+}
+
+window.addEventListener('resize', () => {
+  updateMainContainerPosition(true);
+});
+
+// Detectar si el usuario está interactuando con inputs, chat o textareas para evitar conflictos de gestos
+function isInteractingWithInput(target) {
+  if (!target) return false;
+  const tag = target.tagName.toLowerCase();
+  return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable || target.closest('.chat-messages-container') || target.closest('.stories');
+}
+
+mainContainer.addEventListener('touchstart', e => {
+  if (isInteractingWithInput(e.target)) {
+    isSwiping = false;
+    return;
+  }
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  isSwiping = true;
+  mainContainer.style.transition = 'none';
 }, {passive: true});
 
-feedElement.addEventListener('touchend', e => {
- touchEndX = e.changedTouches[0].screenX;
- handleSwipeGesture();
+mainContainer.addEventListener('touchmove', e => {
+  if (!isSwiping) return;
+  touchCurrentX = e.touches[0].clientX;
+  const diffX = touchCurrentX - touchStartX;
+  const diffY = e.touches[0].clientY - touchStartY;
+
+  // Si el scroll vertical es mayor que el horizontal, cancelar swipe horizontal
+  if (Math.abs(diffY) > Math.abs(diffX) + 10) {
+    isSwiping = false;
+    updateMainContainerPosition(false);
+    return;
+  }
+
+  // Desplazamiento en tiempo real con el dedo (Efecto nativo suave)
+  const baseTranslate = -currentSectionIndex * window.innerWidth;
+  mainContainer.style.transform = `translateX(${baseTranslate + diffX}px)`;
+}, {passive: true});
+
+mainContainer.addEventListener('touchend', e => {
+  if (!isSwiping) return;
+  isSwiping = false;
+  const diffX = touchCurrentX - touchStartX;
+  const threshold = window.innerWidth * 0.25;
+
+  if (diffX < -threshold && currentSectionIndex < sectionsOrder.length - 1) {
+    // Siguiente sección (Slide hacia la izquierda)
+    currentSectionIndex++;
+  } else if (diffX > threshold && currentSectionIndex > 0) {
+    // Sección anterior (Slide hacia la derecha)
+    currentSectionIndex--;
+  }
+
+  showTab(sectionsOrder[currentSectionIndex], null, true);
+}, {passive: true});
+
+// Soporte de gestos en el documento general (Abrir cámara con swipe derecho si estamos en Inicio)
+document.addEventListener('touchstart', e => {
+  if (isInteractingWithInput(e.target)) return;
+  touchStartX = e.changedTouches ? e.changedTouches[0].screenX : e.touches[0].clientX;
+}, {passive: true});
+
+document.addEventListener('touchend', e => {
+  if (isInteractingWithInput(e.target)) return;
+  touchEndX = e.changedTouches ? e.changedTouches[0].screenX : e.clientX;
+  const swipeDistance = touchEndX - touchStartX;
+  if(swipeDistance > 90 && currentSectionIndex === 0){
+   openCameraModal();
+  }
 }, {passive: true});
 
 window.addEventListener('scroll', () => {
@@ -1675,15 +1869,6 @@ window.addEventListener('scroll', () => {
   loadMorePosts();
  }
 }, {passive: true});
-
-function handleSwipeGesture(){
- const swipeDistance = touchEndX - touchStartX;
- if(swipeDistance > 70){
-  openCameraModal();
- } else if(swipeDistance < -70){
-  showTab('messagesPage');
- }
-}
 
 function switchAuthSubView(viewName){
  document.getElementById('authWelcomePanel').classList.remove('active');
@@ -1753,31 +1938,32 @@ async function executeSignIn(){
  hideAuthOverlay();
 }
 
-function showTab(id, btn){
+function showTab(id, btn, isGesture = false){
  if(!currentUser && id !== 'profile'){
   showAuthOverlay();
   return;
  }
 
- // Integración con ÖG Animation Engine para slide lateral fluido
- if(window.ÖGAnimationEngine && typeof window.ÖGAnimationEngine.transitionTo === 'function'){
-  window.ÖGAnimationEngine.transitionTo(id);
- } else {
-  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+ const targetIndex = sectionsOrder.indexOf(id);
+ if (targetIndex >= 0) {
+  currentSectionIndex = targetIndex;
+  updateMainContainerPosition(isGesture);
  }
+
+ document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
+ const activeSection = document.getElementById(id);
+ if(activeSection) activeSection.classList.add('active');
 
  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
 
  if(btn) btn.classList.add('active');
- else{
-  const tabIds=['feed','messagesPage','explore','profile'];
-  const index = tabIds.indexOf(id);
-  if(index>=0) document.querySelectorAll('nav button')[index].classList.add('active');
+ else if(targetIndex >= 0){
+  const navBtns = document.querySelectorAll('nav button');
+  if(navBtns[targetIndex]) navBtns[targetIndex].classList.add('active');
  }
 
- const defaultIcons=document.getElementById('header-default-icons');
- const profileIcons=document.getElementById('header-profile-icons');
+ const defaultIcons = document.getElementById('header-default-icons');
+ const profileIcons = document.getElementById('header-profile-icons');
  const headerPlusBtn = document.getElementById('headerPlusBtn');
  const headerLogoSlot = document.getElementById('headerLogoSlot');
  const bottomNavBar = document.getElementById('bottomNavBar');
@@ -1807,6 +1993,10 @@ function showTab(id, btn){
  if(id==='profile' && currentUser) loadMyPostsGrid();
  window.scrollTo(0,0);
 }
+
+/* ========================================================================= */
+/* MENÚ Y SUB-PANTALLAS                                                      */
+/* ========================================================================= */
 
 function openMenuSection(){
  if(!currentUser){
@@ -1873,10 +2063,10 @@ function loadMenuPreferences(){
   if(document.getElementById('activityStatusToggle')) document.getElementById('activityStatusToggle').checked = prefs.activityStatus !== false;
   if(document.getElementById('showFollowersListToggle')) document.getElementById('showFollowersListToggle').checked = prefs.showFollowersList !== false;
   if(document.getElementById('allowDmToggle')) document.getElementById('allowDmToggle').checked = prefs.allowDm !== false;
-  if(document.getElementById('notifLikesToggle')) document.getElementById('notifLikesToggle').checked = !!prefs.notifLikes;
-  if(document.getElementById('notifCommentsToggle')) document.getElementById('notifCommentsToggle').checked = !!prefs.notifComments;
-  if(document.getElementById('notifFollowsToggle')) document.getElementById('notifFollowsToggle').checked = !!prefs.notifFollows;
-  if(document.getElementById('notifDmToggle')) document.getElementById('notifDmToggle').checked = !!prefs.notifDm;
+  if(document.getElementById('notifLikesToggle')) document.getElementById('notifLikesToggle').checked = prefs.notifLikes !== false;
+  if(document.getElementById('notifCommentsToggle')) document.getElementById('notifCommentsToggle').checked = prefs.notifComments !== false;
+  if(document.getElementById('notifFollowsToggle')) document.getElementById('notifFollowsToggle').checked = prefs.notifFollows !== false;
+  if(document.getElementById('notifDmToggle')) document.getElementById('notifDmToggle').checked = prefs.notifDm !== false;
  }catch(e){}
 }
 
@@ -2046,17 +2236,11 @@ async function updateUserPassword(){
 }
 
 function promptLogoutConfirmation(){
- const modal = document.getElementById('logoutConfirmModal');
- if(modal) {
-  modal.classList.add('active');
- }
+ document.getElementById('logoutConfirmModal').classList.add('active');
 }
 
 function closeLogoutConfirmation(){
- const modal = document.getElementById('logoutConfirmModal');
- if(modal) {
-  modal.classList.remove('active');
- }
+ document.getElementById('logoutConfirmModal').classList.remove('active');
 }
 
 async function executeConfirmedSignOut(){
@@ -2319,6 +2503,10 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('navUnreadDot').classList.remove('active');
 }
 
+/* ========================================================================= */
+/* SISTEMA DE PUBLICACIONES OPTIMIZADO                                       */
+/* ========================================================================= */
+
 async function loadInitialPosts(){
  feedPage = 0;
  feedHasMore = true;
@@ -2476,23 +2664,6 @@ function buildPostDOMElement(post){
   img.src = post.image_url;
   img.alt = 'Imagen';
   img.loading = 'lazy';
-  
-  // Integración de Doble Toque (Double-Tap Like con animation.js)
-  let lastTapTime = 0;
-  img.addEventListener('click', (e) => {
-   const currentTime = new Date().getTime();
-   const tapLength = currentTime - lastTapTime;
-   if (tapLength < 300 && tapLength > 0) {
-    if (window.ÖGAnimationEngine && typeof window.ÖGAnimationEngine.handleDoubleTapLike === 'function') {
-     window.ÖGAnimationEngine.handleDoubleTapLike(e, img, () => {
-      toggleLike(post.id, likeBtn, likesCountDiv);
-     });
-    }
-    e.preventDefault();
-   }
-   lastTapTime = currentTime;
-  });
-
   article.append(img);
  }
 
@@ -2742,6 +2913,10 @@ async function publish(){
  await loadInitialPosts();
 }
 
+/* ========================================================================= */
+/* OTRAS SECCIONES (EXPLORAR, PERFIL, CHAT, ACTIVIDAD, HISTORIAS)            */
+/* ========================================================================= */
+
 function searchUsers(){
  clearTimeout(searchTimer);
  const val = document.getElementById('search').value.trim();
@@ -2828,7 +3003,8 @@ async function openPublicProfile(userId){
   document.getElementById('publicProfileOnlineDot').classList.remove('active');
  }
 
- showTab('publicprofile');
+ document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
+ document.getElementById('publicprofile').classList.add('active');
  checkFollowStatus(userId);
  loadPublicUserPosts(userId);
  loadPublicCounts(userId);
@@ -3437,10 +3613,15 @@ async function openChatRoom(conversationId, recipientProfile){
   document.getElementById('chatRoomStatusSub').textContent = 'Desconectado';
  }
 
- showTab('chatRoomPage');
+ document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
+ document.getElementById('chatRoomPage').classList.add('active');
  await loadChatMessages(conversationId);
  markConversationAsRead(conversationId);
 }
+
+/* ========================================================================= */
+/* LÓGICA DE PANTALLA “DETALLES DEL CHAT”                                     */
+/* ========================================================================= */
 
 function openChatDetailsPage(){
  if(!activeRecipientProfile) return;
@@ -3481,7 +3662,8 @@ function openChatRecipientProfile(){
 }
 
 function triggerChatSearch(){
- showTab('chatRoomPage');
+ document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
+ document.getElementById('chatRoomPage').classList.add('active');
  const input = document.getElementById('chatMessageInput');
  input.placeholder = 'Buscar en esta conversación...';
  input.focus();
