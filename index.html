@@ -6,15 +6,12 @@
 <meta name="theme-color" content="#000000">
 <title>Ög — Social</title>
 
-<!-- CONFIGURACIÓN PWA PARA ANDROID E IOS -->
-<link rel="manifest" href="/manifest.json">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="Ög">
-
+<!-- CONFIGURACIÓN PWA -->
+<link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ög">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -93,6 +90,13 @@ header{
  display:grid;place-items:center;overflow:hidden;border:2.5px solid #000;
 }
 .story-avatar-inner img{width:100%;height:100%;object-fit:cover}
+
+/* PUNTO VERDE DE ESTADO ACTIVO */
+.online-dot{
+ position:absolute;bottom:2px;right:2px;width:13px;height:13px;
+ background:#22c55e;border:2px solid #000;border-radius:50%;display:none;z-index:3;
+}
+.online-dot.active{display:block}
 
 .story-plus-badge{
  position:absolute;bottom:2px;right:2px;width:20px;height:20px;
@@ -217,7 +221,7 @@ main > div.active {display: block !important;}
 .dm-conv-time{font-size:11px;color:#71717a;font-weight:normal}
 .dm-unread-dot{width:8px;height:8px;background:#3b82f6;border-radius:50%;display:inline-block}
 
-/* SALA DE CHAT PRIVADO CORREGIDA Y AVATAR CIRCULAR PERFECTAMENTE ALINEADO */
+/* SALA DE CHAT PRIVADO */
 #chatRoomPage{
  display:none;flex-direction:column;height:100vh;height:100dvh;position:fixed;inset:0;background:#000;z-index:250;
 }
@@ -247,6 +251,7 @@ main > div.active {display: block !important;}
  justify-content:center;
  border:1.5px solid rgba(255,255,255,0.15);
  flex-shrink:0;
+ position:relative;
 }
 #chatRoomHeaderAvatar img{
  width:100%;
@@ -261,7 +266,7 @@ main > div.active {display: block !important;}
 }
 
 .chat-bubble{
- max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;overflow-wrap:anywhere;position:relative;
+ max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;overflow-wrap:anywhere;position:relative;cursor:pointer;
 }
 .chat-bubble.sent{
  background:#3b82f6;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;
@@ -269,15 +274,25 @@ main > div.active {display: block !important;}
 .chat-bubble.received{
  background:#27272a;color:#f4f4f5;align-self:flex-start;border-bottom-left-radius:4px;
 }
+.chat-bubble-reply-preview{
+ font-size:12px;background:rgba(0,0,0,0.2);padding:4px 8px;border-radius:8px;margin-bottom:6px;border-left:3px solid #fff;opacity:0.9;
+}
 .chat-bubble-time{font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;text-align:right}
 
 .chat-input-footer{
  padding:10px 16px calc(env(safe-area-inset-bottom) + 12px) 16px;
  background:rgba(0,0,0,0.95);backdrop-filter:blur(20px);
  border-top:1px solid rgba(255,255,255,0.08);
- display:flex;align-items:center;gap:10px;
+ display:flex;flex-direction:column;gap:8px;
  flex-shrink:0;z-index:50;
 }
+.chat-input-row{display:flex;align-items:center;gap:10px;width:100%}
+
+/* BARRA DE RESPUESTA FLOTANTE ARRIBA DEL INPUT */
+.replying-bar{
+ display:none;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:10px;font-size:12px;color:#d4d4d8;
+}
+.replying-bar.active{display:flex}
 
 /* ESTILO DE PUBLICACIONES */
 .post{background:#000;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
@@ -370,6 +385,7 @@ nav button.active svg{stroke-width:2.4}
  overflow: hidden;
  background: #18181b;
  transition: border-color 0.15s ease;
+ position: relative;
 }
 nav button.active .nav-avatar-ring {
  border-color: #fff;
@@ -411,7 +427,7 @@ textarea{height:110px;resize:none}
  display:block;text-align:center;color:#71717a;padding:60px 20px;font-size:14px;
 }
 
-/* ESTILOS DE EXPLORAR ESTILO INSTAGRAM */
+/* EXPLORAR ESTILO INSTAGRAM */
 .explore-top-bar{
  padding:12px 16px;position:sticky;top:56px;background:rgba(0,0,0,0.8);
  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:40;
@@ -696,18 +712,16 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
  <div class="story-bottom-bar">
   <input type="text" class="story-reply-input" placeholder="Enviar mensaje..." id="storyReplyInput">
-  
   <button class="story-action-icon-btn" id="storyLikeBtn" onclick="toggleStoryLikeAction()" aria-label="Me gusta">
    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
   </button>
-
   <button class="story-action-icon-btn" onclick="sendStoryReply()" aria-label="Enviar mensaje">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
   </button>
  </div>
 </div>
 
-<!-- EXPLORAR -->
+<!-- EXPLORAR ESTILO INSTAGRAM -->
 <div id="explore" class="section">
  <div class="explore-top-bar">
   <div class="explore-search-wrapper">
@@ -821,7 +835,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- CONFIGURACIÓN -->
+<!-- VISTA COMPLETA DE CONFIGURACIÓN -->
 <div id="settingsPage" class="section" style="padding: 16px;">
  <div class="settings-header" style="top:0;margin:-16px -16px 16px -16px;">
   <button class="secondary" style="padding:6px 12px" onclick="showTab('profile')">← Volver</button>
@@ -894,7 +908,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.8.6 (Supabase Direct + RLS Messaging)</p>
+    <p class="settings-row-desc">1.8.7 (Realtime Presence + Message Replies)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -920,6 +934,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <div class="ig-avatar-wrap">
     <div class="story-avatar-container" style="width:86px;height:86px">
      <div class="story-avatar-inner" id="publicavatar"><div style="font-size:28px">👤</div></div>
+     <span id="publicProfileOnlineDot" class="online-dot"></span>
     </div>
    </div>
    
@@ -958,15 +973,17 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div class="ig-posts-grid" id="publicposts"></div>
 </div>
 
-<!-- SALA DE CHAT -->
+<!-- SALA DE CHAT PRIVADO CON RESPUESTAS Y ESTADO ACTIVO -->
 <div id="chatRoomPage" class="section">
  <div class="chat-room-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('messagesPage')">← Volver</button>
   <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
-   <div id="chatRoomHeaderAvatar"></div>
+   <div id="chatRoomHeaderAvatar">
+    <span id="chatRoomOnlineDot" class="online-dot"></span>
+   </div>
    <div style="min-width:0;flex:1;">
     <strong id="chatRoomTitle" style="font-size:14px;display:block;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chat</strong>
-    <small style="color:#71717a;font-size:11px;display:block;">En línea</small>
+    <small id="chatRoomStatusSub" style="color:#71717a;font-size:11px;display:block;">Desconectado</small>
    </div>
   </div>
  </div>
@@ -974,10 +991,16 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div class="chat-messages-container" id="chatMessagesContainer"></div>
 
  <div class="chat-input-footer">
-  <input type="text" class="story-reply-input" id="chatMessageInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
-  <button class="primary" style="width:auto;padding:10px 20px;border-radius:24px;" onclick="sendChatMessage()">
-   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-  </button>
+  <div id="replyingBar" class="replying-bar">
+   <div>Respondiendo a: <strong id="replyingTextSnippet">...</strong></div>
+   <button class="secondary" style="padding:2px 6px;font-size:11px;" onclick="cancelReply()">✕</button>
+  </div>
+  <div class="chat-input-row">
+   <input type="text" class="story-reply-input" id="chatMessageInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+   <button class="primary" style="width:auto;padding:10px 20px;border-radius:24px;" onclick="sendChatMessage()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+   </button>
+  </div>
  </div>
 </div>
 
@@ -1034,6 +1057,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <button onclick="showTab('profile',this)" aria-label="Perfil">
   <div class="nav-avatar-ring" id="navAvatarContainer">
    <svg id="navAvatarPlaceholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+   <span id="navOnlineDot" class="online-dot"></span>
   </div>
   <small>Perfil</small>
  </button>
@@ -1062,6 +1086,9 @@ let dmSearchTimer=null;
 let profilesCache={};
 let realtimeChannel=null;
 let dmRealtimeChannel=null;
+let presenceChannel=null;
+let onlineUsersMap={};
+
 let myActiveStory=null;
 let mediaStream=null;
 let capturedBlob=null;
@@ -1070,8 +1097,11 @@ let currentFacingMode = 'user';
 let currentZoom = 1;
 let currentActiveStoryId = null;
 
+// Variables de Chat Activo y Respuestas
 let activeConversationId = null;
 let activeRecipientProfile = null;
+let replyingToMessageId = null;
+let replyingToSnippet = null;
 
 let visitorId = localStorage.getItem('og_visitor_uuid');
 if (!visitorId) {
@@ -1102,6 +1132,7 @@ function handleSwipeGesture(){
  }
 }
 
+/* GESTIÓN DE PANTALLA DE BIENVENIDA Y AUTH */
 function switchAuthSubView(viewName){
  document.getElementById('authWelcomePanel').classList.remove('active');
  document.getElementById('authSignupPanel').classList.remove('active');
@@ -1243,6 +1274,7 @@ function saveLocalSettings(){
   notifFollows: document.getElementById('notifFollowsToggle').checked
  };
  localStorage.setItem('og_user_settings_' + (currentUser?.id || 'guest'), JSON.stringify(prefs));
+ setupPresenceChannel();
 }
 
 function loadLocalSettings(){
@@ -1281,6 +1313,15 @@ function createAvatarNode(profile, isStoryActive=false){
   inner.append(placeholder);
  }
  container.append(inner);
+
+ const dot = document.createElement('span');
+ dot.className = 'online-dot';
+ if(profile?.id && onlineUsersMap[profile.id]){
+  dot.classList.add('active');
+ }
+ dot.id = `online-dot-${profile?.id}`;
+ container.append(dot);
+
  return container;
 }
 
@@ -1288,6 +1329,7 @@ function updateNavAvatarUI(){
  const navContainer = document.getElementById('navAvatarContainer');
  if(!navContainer) return;
 
+ const dot = document.getElementById('navOnlineDot');
  navContainer.replaceChildren();
 
  if(myProfile?.avatar_url){
@@ -1308,6 +1350,7 @@ function updateNavAvatarUI(){
   svg.innerHTML = '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>';
   navContainer.append(svg);
  }
+ if(dot) navContainer.append(dot);
 }
 
 async function signOut(){
@@ -1316,6 +1359,8 @@ async function signOut(){
 
  if(realtimeChannel) db.removeChannel(realtimeChannel);
  if(dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
+ if(presenceChannel) db.removeChannel(presenceChannel);
+
  currentUser=null;
  myProfile=null;
  viewedProfile=null;
@@ -1366,6 +1411,51 @@ async function loadAccount(user){
  ]);
  
  setupRealtimeNotifications();
+ setupPresenceChannel();
+}
+
+/* SISTEMA REALTIME PRESENCE (PUNTITO VERDE ACTIVO) */
+function setupPresenceChannel(){
+ if(presenceChannel) db.removeChannel(presenceChannel);
+
+ try{
+  const raw = localStorage.getItem('og_user_settings_' + (currentUser?.id || 'guest'));
+  const prefs = raw ? JSON.parse(raw) : {};
+  if(prefs.activityStatus === false) return; // Si desactivó el estado, no transmite
+ }catch(e){}
+
+ presenceChannel = db.channel('online-users-room', {
+  config: { presence: { key: currentUser.id } }
+ });
+
+ presenceChannel
+  .on('presence', { event: 'sync' }, () => {
+   const state = presenceChannel.presenceState();
+   onlineUsersMap = {};
+   Object.keys(state).forEach(userId => {
+    onlineUsersMap[userId] = true;
+   });
+   
+   // Actualizar puntos verdes en pantalla de forma dinámica
+   document.querySelectorAll('.online-dot').forEach(dot => dot.classList.remove('active'));
+   Object.keys(onlineUsersMap).forEach(userId => {
+    const d = document.getElementById(`online-dot-${userId}`);
+    if(d) d.classList.add('active');
+   });
+
+   if(activeRecipientProfile && onlineUsersMap[activeRecipientProfile.id]){
+    document.getElementById('chatRoomOnlineDot').classList.add('active');
+    document.getElementById('chatRoomStatusSub').textContent = 'En línea';
+   } else if(activeRecipientProfile){
+    document.getElementById('chatRoomOnlineDot').classList.remove('active');
+    document.getElementById('chatRoomStatusSub').textContent = 'Desconectado';
+   }
+  })
+  .subscribe(async (status) => {
+   if(status === 'SUBSCRIBED'){
+    await presenceChannel.track({ online_at: new Date().toISOString() });
+   }
+  });
 }
 
 function setupRealtimeNotifications(){
@@ -1429,6 +1519,7 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('headerUnreadDot').classList.remove('active');
 }
 
+/* SISTEMA DE MENSAJERÍA PRIVADA (DIRECTS) Y RESPUESTAS */
 async function loadConversations(){
  const container = document.getElementById('dmConversationsList');
  if(!currentUser) return;
@@ -1604,21 +1695,40 @@ async function openDirectChatWithUser(recipientId){
 async function openChatRoom(conversationId, recipientProfile){
  activeConversationId = conversationId;
  activeRecipientProfile = recipientProfile;
+ cancelReply();
 
  document.getElementById('chatRoomTitle').textContent = recipientProfile.display_name || recipientProfile.username;
  
  const headerAvatarContainer = document.getElementById('chatRoomHeaderAvatar');
- headerAvatarContainer.replaceChildren();
- if(recipientProfile.avatar_url){
-  const img = document.createElement('img');
+ 
+ let img = headerAvatarContainer.querySelector('img');
+ if(!img){
+  headerAvatarContainer.replaceChildren();
+  if(recipientProfile.avatar_url){
+   img = document.createElement('img');
+   img.src = recipientProfile.avatar_url;
+   img.alt = 'Avatar';
+   headerAvatarContainer.append(img);
+  } else {
+   const ph = document.createElement('div');
+   ph.style.fontSize = '18px';
+   ph.textContent = '👤';
+   headerAvatarContainer.append(ph);
+  }
+  const dot = document.createElement('span');
+  dot.className = 'online-dot';
+  dot.id = 'chatRoomOnlineDot';
+  headerAvatarContainer.append(dot);
+ } else if(recipientProfile.avatar_url){
   img.src = recipientProfile.avatar_url;
-  img.alt = 'Avatar';
-  headerAvatarContainer.append(img);
+ }
+
+ if(onlineUsersMap[recipientProfile.id]){
+  document.getElementById('chatRoomOnlineDot').classList.add('active');
+  document.getElementById('chatRoomStatusSub').textContent = 'En línea';
  } else {
-  const ph = document.createElement('div');
-  ph.style.fontSize = '18px';
-  ph.textContent = '👤';
-  headerAvatarContainer.append(ph);
+  document.getElementById('chatRoomOnlineDot').classList.remove('active');
+  document.getElementById('chatRoomStatusSub').textContent = 'Desconectado';
  }
 
  showTab('chatRoomPage');
@@ -1659,6 +1769,15 @@ function appendChatMessageNode(msg){
 
  const bubble = document.createElement('div');
  bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
+ bubble.title = "Toca para responder a este mensaje";
+ bubble.onclick = () => startReplyingTo(msg);
+
+ if(msg.reply_to_snippet){
+  const replyPrev = document.createElement('div');
+  replyPrev.className = 'chat-bubble-reply-preview';
+  replyPrev.textContent = msg.reply_to_snippet;
+  bubble.append(replyPrev);
+ }
  
  const textNode = document.createElement('div');
  textNode.textContent = msg.content;
@@ -1671,29 +1790,53 @@ function appendChatMessageNode(msg){
  container.append(bubble);
 }
 
+function startReplyingTo(msg){
+ replyingToMessageId = msg.id;
+ replyingToSnippet = (msg.sender_id === currentUser.id ? 'Tú: ' : (activeRecipientProfile?.username || 'Usuario') + ': ') + msg.content;
+ 
+ document.getElementById('replyingTextSnippet').textContent = replyingToSnippet;
+ document.getElementById('replyingBar').classList.add('active');
+ document.getElementById('chatMessageInput').focus();
+}
+
+function cancelReply(){
+ replyingToMessageId = null;
+ replyingToSnippet = null;
+ document.getElementById('replyingBar').classList.remove('active');
+ document.getElementById('replyingTextSnippet').textContent = '';
+}
+
 async function sendChatMessage(){
  const input = document.getElementById('chatMessageInput');
  const text = input.value.trim();
  if(!text || !activeConversationId || !currentUser) return;
 
  input.value = '';
+ const currentReplySnippet = replyingToSnippet;
+ cancelReply();
 
  const tempMsg = {
   conversation_id: activeConversationId,
   sender_id: currentUser.id,
   content: text,
+  reply_to_snippet: currentReplySnippet,
   created_at: new Date().toISOString()
  };
 
  appendChatMessageNode(tempMsg);
  scrollToBottomChat();
 
- const { error } = await db.from('messages').insert({
+ const insertPayload = {
   conversation_id: activeConversationId,
   sender_id: currentUser.id,
   content: text
- });
+ };
+ if(replyingToMessageId){
+  insertPayload.reply_to_id = replyingToMessageId;
+  insertPayload.reply_to_snippet = currentReplySnippet;
+ }
 
+ const { error } = await db.from('messages').insert(insertPayload);
  if(error){
   alert('Error al enviar mensaje: ' + error.message);
  }
@@ -1753,6 +1896,10 @@ async function loadStoriesData(){
  }
 
  myAvatarContainer.append(myInner);
+ 
+ const myOnlineDot = document.createElement('span');
+ myOnlineDot.className = 'online-dot active';
+ myAvatarContainer.append(myOnlineDot);
 
  if(!myActiveStory){
   const badge = document.createElement('div');
@@ -1855,6 +2002,11 @@ async function openUserStory(profile, story){
   inner.textContent = '👤';
  }
  avatarContainer.append(inner);
+ 
+ const dot = document.createElement('span');
+ dot.className = 'online-dot';
+ if(onlineUsersMap[profile.id]) dot.classList.add('active');
+ avatarContainer.append(dot);
 
  const likeBtn = document.getElementById('storyLikeBtn');
  likeBtn.classList.remove('liked');
@@ -2839,7 +2991,14 @@ async function openPublicProfile(userId){
  document.getElementById('publicname').textContent=profile.display_name||profile.username||'Usuario';
  document.getElementById('publicusername').textContent='@'+profile.username;
  document.getElementById('publicbio').textContent=profile.bio||'';
- document.getElementById('publicavatar').replaceChildren(createAvatarNode(profile).firstChild);
+ 
+ const pubAvatarWrap = document.getElementById('publicavatar');
+ pubAvatarWrap.replaceChildren(createAvatarNode(profile).firstChild);
+ const pubDot = document.createElement('span');
+ pubDot.className = 'online-dot';
+ if(onlineUsersMap[profile.id]) pubDot.classList.add('active');
+ pubDot.id = `online-dot-${profile.id}`;
+ pubAvatarWrap.append(pubDot);
 
  const cover=document.getElementById('publiccover');
  cover.replaceChildren();
@@ -2982,11 +3141,10 @@ async function init(){
 init();
 </script>
 
-<!-- SCRIPT DE REGISTRO SERVICE WORKER PWA -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
+      navigator.serviceWorker.register('./service-worker.js')
         .then((reg) => {
           console.log('Service Worker registrado con éxito:', reg.scope);
         })
