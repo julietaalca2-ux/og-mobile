@@ -269,7 +269,7 @@ main > div.active {display: block !important;}
  padding-left: 16px;
  padding-right: 16px;
  border-bottom:1px solid rgba(255,255,255,0.08);
- display:flex;align-items:center;gap:12px;
+ display:flex;align-items:center;gap:10px;
  background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
  z-index:40;flex-shrink:0;
  min-height: 64px;
@@ -1358,7 +1358,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <div id="chatRoomPage" class="section">
  <div class="chat-room-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('messagesPage')">← Volver</button>
-  <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+  <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;" onclick="openChatRecipientProfile()">
    <div id="chatRoomHeaderAvatar">
     <span id="chatRoomOnlineDot" class="online-dot"></span>
    </div>
@@ -1367,6 +1367,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <small id="chatRoomStatusSub" style="color:#71717a;font-size:11px;display:block;">Desconectado</small>
    </div>
   </div>
+  <!-- Botón Perfil integrado en los detalles del chat junto a Buscar y Silenciar -->
+  <button class="secondary" style="padding:6px 12px;font-size:12px;white-space:nowrap;" onclick="openChatRecipientProfile()">Perfil</button>
  </div>
 
  <div class="chat-messages-container" id="chatMessagesContainer"></div>
@@ -3266,6 +3268,15 @@ async function openChatRoom(conversationId, recipientProfile){
  markConversationAsRead(conversationId);
 }
 
+/* ========================================================================= */
+/* NUEVA FUNCIÓN: ABRIR PERFIL DEL USUARIO DESDE EL CHAT                      */
+/* ========================================================================= */
+function openChatRecipientProfile(){
+ if(activeRecipientProfile && activeRecipientProfile.id){
+  openPublicProfile(activeRecipientProfile.id);
+ }
+}
+
 async function loadChatMessages(conversationId){
  const container = document.getElementById('chatMessagesContainer');
  container.innerHTML = '<div class="activity-empty">Cargando mensajes...</div>';
@@ -3399,7 +3410,7 @@ async function openFollowersModal(targetUserId = null){
   if(targetPrefs.showFollowersList === false){
    alert('Este usuario ha ocultado su lista de seguidores por privacidad.');
    return;
-  }
+   }
  }
 
  document.getElementById('followModalTitle').textContent = 'Seguidores';
