@@ -739,7 +739,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.5.1 (iOS Glass Liquid Engine)</p>
+    <p class="settings-row-desc">1.5.2 (iOS Glass Liquid Engine)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -1929,7 +1929,7 @@ async function loadActivity(){
 
    if(event.type === 'story_like'){
     const name=document.createElement('strong');
-    name.textContent = 'Alguien';
+    name.textContent = 'Visitante (' + event.visitor_id.slice(0, 6) + '...)';
     message.append(name, document.createTextNode(' le dio Me gusta a tu historia 📸❤️'));
     info.append(message, date);
     
@@ -1937,7 +1937,7 @@ async function loadActivity(){
     dummyAvatar.className = 'story-avatar-container';
     dummyAvatar.style.width = '42px';
     dummyAvatar.style.height = '42px';
-    dummyAvatar.innerHTML = '<div class="story-avatar-inner" style="font-size:20px">❤️</div>';
+    dummyAvatar.innerHTML = '<div class="story-avatar-inner" style="font-size:18px">⭐</div>';
     item.append(dummyAvatar, info);
    } else {
     const profile=profilesCache[event.user_id];
