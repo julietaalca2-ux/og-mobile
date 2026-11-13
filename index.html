@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Ög — Social (Etapa 3 - AntiDuplicación Real)</title>
+<title>Ög — Social (Etapa 4 - Fix Definitivo de Likes)</title>
 
 <!-- CONFIGURACIÓN PWA -->
 <link rel="manifest" href="manifest.json">
@@ -294,7 +294,7 @@ main > div.active {display: block !important;}
 }
 .replying-bar.active{display:flex}
 
-/* ESTILO DE PUBLICACIONES */
+/* ESTILO DE PUBLICACIONES Y BOTÓN LIKE */
 .post{background:#000;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
 .posthead{display:flex;align-items:center;gap:12px;padding:12px 16px}
 .posthead .story-avatar-container{width:36px;height:36px;margin:0;flex-shrink:0}
@@ -302,8 +302,9 @@ main > div.active {display: block !important;}
 .time{color:#71717a;font-size:11px;margin-top:1px}
 .posttext{font-size:14px;line-height:1.45;padding:0 16px 8px 16px;white-space:pre-wrap;overflow-wrap:anywhere;color:#e4e4e7}
 .post-actions{display:flex;gap:16px;padding:8px 16px 6px 16px;align-items:center}
-.post-action-btn{border:0;background:none;color:#f4f4f5;font-size:22px;cursor:pointer;padding:0;display:flex;align-items:center}
-.post-action-btn svg{width:24px;height:24px}
+.post-action-btn{border:0;background:none;color:#f4f4f5;font-size:22px;cursor:pointer;padding:0;display:flex;align-items:center;transition:transform 0.1s ease}
+.post-action-btn:active{transform:scale(0.85)}
+.post-action-btn svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2}
 .post-action-btn.liked svg{fill:#ef4444;stroke:#ef4444}
 .likes-count{font-size:13px;font-weight:600;color:#fff;padding:0 16px 6px 16px}
 
@@ -598,7 +599,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <p id="authOverlayStatus" class="status" style="margin-top:8px"></p>
   </div>
  </div>
- <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine (Etapa 3 - AntiDuplicación Real)</div>
+ <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine (Etapa 4 - Fix Likes Definitivo)</div>
 </div>
 
 <header>
@@ -919,7 +920,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.9.2 (Realtime Anti-Duplication Engine)</p>
+    <p class="settings-row-desc">1.9.4 (Fix Definitivo de Likes)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -1123,19 +1124,16 @@ let currentFacingMode = 'user';
 let currentZoom = 1;
 let currentActiveStoryId = null;
 
-// Paginación eficiente del Feed y Set AntiDuplicación estricto
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedLoading = false;
 let feedHasMore = true;
-let loadedPostIds = new Set(); // Conjunto global de control para evitar duplicados en el Feed
+let loadedPostIds = new Set();
 
-// Variables de Chat Activo y Respuestas
 let activeConversationId = null;
 let activeRecipientProfile = null;
 let replyingToMessageId = null;
 let replyingToSnippet = null;
-
 let isPublishing = false;
 
 let visitorId = localStorage.getItem('og_visitor_uuid');
@@ -1545,11 +1543,10 @@ function setupRealtimeNotifications(){
   })
   .subscribe();
 
- // Canal Realtime seguro para nuevas publicaciones con validación estricta de ID
  postsRealtimeChannel = db.channel('global-posts-feed')
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async payload => {
    const newPost = payload.new;
-   if (!newPost || loadedPostIds.has(newPost.id)) return; // Evita duplicar si ya está en pantalla
+   if (!newPost || loadedPostIds.has(newPost.id)) return;
    
    if(!profilesCache[newPost.user_id]){
     const { data: prof } = await db.from('profiles').select('id, username, display_name, avatar_url').eq('id', newPost.user_id).maybeSingle();
@@ -2603,7 +2600,7 @@ async function openPostDetail(post){
 
  const likeBtn = document.createElement('button');
  likeBtn.className = 'post-action-btn';
- likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+ likeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
  likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
  actions.append(likeBtn);
  article.append(actions);
@@ -2844,7 +2841,7 @@ async function loadActivity(){
 async function loadInitialPosts(){
  feedPage = 0;
  feedHasMore = true;
- loadedPostIds.clear(); // Limpiamos el Set al recargar el feed inicial
+ loadedPostIds.clear();
  const container = document.getElementById('posts');
  container.replaceChildren();
  await fetchAndAppendPosts(true);
@@ -2883,7 +2880,6 @@ async function fetchAndAppendPosts(isInitial){
 
  if(!posts || !posts.length) return;
 
- // Filtro preventivo de IDs duplicados devueltos por la base de datos
  const uniqueNewPosts = posts.filter(p => !loadedPostIds.has(p.id));
  if(!uniqueNewPosts.length) return;
 
@@ -2897,7 +2893,7 @@ async function fetchAndAppendPosts(isInitial){
  const fragment = document.createDocumentFragment();
 
  for(const post of uniqueNewPosts){
-  loadedPostIds.add(post.id); // Registramos el ID como renderizado
+  loadedPostIds.add(post.id);
   const article = buildPostDOMElement(post);
   fragment.append(article);
  }
@@ -2906,7 +2902,7 @@ async function fetchAndAppendPosts(isInitial){
 }
 
 function prependSinglePostToFeed(post){
- if(loadedPostIds.has(post.id)) return; // Validación estricta antiduplicación
+ if(loadedPostIds.has(post.id)) return;
  loadedPostIds.add(post.id);
 
  const container = document.getElementById('posts');
@@ -2986,7 +2982,7 @@ function buildPostDOMElement(post){
 
  const likeBtn = document.createElement('button');
  likeBtn.className = 'post-action-btn';
- likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+ likeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
  likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
 
  const commentIconBtn = document.createElement('button');
@@ -3022,25 +3018,58 @@ async function toggleLike(postId, btn, countDiv){
   return;
  }
 
- const {data, error} = await db.rpc('toggle_like', {
+ // Ejecutamos la función RPC robusta en Supabase
+ const { data, error } = await db.rpc('toggle_like', {
   p_post_id: postId,
   p_user_id: currentUser.id
  });
 
- if(!error && data){
-  if(data.liked) btn.classList.add('liked');
-  else btn.classList.remove('liked');
-  countDiv.textContent = `${data.count} Me gusta`;
+ if(error){
+  console.error('Error al dar Me gusta:', error);
+  // Fallback directo por tabla en caso de error en RPC
+  await toggleLikeFallback(postId, btn, countDiv);
+  return;
+ }
+
+ if(data){
+  if(data.liked){
+   btn.classList.add('liked');
+  } else {
+   btn.classList.remove('liked');
+  }
+  const count = data.count !== undefined ? data.count : 0;
+  countDiv.textContent = `${count} Me gusta`;
+ } else {
+  // Recargamos los likes si la respuesta no vino estructurada
+  await loadPostLikes(postId, btn, countDiv);
  }
 }
 
+async function toggleLikeFallback(postId, btn, countDiv){
+ const userId = currentUser.id;
+ const { data: existing } = await db.from('likes').select('id').eq('post_id', postId).eq('user_id', userId).maybeSingle();
+
+ if(existing){
+  await db.from('likes').delete().eq('post_id', postId).eq('user_id', userId);
+  btn.classList.remove('liked');
+ } else {
+  await db.from('likes').insert({ post_id: postId, user_id: userId });
+  btn.classList.add('liked');
+ }
+ await loadPostLikes(postId, btn, countDiv);
+}
+
 async function loadPostLikes(postId, btn, countDiv){
- const {data: likes} = await db.from('likes').select('user_id').eq('post_id', postId);
+ const { data: likes, error } = await db.from('likes').select('user_id').eq('post_id', postId);
+ if(error) return;
+
  const count = likes ? likes.length : 0;
  countDiv.textContent = `${count} Me gusta`;
 
  if(currentUser && likes && likes.some(l => l.user_id === currentUser.id)){
   btn.classList.add('liked');
+ } else {
+  btn.classList.remove('liked');
  }
 }
 
@@ -3106,7 +3135,6 @@ async function quickComment(postId, input){
 
  const commentSec = document.getElementById(`comments-${postId}`) || document.getElementById(`modal-comments-${postId}`);
  if(commentSec){
-  const {data: comments} = await db.from('comments').select('*').eq('post_id', postId).order('created_at', {ascending: true});
   loadPostComments(postId, commentSec);
  }
 }
@@ -3116,7 +3144,7 @@ async function publish(){
   showAuthOverlay();
   return;
  }
- if(isPublishing) return; // Evita doble ejecución de publicación
+ if(isPublishing) return;
 
  const text = document.getElementById('newpost').value.trim();
  if(!text && !postImageBlob) return status('publishStatus', 'Escribe algo o agrega una foto.');
