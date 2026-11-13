@@ -43,6 +43,73 @@ body{
  scrollbar-width: none !important;
 }
 
+/* ========================================================================= */
+/* MÓDULO DE ANIMACIONES INTEGRADO ÖG                                      */
+/* ========================================================================= */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOutScale {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDownModal {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(100%); opacity: 0; }
+}
+
+/* Transiciones de pantallas y modales */
+#postDetailModal, #editProfileModal, #storyViewer, #cameraModal, #logoutConfirmModal, #followListModal {
+  transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#postDetailModal.active, #editProfileModal.active, #storyViewer.active, #cameraModal.active, #logoutConfirmModal.active, #followListModal.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#postDetailModal.active .post-modal-card,
+#editProfileModal.active .edit-modal-card,
+#logoutConfirmModal.active .confirm-card {
+  animation: fadeInScale 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+#followListModal.open .settings-drawer {
+  animation: slideUpModal 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+/* Efectos de rebote y pulso en interacciones */
+button, .story, .post-action-btn, .chat-action-pill, .menu-list-btn, .explore-grid-item, .ig-grid-item {
+  transition: transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.15s ease, background-color 0.15s ease;
+}
+
+button:active, .post-action-btn:active, .story:active {
+  transform: scale(0.94);
+}
+
+/* Microanimación de carga */
+@keyframes pulseLoader {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.activity-empty {
+  animation: pulseLoader 1.5s ease-in-out infinite;
+}
+/* ========================================================================= */
+
 /* SPLASH SCREEN */
 #appSplashScreen{
  position:fixed;inset:0;background:#000000;z-index:9999;
@@ -83,10 +150,8 @@ body{
 .auth-tagline{font-size:15px;color:#a1a1aa;margin-bottom:40px;line-height:1.4}
 
 .auth-forms-container{width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
-.auth-panel{display:none;width:100%;flex-direction:column;gap:12px;animation:fadeIn 0.2s ease}
+.auth-panel{display:none;width:100%;flex-direction:column;gap:12px;animation:fadeInScale 0.2s ease}
 .auth-panel.active{display:flex}
-
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
 /* HEADER ESTILO INSTAGRAM */
 header{
@@ -157,9 +222,8 @@ main > div.active {display: block !important;}
 /* CÁMARA */
 #cameraModal{
  position:fixed;inset:0;background:#000;z-index:400;
- display:none;flex-direction:column;justify-content:space-between;
+ display:flex;flex-direction:column;justify-content:space-between;
 }
-#cameraModal.active{display:flex}
 
 .camera-screen-container{
  position:absolute;inset:0;background:transparent;z-index:3;
@@ -221,10 +285,9 @@ main > div.active {display: block !important;}
 /* VISOR DE HISTORIAS */
 #storyViewer{
  position:fixed;inset:0;background:#000;z-index:300;
- display:none;flex-direction:column;justify-content:space-between;
+ display:flex;flex-direction:column;justify-content:space-between;
  padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px) 12px;
 }
-#storyViewer.active{display:flex}
 .story-top-bar{display:flex;align-items:center;justify-content:space-between;color:#fff;position:relative;z-index:2;padding:0 4px}
 .story-user-info{display:flex;align-items:center;gap:8px}
 .story-user-info .story-avatar-container{width:32px;height:32px;margin:0}
@@ -399,9 +462,8 @@ main > div.active {display: block !important;}
 /* MODAL DE PUBLICACIÓN */
 #postDetailModal{
  position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
- z-index:500;display:none;align-items:center;justify-content:center;padding:16px;
+ z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;
 }
-#postDetailModal.active{display:flex}
 .post-modal-card{
  background:rgba(18,18,20,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
  width:100%;max-width:430px;max-height:85vh;
@@ -546,10 +608,9 @@ textarea{height:110px;resize:none}
 /* MODAL PANTALLA DE EDICIÓN DE PERFIL ESTILO INSTAGRAM */
 #editProfileModal {
  position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
- z-index:600;display:none;flex-direction:column;overflow-y:auto;
+ z-index:600;display:flex;flex-direction:column;overflow-y:auto;
  padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
 }
-#editProfileModal.active{display:flex}
 .edit-modal-card{
  width:100%;max-width:430px;margin:auto;background:rgba(24,24,27,0.95);
  border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:20px;
@@ -643,13 +704,12 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 /* MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN */
 #logoutConfirmModal{
  position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
- z-index:700;display:none;align-items:center;justify-content:center;padding:20px;
+ z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;
 }
-#logoutConfirmModal.active{display:flex}
 .confirm-card{
  background:#18181b;border:1px solid rgba(255,255,255,0.12);border-radius:22px;
  padding:24px 20px;width:100%;max-width:340px;text-align:center;
- box-shadow:0 20px 40px rgba(0,0,0,0.6);animation:fadeIn 0.15s ease;
+ box-shadow:0 20px 40px rgba(0,0,0,0.6);
 }
 
 .public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer}
@@ -676,10 +736,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  border-top-left-radius:24px;border-top-right-radius:24px;
  border-top:1px solid rgba(255,255,255,0.15);
  z-index:201;padding:20px 16px calc(env(safe-area-inset-bottom) + 24px) 16px;
- transform:translateY(100%);transition:transform 0.25s cubic-bezier(0.1,0.9,0.2,1);
  max-width:470px;margin:auto;
 }
-.settings-overlay.open .settings-drawer{transform:translateY(0)}
 .settings-handle{width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin:0 auto 20px auto}
 </style>
 </head>
