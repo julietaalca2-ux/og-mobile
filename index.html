@@ -206,7 +206,7 @@ main > div.active {display: block !important;}
 .dm-conv-time{font-size:11px;color:#71717a;font-weight:normal}
 .dm-unread-dot{width:8px;height:8px;background:#3b82f6;border-radius:50%;display:inline-block}
 
-/* SALA DE CHAT PRIVADO MEJORADA Y FIJA */
+/* SALA DE CHAT PRIVADO MEJORADA Y FIJA (CORREGIDA LA ALINEACIÓN SUPERIOR) */
 #chatRoomPage{
  display:none;flex-direction:column;height:100vh;height:100dvh;position:fixed;inset:0;background:#000;z-index:250;
 }
@@ -927,10 +927,12 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <div id="chatRoomPage" class="section">
  <div class="chat-room-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('messagesPage')">← Volver</button>
-  <div id="chatRoomHeaderAvatar" style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:#27272a;display:grid;place-items:center;"></div>
-  <div style="min-width:0;flex:1;">
-   <strong id="chatRoomTitle" style="font-size:14px;display:block;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chat</strong>
-   <small style="color:#71717a;font-size:11px;">En línea</small>
+  <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+   <div id="chatRoomHeaderAvatar" style="width:36px;height:36px;min-width:36px;border-radius:50%;overflow:hidden;background:#27272a;display:grid;place-items:center;"></div>
+   <div style="min-width:0;flex:1;">
+    <strong id="chatRoomTitle" style="font-size:14px;display:block;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Chat</strong>
+    <small style="color:#71717a;font-size:11px;display:block;">En línea</small>
+   </div>
   </div>
  </div>
 
