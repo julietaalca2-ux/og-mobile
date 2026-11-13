@@ -1,69 +1,117 @@
 /* ========================================================================= */
-/* ÖG ANIMATION ENGINE - CSS STYLES PRO                                      */
+/* ÖG ANIMATION ENGINE - CSS STYLES                                          */
 /* ========================================================================= */
 
-/* 1. Transición de secciones con deslizamiento lateral (Estilo App Nativa) */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+/* Contenedor principal con desbordamiento oculto para permitir el efecto slide */
+main {
+ position: relative;
+ overflow-x: hidden;
+ max-width: 470px;
+ margin: auto;
+ min-height: 80vh;
+}
+
 main > div {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateX(30px) scale(0.98);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
-              opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
-              visibility 0.35s ease;
-  will-change: transform, opacity;
+ position: absolute;
+ width: 100%;
+ top: 0;
+ left: 0;
+ display: none !important;
+ opacity: 0;
+ will-change: transform, opacity;
 }
 
 main > div.active {
-  position: relative;
+ display: block !important;
+ opacity: 1;
+ position: relative;
+}
+
+/* Animaciones de desvanecimiento y escala */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Animaciones de Desplazamiento Lateral (Slide) entre Pestañas */
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); opacity: 0.8; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutToLeft {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(-100%); opacity: 0.8; }
+}
+
+@keyframes slideInFromLeft {
+  from { transform: translateX(-100%); opacity: 0.8; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutToRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0.8; }
+}
+
+.slide-in-right {
+  animation: slideInFromRight 0.28s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+.slide-out-left {
+  animation: slideOutToLeft 0.28s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+.slide-in-left {
+  animation: slideInFromLeft 0.28s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+.slide-out-right {
+  animation: slideOutToRight 0.28s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+/* Transiciones de modales */
+#postDetailModal, #editProfileModal, #storyViewer, #cameraModal, #logoutConfirmModal, #followListModal {
+  transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#postDetailModal.active, #editProfileModal.active, #storyViewer.active, #cameraModal.active, #logoutConfirmModal.active, #followListModal.open {
   opacity: 1;
   visibility: visible;
-  transform: translateX(0) scale(1);
   pointer-events: auto;
 }
 
-main > div.slide-left {
-  transform: translateX(-30px) scale(0.98);
-  opacity: 0;
+#postDetailModal.active .post-modal-card,
+#editProfileModal.active .edit-modal-card,
+#logoutConfirmModal.active .confirm-card {
+  animation: fadeInScale 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 
-/* 2. Skeleton Loader Animado (Carga fluida) */
-@keyframes ogSkeletonPulse {
-  0% { opacity: 0.4; background-color: rgba(255, 255, 255, 0.05); }
-  50% { opacity: 0.8; background-color: rgba(255, 255, 255, 0.15); }
-  100% { opacity: 0.4; background-color: rgba(255, 255, 255, 0.05); }
+#followListModal.open .settings-drawer {
+  animation: slideUpModal 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 
-.og-skeleton {
-  border-radius: 12px;
-  animation: ogSkeletonPulse 1.5s ease-in-out infinite;
+/* Efectos táctiles y microinteracciones */
+button, .story, .post-action-btn, .chat-action-pill, .menu-list-btn, .explore-grid-item, .ig-grid-item {
+  transition: transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.15s ease, background-color 0.15s ease;
 }
 
-/* 3. Microinteracciones de rebote táctil en botones y menús */
-nav button, .post-action-btn, .menu-list-btn, .story {
-  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+button:active, .post-action-btn:active, .story:active {
+  transform: scale(0.94);
 }
 
-nav button:active, .post-action-btn:active, .menu-list-btn:active, .story:active {
-  transform: scale(0.85);
+@keyframes pulseLoader {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
-/* 4. Efecto de Corazón Flotante para Doble Toke (Double Tap Like) */
-@keyframes floatUpHeart {
-  0% { transform: scale(0) translateY(0); opacity: 1; }
-  50% { transform: scale(1.3) translateY(-30px); opacity: 1; }
-  100% { transform: scale(1) translateY(-60px); opacity: 0; }
-}
-
-.floating-heart-anim {
-  position: absolute;
-  font-size: 64px;
-  z-index: 100;
-  pointer-events: none;
-  animation: floatUpHeart 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  user-select: none;
+.activity-empty {
+  animation: pulseLoader 1.5s ease-in-out infinite;
 }
