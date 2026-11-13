@@ -992,7 +992,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <span id="mypronouns" class="ig-pronouns-tag"></span>
    </h2>
    <p class="ig-username-tag" id="myusername">@usuario</p>
-   <p class="ig-bio-text" id="mybio">Bienvenido à Ög.</p>
+   <p class="ig-bio-text" id="mybio">Bienvenido a Ög.</p>
   </div>
 
   <div class="ig-action-buttons" id="profile-actions">
@@ -1365,7 +1365,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <h4 class="settings-group-title">Reportar un problema</h4>
    <p class="muted" style="margin-top:0">¿Encontraste un fallo o querés sugerir una mejora? Escribinos abajo:</p>
    <textarea id="helpReportInput" placeholder="Describí el problema o consulta..." style="height:100px;"></textarea>
-   <button class="primary" style="margin-top:12px;" onclick="submitHelpReport()">Enviar mensaje à soporte</button>
+   <button class="primary" style="margin-top:12px;" onclick="submitHelpReport()">Enviar mensaje a soporte</button>
    <p id="helpReportStatus" class="status"></p>
   </div>
  </div>
@@ -1393,7 +1393,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
   <div class="settings-group" style="border-bottom:none">
    <h4 class="settings-group-title">Contraseña y seguridad</h4>
-   <p class="settings-row-desc" style="margin-bottom:8px;">Cambiá la contraseña de acceso à tu cuenta de Supabase.</p>
+   <p class="settings-row-desc" style="margin-bottom:8px;">Cambiá la contraseña de acceso a tu cuenta de Supabase.</p>
    <input class="field" id="newPasswordInput" type="password" placeholder="Nueva contraseña (mín. 8 caracteres)">
    <button class="primary" style="margin-top:12px" onclick="updateUserPassword()">Actualizar contraseña</button>
    <p id="passwordStatus" class="status"></p>
@@ -1405,7 +1405,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <div id="logoutConfirmModal" onclick="closeLogoutConfirmation()">
  <div class="confirm-card" onclick="event.stopPropagation()">
   <h3 style="margin:0 0 8px 0;font-size:18px;color:#fff;">¿Cerrar sesión en Ög?</h3>
-  <p class="muted" style="margin:0 0 20px 0;line-height:1.4;">Tendrás que volver à ingresar tu correo y contraseña para acceder à tu cuenta.</p>
+  <p class="muted" style="margin:0 0 20px 0;line-height:1.4;">Tendrás que volver a ingresar tu correo y contraseña para acceder a tu cuenta.</p>
   <div style="display:flex;flex-direction:column;gap:10px;">
    <button class="danger-btn" onclick="executeConfirmedSignOut()">Sí, cerrar sesión</button>
    <button class="secondary" onclick="closeLogoutConfirmation()">Cancelar</button>
@@ -1488,7 +1488,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
  <div class="chat-input-footer">
   <div id="replyingBar" class="replying-bar">
-   <div>Respondiendo à: <strong id="replyingTextSnippet">...</strong></div>
+   <div>Respondiendo a: <strong id="replyingTextSnippet">...</strong></div>
    <button class="secondary" style="padding:2px 6px;font-size:11px;" onclick="cancelReply()">✕</button>
   </div>
   <div class="chat-input-row">
@@ -1711,12 +1711,14 @@ if (!visitorId) {
 }
 
 let touchStartX = 0;
+let touchStartY = 0;
 let touchEndX = 0;
+let touchEndY = 0;
+let isSwipeLocked = false;
 
 /* ========================================================================= */
 /* IMPLEMENTACIÓN DE DESLIZAMIENTO CON ANIMACIÓN (INICIO ➔ CHAT ➔ EXPLORE)    */
 /* ========================================================================= */
-// ORDEN CORREGIDO: Inicio ('feed') ➔ Chat ('messagesPage') ➔ Explore ('explore')
 const swipeNavigationFlow = ['feed', 'messagesPage', 'explore'];
 
 function animateTabTransition(direction) {
@@ -1734,61 +1736,74 @@ function animateTabTransition(direction) {
   }, 250);
 }
 
-function handleSwipeGesture(){
- const swipeDistance = touchEndX - touchStartX;
- 
- // Si desliza hacia la derecha y está en el inicio ('feed'), abre la cámara
- if(swipeDistance > 70 && document.getElementById('feed').classList.contains('active')){
-  openCameraModal();
-  return;
- }
+function handleSwipeGesture() {
+  if (isSwipeLocked) return;
 
- if(Math.abs(swipeDistance) > 60) {
-  const currentActiveTab = document.querySelector('main > div.active');
-  if(!currentActiveTab) return;
-  const currentId = currentActiveTab.id;
-  const currentIndex = swipeNavigationFlow.indexOf(currentId);
+  const swipeDistanceX = touchEndX - touchStartX;
+  const swipeDistanceY = Math.abs(touchEndY - touchStartY);
 
-  // Solo se desliza si se encuentra dentro del flujo permitido (Inicio ➔ Chat ➔ Explore)
-  if(currentIndex !== -1) {
-   let nextIndex = currentIndex;
-   if(swipeDistance < -60 && currentIndex < swipeNavigationFlow.length - 1) {
-    nextIndex = currentIndex + 1; // Deslizar izquierda -> Avanzar a la siguiente pantalla
-    animateTabTransition('left');
-   } else if(swipeDistance > 60 && currentIndex > 0) {
-    nextIndex = currentIndex - 1; // Deslizar derecha -> Retroceder a la pantalla anterior
-    animateTabTransition('right');
-   }
+  // Ignorar si fue un scroll vertical
+  if (swipeDistanceY > Math.abs(swipeDistanceX)) return;
 
-   if(nextIndex !== currentIndex) {
-    const targetTabId = swipeNavigationFlow[nextIndex];
-    const navButtons = document.querySelectorAll('nav button');
-    const targetButton = navButtons[nextIndex];
-    showTab(targetTabId, targetButton);
-   }
+  // Bloqueo breve para evitar saltos dobles
+  isSwipeLocked = true;
+  setTimeout(() => { isSwipeLocked = false; }, 320);
+
+  // Si desliza hacia la derecha en Inicio ('feed'), abre la cámara
+  if (swipeDistanceX > 70 && document.getElementById('feed').classList.contains('active')) {
+    openCameraModal();
+    return;
   }
- }
+
+  if (Math.abs(swipeDistanceX) > 60) {
+    const currentActiveTab = document.querySelector('main > div.active');
+    if (!currentActiveTab) return;
+    
+    const currentId = currentActiveTab.id;
+    const currentIndex = swipeNavigationFlow.indexOf(currentId);
+
+    // Solo permite deslizar entre Inicio (0) ➔ Chat (1) ➔ Explore (2)
+    if (currentIndex !== -1) {
+      let nextIndex = currentIndex;
+      
+      if (swipeDistanceX < -60 && currentIndex < swipeNavigationFlow.length - 1) {
+        nextIndex = currentIndex + 1; // Izquierda: avanza un paso (Inicio -> Chat, Chat -> Explore)
+        animateTabTransition('left');
+      } else if (swipeDistanceX > 60 && currentIndex > 0) {
+        nextIndex = currentIndex - 1; // Derecha: retrocede un paso (Explore -> Chat, Chat -> Inicio)
+        animateTabTransition('right');
+      }
+
+      if (nextIndex !== currentIndex) {
+        const targetTabId = swipeNavigationFlow[nextIndex];
+        const navButtons = document.querySelectorAll('nav button');
+        const targetButton = navButtons[nextIndex];
+        showTab(targetTabId, targetButton);
+      }
+    }
+  }
 }
 
-const feedElement = document.getElementById('feed');
-feedElement.addEventListener('touchstart', e => {
- touchStartX = e.changedTouches[0].screenX;
-}, {passive: true});
-
-feedElement.addEventListener('touchend', e => {
- touchEndX = e.changedTouches[0].screenX;
- handleSwipeGesture();
-}, {passive: true});
-
+// Único listener centralizado en <main> (elimina la doble ejecución)
 const mainContainerElement = document.querySelector('main');
+
 mainContainerElement.addEventListener('touchstart', e => {
- touchStartX = e.changedTouches[0].screenX;
-}, {passive: true});
+  // Evita cambiar de pestaña si el usuario está deslizando las historias horizontalmente
+  if (e.target.closest('.stories')) {
+    touchStartX = 0;
+    return;
+  }
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
 
 mainContainerElement.addEventListener('touchend', e => {
- touchEndX = e.changedTouches[0].screenX;
- handleSwipeGesture();
-}, {passive: true});
+  if (touchStartX === 0) return;
+  touchEndX = e.changedTouches[0].screenX;
+  touchEndY = e.changedTouches[0].screenY;
+  handleSwipeGesture();
+  touchStartX = 0;
+}, { passive: true });
 /* ========================================================================= */
 
 window.addEventListener('scroll', () => {
@@ -2035,12 +2050,12 @@ async function loadUserOwnActivity(){
    date.textContent = formatDate(ev.created_at);
 
    if(ev.type === 'liked_post'){
-    text.innerHTML = '❤️ Le diste <strong>Me gusta</strong> à una publicación.';
+    text.innerHTML = '❤️ Le diste <strong>Me gusta</strong> a una publicación.';
    } else if(ev.type === 'commented_post'){
     text.innerHTML = `💬 Comentaste: <span style="color:#a1a1aa">“${ev.content}”</span>`;
    } else if(ev.type === 'followed_user'){
     const p = profilesCache[ev.user_id];
-    text.innerHTML = `👤 Empezaste à seguir à <strong>@${p?.username || 'usuario'}</strong>.`;
+    text.innerHTML = `👤 Empezaste a seguir a <strong>@${p?.username || 'usuario'}</strong>.`;
    }
 
    info.append(text, date);
@@ -2468,7 +2483,7 @@ async function fetchAndAppendPosts(isInitial){
 
   if(error){
    if(isInitial && (!cachedFeedPosts || !cachedFeedPosts.length)){
-    document.getElementById('posts').innerHTML = '<div class="activity-empty">Error al cargar publicaciones.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Volver à intentar</button></div>';
+    document.getElementById('posts').innerHTML = '<div class="activity-empty">Error al cargar publicaciones.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Volver a intentar</button></div>';
    }
    return;
   }
@@ -3260,7 +3275,7 @@ function renderActivityDOM(events, container){
    if(event.type === 'story_like'){
     const name=document.createElement('strong');
     name.textContent = 'Visitante (' + event.visitor_id.slice(0, 6) + '...)';
-    message.append(name, document.createTextNode(' le dio Me gusta à tu historia 📸❤️'));
+    message.append(name, document.createTextNode(' le dio Me gusta a tu historia 📸❤️'));
     info.append(message, date);
     
     const dummyAvatar = document.createElement('div');
@@ -3278,8 +3293,8 @@ function renderActivityDOM(events, container){
     name.textContent=profile.display_name||profile.username||'Usuario';
     message.append(name);
 
-    if(event.type==='follow') message.append(document.createTextNode(' comenzó à seguirte.'));
-    else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta à tu publicación.'));
+    if(event.type==='follow') message.append(document.createTextNode(' comenzó a seguirte.'));
+    else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
     else if(event.type==='comment') message.append(document.createTextNode(' comentó tu publicación.'));
 
     info.append(message);
@@ -3317,7 +3332,7 @@ async function loadConversations(){
   const { data: myParts, error: partErr } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
   if(partErr || !myParts || !myParts.length){
    cachedConversationsList = [];
-   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá à alguien arriba para iniciar un chat.</div>';
+   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá a alguien arriba para iniciar un chat.</div>';
    document.getElementById('navUnreadDot').classList.remove('active');
    return;
   }
@@ -3693,7 +3708,7 @@ function appendChatMessageNode(msg){
 
  const bubble = document.createElement('div');
  bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
- bubble.title = "Toca para responder à este mensaje";
+ bubble.title = "Toca para responder a este mensaje";
  bubble.onclick = () => startReplyingTo(msg);
 
  if(msg.reply_to_snippet){
@@ -3830,7 +3845,7 @@ async function openFollowingModal(targetUserId = null){
 
  const { data, error } = await db.from('follows').select('following_id').eq('follower_id', userId);
  if(error || !data || !data.length){
-  container.innerHTML = '<div class="activity-empty">No sigue à nadie todavía.</div>';
+  container.innerHTML = '<div class="activity-empty">No sigue a nadie todavía.</div>';
   return;
  }
 
@@ -4075,7 +4090,7 @@ function sendStoryReply(){
  const input = document.getElementById('storyReplyInput');
  const msg = input.value.trim();
  if(!msg) return;
- alert('Mensaje enviado à la historia.');
+ alert('Mensaje enviado a la historia.');
  input.value = '';
 }
 
@@ -4134,8 +4149,8 @@ async function startCameraStream(){
   videoElem.srcObject = mediaStream;
   await videoElem.play();
  }catch(err){
-  console.error('Error al acceder à la cámara:', err);
-  alert('No se pudo acceder à la cámara. Asegúrate de dar permisos.');
+  console.error('Error al acceder a la cámara:', err);
+  alert('No se pudo acceder a la cámara. Asegúrate de dar permisos.');
  }
 }
 
@@ -4272,7 +4287,7 @@ function updateProfileUI(){
   document.getElementById('myname').textContent='Mi perfil';
   document.getElementById('mypronouns').textContent='';
   document.getElementById('myusername').textContent='@invitado';
-  document.getElementById('mybio').textContent='Bienvenido à Ög.';
+  document.getElementById('mybio').textContent='Bienvenido a Ög.';
   document.getElementById('mypostscount').textContent='0';
   document.getElementById('myfollowerscount').textContent='0';
   document.getElementById('myfollowingcount').textContent='0';
