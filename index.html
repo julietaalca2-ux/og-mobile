@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Ög — Social (Etapa 3 - AntiDuplicación)</title>
+<title>Ög — Social (Etapa 3 - AntiDuplicación Real)</title>
 
 <!-- CONFIGURACIÓN PWA -->
 <link rel="manifest" href="manifest.json">
@@ -598,7 +598,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <p id="authOverlayStatus" class="status" style="margin-top:8px"></p>
   </div>
  </div>
- <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine (AntiDuplicación)</div>
+ <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine (Etapa 3 - AntiDuplicación Real)</div>
 </div>
 
 <header>
@@ -919,7 +919,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.9.1 (Anti-Duplicación de Publicaciones)</p>
+    <p class="settings-row-desc">1.9.2 (Realtime Anti-Duplication Engine)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -1111,6 +1111,7 @@ let dmSearchTimer=null;
 let profilesCache={};
 let realtimeChannel=null;
 let dmRealtimeChannel=null;
+let postsRealtimeChannel=null;
 let presenceChannel=null;
 let onlineUsersMap={};
 
@@ -1122,11 +1123,12 @@ let currentFacingMode = 'user';
 let currentZoom = 1;
 let currentActiveStoryId = null;
 
-// Paginación eficiente del Feed
+// Paginación eficiente del Feed y Set AntiDuplicación estricto
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedLoading = false;
 let feedHasMore = true;
+let loadedPostIds = new Set(); // Conjunto global de control para evitar duplicados en el Feed
 
 // Variables de Chat Activo y Respuestas
 let activeConversationId = null;
@@ -1134,7 +1136,6 @@ let activeRecipientProfile = null;
 let replyingToMessageId = null;
 let replyingToSnippet = null;
 
-// Bandera estricta antiduplicación para publicaciones
 let isPublishing = false;
 
 let visitorId = localStorage.getItem('og_visitor_uuid');
@@ -1402,6 +1403,7 @@ async function signOut(){
 
  if(realtimeChannel) db.removeChannel(realtimeChannel);
  if(dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
+ if(postsRealtimeChannel) db.removeChannel(postsRealtimeChannel);
  if(presenceChannel) db.removeChannel(presenceChannel);
 
  currentUser=null;
@@ -1502,6 +1504,7 @@ function setupPresenceChannel(){
 function setupRealtimeNotifications(){
  if(realtimeChannel) db.removeChannel(realtimeChannel);
  if(dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
+ if(postsRealtimeChannel) db.removeChannel(postsRealtimeChannel);
 
  realtimeChannel=db.channel('public-notifications')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows'},payload=>{
@@ -1539,6 +1542,21 @@ function setupRealtimeNotifications(){
      scrollToBottomChat();
     }
    }
+  })
+  .subscribe();
+
+ // Canal Realtime seguro para nuevas publicaciones con validación estricta de ID
+ postsRealtimeChannel = db.channel('global-posts-feed')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async payload => {
+   const newPost = payload.new;
+   if (!newPost || loadedPostIds.has(newPost.id)) return; // Evita duplicar si ya está en pantalla
+   
+   if(!profilesCache[newPost.user_id]){
+    const { data: prof } = await db.from('profiles').select('id, username, display_name, avatar_url').eq('id', newPost.user_id).maybeSingle();
+    if(prof) profilesCache[prof.id] = prof;
+   }
+
+   prependSinglePostToFeed(newPost);
   })
   .subscribe();
 }
@@ -2826,6 +2844,7 @@ async function loadActivity(){
 async function loadInitialPosts(){
  feedPage = 0;
  feedHasMore = true;
+ loadedPostIds.clear(); // Limpiamos el Set al recargar el feed inicial
  const container = document.getElementById('posts');
  container.replaceChildren();
  await fetchAndAppendPosts(true);
@@ -2864,7 +2883,11 @@ async function fetchAndAppendPosts(isInitial){
 
  if(!posts || !posts.length) return;
 
- const missingUserIds = [...new Set(posts.map(p => p.user_id))].filter(id => !profilesCache[id]);
+ // Filtro preventivo de IDs duplicados devueltos por la base de datos
+ const uniqueNewPosts = posts.filter(p => !loadedPostIds.has(p.id));
+ if(!uniqueNewPosts.length) return;
+
+ const missingUserIds = [...new Set(uniqueNewPosts.map(p => p.user_id))].filter(id => !profilesCache[id]);
  if(missingUserIds.length > 0){
   const {data:newProfiles} = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missingUserIds);
   (newProfiles || []).forEach(p => profilesCache[p.id] = p);
@@ -2873,162 +2896,192 @@ async function fetchAndAppendPosts(isInitial){
  const container = document.getElementById('posts');
  const fragment = document.createDocumentFragment();
 
- for(const post of posts){
-  const profile = profilesCache[post.user_id] || {username: 'usuario'};
-
-  const article = document.createElement('article');
-  article.className = 'post';
-
-  const head = document.createElement('div');
-  head.className = 'posthead';
-
-  const av = createAvatarNode(profile, false);
-  av.style.cursor = 'pointer';
-  av.onclick = () => openPublicProfile(post.user_id);
-
-  const info = document.createElement('div');
-  info.style.cursor = 'pointer';
-  info.onclick = () => openPublicProfile(post.user_id);
-
-  const name = document.createElement('div');
-  name.className = 'username';
-  name.textContent = profile.display_name || profile.username || 'Usuario';
-
-  const time = document.createElement('div');
-  time.className = 'time';
-  time.textContent = formatDate(post.created_at);
-
-  info.append(name, time);
-  head.append(av, info);
-  article.append(head);
-
-  if(post.image_url){
-   const img = document.createElement('img');
-   img.className = 'postimage';
-   img.src = post.image_url;
-   img.alt = 'Imagen';
-   img.loading = 'lazy';
-   article.append(img);
-  }
-
-  if(post.content){
-   const content = document.createElement('p');
-   content.className = 'posttext';
-   content.style.marginTop = post.image_url ? '12px' : '0';
-   content.textContent = post.content;
-   article.append(content);
-  }
-
-  const commentsSec = document.createElement('div');
-  commentsSec.className = 'post-comments-section';
-  commentsSec.id = `comments-${post.id}`;
-  article.append(commentsSec);
-
-  const commentInputBox = document.createElement('div');
-  commentInputBox.className = 'comment-input-box';
-  commentInputBox.id = `commentbox-${post.id}`;
-  
-  const commentInput = document.createElement('input');
-  commentInput.className = 'comment-input';
-  commentInput.placeholder = 'Agrega un comentario...';
-  
-  const commentSend = document.createElement('button');
-  commentSend.className = 'comment-send-btn';
-  commentSend.textContent = 'Publicar';
-  commentSend.onclick = () => quickComment(post.id, commentInput);
-
-  commentInputBox.append(commentInput, commentSend);
-  article.append(commentInputBox);
-
-  const actions = document.createElement('div');
-  actions.className = 'post-actions';
-
-  const likeBtn = document.createElement('button');
-  likeBtn.className = 'post-action-btn';
-  likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
-  likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
-
-  const commentIconBtn = document.createElement('button');
-  commentIconBtn.className = 'post-action-btn';
-  commentIconBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
-  
-  commentIconBtn.onclick = () => {
-   if(!currentUser){ showAuthOverlay(); return; }
-   const box = document.getElementById(`commentbox-${post.id}`);
-   box.classList.toggle('open');
-   if(box.classList.contains('open')){
-    box.querySelector('input').focus();
-   }
-  };
-  
-  actions.append(likeBtn, commentIconBtn);
-  article.append(actions);
-
-  const likesCountDiv = document.createElement('div');
-  likesCountDiv.className = 'likes-count';
-  likesCountDiv.textContent = '0 Me gusta';
-  article.append(likesCountDiv);
-
+ for(const post of uniqueNewPosts){
+  loadedPostIds.add(post.id); // Registramos el ID como renderizado
+  const article = buildPostDOMElement(post);
   fragment.append(article);
-
-  loadPostLikes(post.id, likeBtn, likesCountDiv);
-  loadPostComments(post.id, commentsSec);
  }
 
  container.append(fragment);
 }
 
-async function loadPostLikes(postId, btn, countDiv){
- const {count, data, error}=await db.from('likes')
-  .select('user_id',{count:'exact'})
-  .eq('post_id',postId);
+function prependSinglePostToFeed(post){
+ if(loadedPostIds.has(post.id)) return; // Validación estricta antiduplicación
+ loadedPostIds.add(post.id);
 
- if(!error){
-  countDiv.textContent=(count||0)+' Me gusta';
-  if(currentUser && data.some(l=>l.user_id===currentUser.id)){
-   btn.classList.add('liked');
+ const container = document.getElementById('posts');
+ const article = buildPostDOMElement(post);
+ container.insertBefore(article, container.firstChild);
+}
+
+function buildPostDOMElement(post){
+ const profile = profilesCache[post.user_id] || {username: 'usuario'};
+
+ const article = document.createElement('article');
+ article.className = 'post';
+
+ const head = document.createElement('div');
+ head.className = 'posthead';
+
+ const av = createAvatarNode(profile, false);
+ av.style.cursor = 'pointer';
+ av.onclick = () => openPublicProfile(post.user_id);
+
+ const info = document.createElement('div');
+ info.style.cursor = 'pointer';
+ info.onclick = () => openPublicProfile(post.user_id);
+
+ const name = document.createElement('div');
+ name.className = 'username';
+ name.textContent = profile.display_name || profile.username || 'Usuario';
+
+ const time = document.createElement('div');
+ time.className = 'time';
+ time.textContent = formatDate(post.created_at);
+
+ info.append(name, time);
+ head.append(av, info);
+ article.append(head);
+
+ if(post.image_url){
+  const img = document.createElement('img');
+  img.className = 'postimage';
+  img.src = post.image_url;
+  img.alt = 'Imagen';
+  img.loading = 'lazy';
+  article.append(img);
+ }
+
+ if(post.content){
+  const content = document.createElement('p');
+  content.className = 'posttext';
+  content.style.marginTop = post.image_url ? '12px' : '0';
+  content.textContent = post.content;
+  article.append(content);
+ }
+
+ const commentsSec = document.createElement('div');
+ commentsSec.className = 'post-comments-section';
+ commentsSec.id = `comments-${post.id}`;
+ article.append(commentsSec);
+
+ const commentInputBox = document.createElement('div');
+ commentInputBox.className = 'comment-input-box';
+ commentInputBox.id = `commentbox-${post.id}`;
+ 
+ const commentInput = document.createElement('input');
+ commentInput.className = 'comment-input';
+ commentInput.placeholder = 'Agrega un comentario...';
+ 
+ const commentSend = document.createElement('button');
+ commentSend.className = 'comment-send-btn';
+ commentSend.textContent = 'Publicar';
+ commentSend.onclick = () => quickComment(post.id, commentInput);
+
+ commentInputBox.append(commentInput, commentSend);
+ article.append(commentInputBox);
+
+ const actions = document.createElement('div');
+ actions.className = 'post-actions';
+
+ const likeBtn = document.createElement('button');
+ likeBtn.className = 'post-action-btn';
+ likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+ likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
+
+ const commentIconBtn = document.createElement('button');
+ commentIconBtn.className = 'post-action-btn';
+ commentIconBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
+ 
+ commentIconBtn.onclick = () => {
+  if(!currentUser){ showAuthOverlay(); return; }
+  const box = document.getElementById(`commentbox-${post.id}`);
+  box.classList.toggle('open');
+  if(box.classList.contains('open')){
+   box.querySelector('input').focus();
   }
+ };
+
+ actions.append(likeBtn, commentIconBtn);
+ article.append(actions);
+
+ const likesCountDiv = document.createElement('div');
+ likesCountDiv.className = 'likes-count';
+ likesCountDiv.textContent = '0 Me gusta';
+ article.append(likesCountDiv);
+
+ loadPostLikes(post.id, likeBtn, likesCountDiv);
+ loadPostComments(post.id, commentsSec);
+
+ return article;
+}
+
+async function toggleLike(postId, btn, countDiv){
+ if(!currentUser){
+  showAuthOverlay();
+  return;
+ }
+
+ const {data, error} = await db.rpc('toggle_like', {
+  p_post_id: postId,
+  p_user_id: currentUser.id
+ });
+
+ if(!error && data){
+  if(data.liked) btn.classList.add('liked');
+  else btn.classList.remove('liked');
+  countDiv.textContent = `${data.count} Me gusta`;
+ }
+}
+
+async function loadPostLikes(postId, btn, countDiv){
+ const {data: likes} = await db.from('likes').select('user_id').eq('post_id', postId);
+ const count = likes ? likes.length : 0;
+ countDiv.textContent = `${count} Me gusta`;
+
+ if(currentUser && likes && likes.some(l => l.user_id === currentUser.id)){
+  btn.classList.add('liked');
  }
 }
 
 async function loadPostComments(postId, container){
- const {data:comments, error}=await db.from('comments')
-  .select('id, user_id, content, created_at')
+ const {data: comments} = await db.from('comments')
+  .select('*')
   .eq('post_id', postId)
-  .order('created_at', {ascending:true});
+  .order('created_at', {ascending: true});
 
- if(error || !comments || !comments.length) return;
-
- const missing=[...new Set(comments.map(c=>c.user_id))].filter(id=>!profilesCache[id]);
- if(missing.length>0){
-  const {data:newProfiles}=await db.from('profiles').select('id, username').in('id',missing);
-  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
+ if(!comments || !comments.length){
+  container.replaceChildren();
+  return;
  }
 
- container.replaceChildren();
- 
- const visibleComments=comments.slice(-2);
- 
- visibleComments.forEach(c=>{
-  const item=document.createElement('div');
-  item.className='comment-item';
-  const userSpan=document.createElement('span');
-  userSpan.className='comment-user';
-  userSpan.textContent=profilesCache[c.user_id]?.username||'usuario';
-  const textSpan=document.createElement('span');
-  textSpan.className='comment-text';
-  textSpan.textContent=c.content;
-  item.append(userSpan, textSpan);
-  container.append(item);
+ const missingUserIds = [...new Set(comments.map(c => c.user_id))].filter(id => !profilesCache[id]);
+ if(missingUserIds.length > 0){
+  const {data: profs} = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missingUserIds);
+  (profs || []).forEach(p => profilesCache[p.id] = p);
+ }
+
+ const fragment = document.createDocumentFragment();
+ const maxShow = 3;
+ const showComments = comments.slice(0, maxShow);
+
+ showComments.forEach(c => {
+  const profile = profilesCache[c.user_id] || {username: 'usuario'};
+  const div = document.createElement('div');
+  div.className = 'comment-item';
+  div.innerHTML = `<span class="comment-user">${profile.display_name || profile.username}</span><span class="comment-text">${c.content}</span>`;
+  fragment.append(div);
  });
 
- if(comments.length>2){
-  const viewMoreBtn=document.createElement('button');
-  viewMoreBtn.className='view-more-comments';
-  viewMoreBtn.textContent=`Ver los ${comments.length} comentarios`;
-  viewMoreBtn.onclick=()=>showAllCommentsModal(postId);
-  container.append(viewMoreBtn);
+ if(comments.length > maxShow){
+  const btn = document.createElement('button');
+  btn.className = 'view-more-comments';
+  btn.textContent = `Ver los ${comments.length} comentarios`;
+  btn.onclick = () => openPostDetail({ id: postId, user_id: profilesCache[postId]?.id });
+  fragment.append(btn);
  }
+
+ container.replaceChildren(fragment);
 }
 
 async function quickComment(postId, input){
@@ -3036,302 +3089,245 @@ async function quickComment(postId, input){
   showAuthOverlay();
   return;
  }
- const content=input.value.trim();
- if(!content)return;
+ const text = input.value.trim();
+ if(!text) return;
 
- const {error}=await db.from('comments').insert({
-  post_id:postId, user_id:currentUser.id, content
+ input.value = '';
+ const {error} = await db.from('comments').insert({
+  post_id: postId,
+  user_id: currentUser.id,
+  content: text
  });
 
- if(error)return alert('Error: '+error.message);
- input.value='';
- const sec=document.getElementById(`comments-${postId}`);
- if(sec) loadPostComments(postId, sec);
- const modalSec=document.getElementById(`modal-comments-${postId}`);
- if(modalSec) loadPostComments(postId, modalSec);
-}
-
-async function showAllCommentsModal(postId){
- const {data:comments, error}=await db.from('comments')
-  .select('id, user_id, content, created_at')
-  .eq('post_id', postId)
-  .order('created_at', {ascending:true});
-
- if(error||!comments.length)return alert('No hay comentarios.');
-
- const userIds=[...new Set(comments.map(c=>c.user_id))];
- const missing=[...userIds].filter(id=>!profilesCache[id]);
- if(missing.length>0){
-  const {data:newProfiles}=await db.from('profiles').select('id, username').in('id',missing);
-  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
+ if(error){
+  alert('Error al comentar: ' + error.message);
+  return;
  }
 
- alert(comments.map(c=>'@'+(profilesCache[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
+ const commentSec = document.getElementById(`comments-${postId}`) || document.getElementById(`modal-comments-${postId}`);
+ if(commentSec){
+  const {data: comments} = await db.from('comments').select('*').eq('post_id', postId).order('created_at', {ascending: true});
+  loadPostComments(postId, commentSec);
+ }
 }
 
-/* FUNCIÓN PUBLISH CORREGIDA CON BLOQUEO ANTIDUPLICACIÓN ESTRICTO */
 async function publish(){
- if(!currentUser || isPublishing) return;
+ if(!currentUser){
+  showAuthOverlay();
+  return;
+ }
+ if(isPublishing) return; // Evita doble ejecución de publicación
 
- const input=document.getElementById('newpost');
- const content=input.value.trim();
- if(!content && !postImageBlob) return alert('Escribí un título o agregá una imagen.');
+ const text = document.getElementById('newpost').value.trim();
+ if(!text && !postImageBlob) return status('publishStatus', 'Escribe algo o agrega una foto.');
 
  isPublishing = true;
- const pubBtn = document.getElementById('publishBtn');
- if(pubBtn) pubBtn.disabled = true;
-
- status('publishStatus','Publicando...');
+ status('publishStatus', 'Publicando...');
+ document.getElementById('publishBtn').disabled = true;
 
  let imageUrl = null;
-
  if(postImageBlob){
-  const path = currentUser.id+'/post-'+Date.now()+'.jpg';
-  const {error:uploadError} = await db.storage.from('og-media')
+  const path = currentUser.id + '/post-' + Date.now() + '.jpg';
+  const {error: uploadError} = await db.storage.from('og-media')
    .upload(path, postImageBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
 
   if(uploadError){
+   status('publishStatus', 'Error al subir imagen: ' + uploadError.message);
    isPublishing = false;
-   if(pubBtn) pubBtn.disabled = false;
-   status('publishStatus','Error al subir imagen.');
+   document.getElementById('publishBtn').disabled = false;
    return;
   }
-  const {data:urlData} = db.storage.from('og-media').getPublicUrl(path);
+  const {data: urlData} = db.storage.from('og-media').getPublicUrl(path);
   imageUrl = urlData.publicUrl;
  }
 
- const {error}=await db.from('posts').insert({
+ const {error} = await db.from('posts').insert({
   user_id: currentUser.id,
-  content: content,
-  image_url: imageUrl,
-  views: 0
+  content: text,
+  image_url: imageUrl
  });
 
  isPublishing = false;
- if(pubBtn) pubBtn.disabled = false;
+ document.getElementById('publishBtn').disabled = false;
 
- if(error){
-  status('publishStatus','Error al publicar: '+error.message);
-  return;
- }
+ if(error) return status('publishStatus', error.message);
 
- input.value='';
+ document.getElementById('newpost').value = '';
  removePostImage();
- status('publishStatus','¡Publicado con éxito!');
- 
+ status('publishStatus', '¡Publicado con éxito!');
+ setTimeout(() => status('publishStatus', ''), 2000);
+ showTab('feed');
  await loadInitialPosts();
- await loadMyPostsGrid();
- setTimeout(()=>showTab('feed'), 500);
 }
 
-async function toggleLike(postId,button, countDiv){
- if(!currentUser){
-  showAuthOverlay();
+function searchUsers(){
+ clearTimeout(searchTimer);
+ const val = document.getElementById('search').value.trim();
+ const resultBox = document.getElementById('searchresult');
+
+ if(val.length < 2){
+  resultBox.replaceChildren();
   return;
  }
 
- const isLiked=button.classList.contains('liked');
- let currentCount=parseInt(countDiv.textContent)||0;
+ searchTimer = setTimeout(async () => {
+  const {data} = await db.from('profiles').select('id, username, display_name, avatar_url').ilike('username', '%' + val + '%').limit(10);
+  if(!data || !data.length){
+   resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>';
+   return;
+  }
 
- if(isLiked){
-  button.classList.remove('liked');
-  currentCount=Math.max(0, currentCount-1);
-  await db.from('likes').delete().eq('post_id',postId).eq('user_id',currentUser.id);
- }else{
-  button.classList.add('liked');
-  currentCount+=1;
-  await db.from('likes').insert({post_id:postId,user_id:currentUser.id});
- }
- countDiv.textContent=currentCount+' Me gusta';
+  const fragment = document.createDocumentFragment();
+  data.forEach(profile => {
+   if(profile.id === currentUser?.id) return;
+   profilesCache[profile.id] = profile;
+
+   const item = document.createElement('div');
+   item.className = 'public-user';
+   const av = createAvatarNode(profile, false);
+   const info = document.createElement('div');
+   info.className = 'public-user-info';
+   const name = document.createElement('strong');
+   name.textContent = profile.display_name || profile.username;
+   const username = document.createElement('small');
+   username.textContent = '@' + profile.username;
+   info.append(name, username);
+   item.append(av, info);
+   item.onclick = () => openPublicProfile(profile.id);
+   fragment.append(item);
+  });
+  resultBox.replaceChildren(fragment);
+ }, 300);
 }
 
 async function openPublicProfile(userId){
- if(!currentUser){
-  showAuthOverlay();
+ if(currentUser && userId === currentUser.id){
+  showTab('profile');
   return;
  }
 
- if(userId===currentUser.id)return showTab('profile');
+ const {data: profile} = await db.from('profiles').select('*').eq('id', userId).single();
+ if(!profile) return;
 
- status('publicstatus','Cargando...');
- showTab('publicprofile');
+ viewedProfile = profile;
+ profilesCache[userId] = profile;
 
- let profile=profilesCache[userId];
- if(!profile){
-  const {data,error}=await db.from('profiles').select('*').eq('id',userId).maybeSingle();
-  if(error||!data)return status('publicstatus','No se encontró el perfil.');
-  profile=data;
-  profilesCache[userId]=data;
+ document.getElementById('publicname').textContent = profile.display_name || profile.username;
+ document.getElementById('publicheadername').textContent = profile.username;
+ document.getElementById('publicusername').textContent = '@' + profile.username;
+ document.getElementById('publicbio').textContent = profile.bio || '';
+
+ const avBox = document.getElementById('publicavatar');
+ avBox.replaceChildren();
+ if(profile.avatar_url){
+  const img = document.createElement('img');
+  img.src = profile.avatar_url;
+  img.alt = profile.username;
+  img.loading = 'lazy';
+  avBox.append(img);
+ } else {
+  avBox.textContent = '👤';
  }
 
- viewedProfile=profile;
- document.getElementById('publicheadername').textContent='@'+profile.username;
- document.getElementById('publicname').textContent=profile.display_name||profile.username||'Usuario';
- document.getElementById('publicusername').textContent='@'+profile.username;
- document.getElementById('publicbio').textContent=profile.bio||'';
- 
- const pubAvatarWrap = document.getElementById('publicavatar');
- pubAvatarWrap.replaceChildren(createAvatarNode(profile).firstChild);
- const pubDot = document.createElement('span');
- pubDot.className = 'online-dot';
- if(onlineUsersMap[profile.id]) pubDot.classList.add('active');
- pubDot.id = `online-dot-${profile.id}`;
- pubAvatarWrap.append(pubDot);
-
- const cover=document.getElementById('publiccover');
+ const cover = document.getElementById('publiccover');
  cover.replaceChildren();
  if(profile.cover_url){
-  const img=document.createElement('img');
-  img.src=profile.cover_url;
-  img.loading='lazy';
+  const img = document.createElement('img');
+  img.src = profile.cover_url;
+  img.alt = 'Portada';
+  img.loading = 'lazy';
   cover.append(img);
  }
 
- const [followers,following,relation]=await Promise.all([
-  db.from('follows').select('*',{count:'exact',head:true}).eq('following_id',userId),
-  db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',userId),
-  db.from('follows').select('follower_id').eq('follower_id',currentUser.id).eq('following_id',userId).maybeSingle()
- ]);
-
- isFollowing=!!relation.data;
- document.getElementById('publicfollowerscount').textContent=followers.count||0;
- document.getElementById('publicfollowingcount').textContent=following.count||0;
- updateFollowButton();
-
- const container=document.getElementById('publicposts');
- container.replaceChildren();
-
- const {data:posts}=await db.from('posts').select('*').eq('user_id',userId).order('created_at',{ascending:false});
- document.getElementById('publicpostscount').textContent=posts?posts.length:0;
-
- if(posts&&posts.length){
-  const fragment=document.createDocumentFragment();
-  posts.forEach(post=>{
-   const item=document.createElement('div');
-   item.className='ig-grid-item';
-   item.onclick = () => openPostDetail(post);
-
-   if(post.image_url){
-    const img=document.createElement('img');
-    img.src=post.image_url;
-    img.loading='lazy';
-    item.append(img);
-   }else{
-    item.textContent=(post.content||'').slice(0,55);
-   }
-   fragment.append(item);
-  });
-  container.replaceChildren(fragment);
+ if(onlineUsersMap[userId]){
+  document.getElementById('publicProfileOnlineDot').classList.add('active');
+ } else {
+  document.getElementById('publicProfileOnlineDot').classList.remove('active');
  }
- status('publicstatus','');
+
+ showTab('publicprofile');
+ checkFollowStatus(userId);
+ loadPublicUserPosts(userId);
+ loadPublicCounts(userId);
 }
 
-function updateFollowButton(){
- const button=document.getElementById('publicfollow');
- button.textContent=isFollowing?'Siguiendo':'Seguir';
- button.className=isFollowing?'secondary':'primary';
+async function loadPublicCounts(userId){
+ const [followers, following, posts] = await Promise.all([
+  db.from('follows').select('*', {count: 'exact', head: true}).eq('following_id', userId),
+  db.from('follows').select('*', {count: 'exact', head: true}).eq('follower_id', userId),
+  db.from('posts').select('*', {count: 'exact', head: true}).eq('user_id', userId)
+ ]);
+
+ document.getElementById('publicfollowerscount').textContent = followers.count || 0;
+ document.getElementById('publicfollowingcount').textContent = following.count || 0;
+ document.getElementById('publicpostscount').textContent = posts.count || 0;
+}
+
+async function checkFollowStatus(userId){
+ if(!currentUser) return;
+ const {data} = await db.from('follows').select('*').eq('follower_id', currentUser.id).eq('following_id', userId).maybeSingle();
+ 
+ isFollowing = !!data;
+ const btn = document.getElementById('publicfollow');
+ btn.textContent = isFollowing ? 'Siguiendo' : 'Seguir';
+ btn.className = isFollowing ? 'secondary' : 'primary';
 }
 
 async function toggleFollow(){
- if(!currentUser||!viewedProfile)return;
- const button=document.getElementById('publicfollow');
- button.disabled=true;
-
- let error=null;
- if(isFollowing){
-  const res=await db.from('follows').delete().eq('follower_id',currentUser.id).eq('following_id',viewedProfile.id);
-  error=res.error;
- }else{
-  const res=await db.from('follows').insert({follower_id:currentUser.id,following_id:viewedProfile.id});
-  error=res.error;
- }
- button.disabled=false;
- if(error)return alert(error.message);
-
- isFollowing=!isFollowing;
- updateFollowButton();
- await loadFollowCounts();
- await loadStoriesData();
-}
-
-async function searchUsers(){
- clearTimeout(searchTimer);
- const value=document.getElementById('search').value.trim();
- const result=document.getElementById('searchresult');
+ if(!currentUser || !viewedProfile) return;
  
- if(value.length<2){
-  result.replaceChildren();
-  return;
- }
+ const btn = document.getElementById('publicfollow');
+ btn.disabled = true;
 
- searchTimer=setTimeout(async()=>{
-  const {data}=await db.from('profiles').select('id,username,display_name,avatar_url').ilike('username','%'+value+'%').limit(20);
-  if(!data||!data.length){
-   result.innerHTML='<p class="muted" style="text-align:center">No se encontraron usuarios.</p>';
-   return;
-  }
-  const fragment=document.createDocumentFragment();
-  data.forEach(profile=>{
-   profilesCache[profile.id]=profile;
-   const item=document.createElement('div');
-   item.className='public-user';
-   const av=createAvatarNode(profile, false);
-   const info=document.createElement('div');
-   info.className='public-user-info';
-   const name=document.createElement('strong');
-   name.textContent=profile.display_name||profile.username;
-   const username=document.createElement('small');
-   username.textContent='@'+profile.username;
-   info.append(name,username);
-   item.append(av,info);
-   item.onclick=()=>openPublicProfile(profile.id);
-   fragment.append(item);
-  });
-  result.replaceChildren(fragment);
- },300);
+ if(isFollowing){
+  await db.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', viewedProfile.id);
+  isFollowing = false;
+  btn.textContent = 'Seguir';
+  btn.className = 'primary';
+ } else {
+  await db.from('follows').insert({follower_id: currentUser.id, following_id: viewedProfile.id});
+  isFollowing = true;
+  btn.textContent = 'Siguiendo';
+  btn.className = 'secondary';
+ }
+ btn.disabled = false;
+ loadPublicCounts(viewedProfile.id);
 }
 
-db.auth.onAuthStateChange((event,session)=>{
- if(event==='INITIAL_SESSION')return;
- setTimeout(async()=>{
-  if(session?.user) await loadAccount(session.user);
-  else{
-   currentUser=null; myProfile=null; viewedProfile=null; myActiveStory=null;
-   updateStoryUI(); updateNavAvatarUI(); updateProfileUI(); await loadInitialPosts();
-   showAuthOverlay();
-  }
- },0);
-});
+async function loadPublicUserPosts(userId){
+ const grid = document.getElementById('publicposts');
+ const {data: posts} = await db.from('posts').select('*').eq('user_id', userId).order('created_at', {ascending: false});
+ 
+ grid.replaceChildren();
+ if(!posts || !posts.length) return;
 
-async function init(){
- const {data}=await db.auth.getSession();
- if(data.session){
-  await loadAccount(data.session.user);
- }else{
-  updateProfileUI();
-  updateNavAvatarUI();
-  await loadInitialPosts();
+ const fragment = document.createDocumentFragment();
+ posts.forEach(post => {
+  const item = document.createElement('div');
+  item.className = 'ig-grid-item';
+  item.onclick = () => openPostDetail(post);
+
+  if(post.image_url){
+   const img = document.createElement('img');
+   img.src = post.image_url;
+   img.loading = 'lazy';
+   item.append(img);
+  } else {
+   item.textContent = (post.content || '').slice(0, 55);
+  }
+  fragment.append(item);
+ });
+ grid.replaceChildren(fragment);
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+ const {data:{session}} = await db.auth.getSession();
+ if(session?.user){
+  await loadAccount(session.user);
+ } else {
   showAuthOverlay();
  }
- loadExploreGrid();
-}
-
-init();
+});
 </script>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then((reg) => {
-          console.log('Service Worker registrado con éxito:', reg.scope);
-        })
-        .catch((err) => {
-          console.log('Error al registrar el Service Worker:', err);
-        });
-    });
-  }
-</script>
-
 </body>
 </html>
