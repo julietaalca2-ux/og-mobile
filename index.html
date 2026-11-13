@@ -652,6 +652,103 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 }
 .settings-overlay.open .settings-drawer{transform:translateY(0)}
 .settings-handle{width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin:0 auto 20px auto}
+
+/* INTERFAZ DE FUNCIONES DEL CHAT ÖG */
+.chat-ui-screen{position:fixed;inset:0;z-index:1200;background:#050506;color:#f4f4f5;display:none;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+.chat-ui-screen.active{display:flex}
+.chat-ui-header{display:flex;align-items:center;gap:12px;min-height:62px;padding:calc(env(safe-area-inset-top) + 8px) 16px 10px;border-bottom:1px solid rgba(255,255,255,.09);background:rgba(5,5,6,.96);flex-shrink:0}
+.chat-ui-header-title{flex:1;min-width:0;text-align:center;font-size:16px;font-weight:700;color:#fff}
+.chat-ui-icon-button{width:40px;height:40px;display:grid;place-items:center;border:0;background:transparent;color:#f4f4f5;border-radius:12px;font-size:24px;cursor:pointer}
+.chat-ui-icon-button:active,.chat-ui-button:active,.chat-ui-row:active{transform:scale(.98);background-color:rgba(255,255,255,.08)}
+.chat-ui-spacer{width:40px;flex:0 0 40px}
+.chat-ui-content{flex:1;overflow:auto;padding:20px 16px calc(env(safe-area-inset-bottom) + 28px);-webkit-overflow-scrolling:touch}
+.chat-ui-profile{text-align:center;padding:22px 12px 18px}
+.chat-ui-avatar{width:96px;height:96px;margin:0 auto 14px;border:1px solid rgba(255,255,255,.18);border-radius:50%;overflow:hidden;background:#202024;display:grid;place-items:center;font-size:34px;color:#a1a1aa}
+.chat-ui-avatar img,.chat-ui-mini-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.chat-ui-profile h2{margin:0 0 4px;font-size:20px;color:#fff}
+.chat-ui-profile p{margin:0 0 5px;color:#a1a1aa;font-size:13px}
+.chat-ui-profile .chat-ui-activity{color:#22c55e;font-size:12px}
+.chat-ui-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:4px 0 26px}
+.chat-ui-action-button{min-height:78px;padding:12px 8px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:#141416;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.06em;cursor:pointer}
+.chat-ui-action-button .chat-ui-action-icon{font-size:19px;line-height:1}
+.chat-ui-section-label{margin:22px 4px 9px;color:#85858e;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+.chat-ui-list{border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;background:#101012}
+.chat-ui-row{width:100%;min-height:58px;padding:13px 15px;display:flex;align-items:center;gap:13px;border:0;border-bottom:1px solid rgba(255,255,255,.07);background:transparent;color:#f4f4f5;text-align:left;cursor:pointer}
+.chat-ui-row:last-child{border-bottom:0}
+.chat-ui-row-icon{width:24px;flex:0 0 24px;text-align:center;font-size:18px;color:#d4d4d8}
+.chat-ui-row-label{flex:1;font-size:14px;font-weight:550}
+.chat-ui-chevron{color:#71717a;font-size:20px}
+.chat-action-menu{position:fixed;z-index:1300;display:none;right:14px;top:calc(env(safe-area-inset-top) + 58px);width:min(230px,calc(100vw - 28px));padding:6px;background:#202024;border:1px solid rgba(255,255,255,.12);border-radius:14px;box-shadow:0 14px 38px rgba(0,0,0,.55)}
+.chat-action-menu.active{display:block}
+.chat-action-menu button{width:100%;padding:13px 12px;border:0;border-radius:9px;background:transparent;color:#f4f4f5;text-align:left;font-size:14px;cursor:pointer}
+.chat-action-menu button:active{background:rgba(255,255,255,.08)}
+.chat-action-menu button.danger{color:#fb7185}
+.chat-ui-searchbar{display:flex;align-items:center;gap:10px;padding:0 14px;height:48px;border:1px solid rgba(255,255,255,.12);border-radius:15px;background:#151518}
+.chat-ui-searchbar span{font-size:18px;color:#a1a1aa}
+.chat-ui-searchbar input{width:100%;border:0;outline:0;background:transparent;color:#fff;font:inherit;font-size:14px}
+.chat-ui-searchbar input::placeholder{color:#777780}
+.chat-ui-state{padding:32px 14px;text-align:center;color:#8a8a94;font-size:13px;line-height:1.5}
+.chat-search-result{display:flex;align-items:flex-start;gap:11px;padding:14px 4px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer}
+.chat-ui-mini-avatar{width:36px;height:36px;flex:0 0 36px;border-radius:50%;overflow:hidden;background:#27272a;display:grid;place-items:center;color:#a1a1aa}
+.chat-search-result-body{min-width:0;flex:1}
+.chat-search-result-head{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px}
+.chat-search-result-name{font-size:13px;font-weight:700;color:#eee}
+.chat-search-result-time{font-size:10px;color:#81818b;white-space:nowrap}
+.chat-search-result-text{font-size:13px;line-height:1.4;color:#d4d4d8;overflow-wrap:anywhere}
+.chat-search-result-text mark{background:rgba(59,130,246,.35);color:#fff;border-radius:3px;padding:0 1px}
+.chat-ui-card{margin:0 0 14px;padding:16px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:#111113}
+.chat-ui-card h3{margin:0 0 6px;font-size:15px;color:#fff}
+.chat-ui-card p{margin:0;color:#9999a3;font-size:12px;line-height:1.5}
+.chat-ui-options{display:flex;flex-direction:column;gap:9px;margin:14px 0}
+.chat-ui-option{width:100%;padding:14px;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:#111113;color:#f4f4f5;text-align:left;cursor:pointer}
+.chat-ui-option[aria-pressed="true"],.chat-ui-option.selected{border-color:#3b82f6;background:rgba(59,130,246,.12)}
+.chat-ui-option input{accent-color:#3b82f6}
+.chat-ui-option-copy{flex:1}
+.chat-ui-option-title{display:block;font-size:14px;font-weight:650}
+.chat-ui-option-desc{display:block;margin-top:4px;color:#92929c;font-size:11px;line-height:1.4}
+.chat-ui-field{display:flex;flex-direction:column;gap:8px;margin:15px 0}
+.chat-ui-field label{font-size:13px;font-weight:650;color:#e4e4e7}
+.chat-ui-field input[type="text"],.chat-ui-field textarea,.chat-ui-field select{width:100%;min-height:46px;padding:12px;border:1px solid rgba(255,255,255,.13);border-radius:12px;background:#151518;color:#f4f4f5;font:inherit;font-size:14px;outline:none}
+.chat-ui-field textarea{min-height:118px;resize:vertical}
+.chat-ui-field input:focus,.chat-ui-field textarea:focus,.chat-ui-field select:focus{border-color:#3b82f6}
+.chat-ui-hint{font-size:11px;color:#85858e;line-height:1.45}
+.chat-ui-primary,.chat-ui-secondary,.chat-ui-danger{width:100%;min-height:48px;padding:12px 16px;border:0;border-radius:13px;font-size:14px;font-weight:700;cursor:pointer}
+.chat-ui-primary{background:#3b82f6;color:#fff}
+.chat-ui-secondary{background:#202024;color:#f4f4f5;border:1px solid rgba(255,255,255,.09)}
+.chat-ui-danger{background:#e5485d;color:#fff}
+.chat-ui-button-stack{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.chat-ui-status{min-height:18px;margin-top:10px;color:#a1a1aa;font-size:12px;line-height:1.4}
+.chat-ui-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.chat-ui-toggle-row:last-child{border-bottom:0}
+.chat-ui-toggle-copy{flex:1}
+.chat-ui-toggle-copy strong{display:block;font-size:14px;color:#f4f4f5}
+.chat-ui-toggle-copy small{display:block;margin-top:4px;color:#92929c;font-size:11px;line-height:1.4}
+.chat-ui-switch{position:relative;width:48px;height:28px;flex:0 0 48px}
+.chat-ui-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.chat-ui-switch span{position:absolute;inset:0;border-radius:20px;background:#39393f;transition:.18s}
+.chat-ui-switch span:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.18s}
+.chat-ui-switch input:checked+span{background:#3b82f6}
+.chat-ui-switch input:checked+span:before{transform:translateX(20px)}
+.chat-ui-blocked-user{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.chat-ui-blocked-user:last-child{border-bottom:0}
+.chat-ui-blocked-user .chat-ui-mini-avatar{width:40px;height:40px;flex-basis:40px}
+.chat-ui-blocked-name{flex:1;min-width:0;font-size:13px;font-weight:650;color:#f4f4f5}
+.chat-ui-unblock{border:1px solid rgba(255,255,255,.16);border-radius:9px;background:transparent;color:#d4d4d8;padding:7px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.chat-ui-preview{padding:16px;border-radius:16px;background:#101012;min-height:190px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;transition:background .15s,color .15s}
+.chat-ui-preview-label{font-size:10px;color:#888892;margin-bottom:auto}
+.chat-ui-preview-bubble{max-width:82%;padding:10px 13px;border-radius:18px;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.chat-ui-preview-bubble.incoming{align-self:flex-start;background:#29292d;color:#f4f4f5;border-bottom-left-radius:5px}
+.chat-ui-preview-bubble.outgoing{align-self:flex-end;background:#3b82f6;color:#fff;border-bottom-right-radius:5px}
+.chat-ui-range{width:100%;accent-color:#3b82f6}
+.chat-ui-confirm-icon{width:60px;height:60px;margin:20px auto 16px;border-radius:50%;display:grid;place-items:center;background:rgba(229,72,93,.14);font-size:26px;color:#fb7185}
+.chat-ui-confirm-copy{text-align:center;padding:0 10px}
+.chat-ui-confirm-copy h2{margin:0 0 9px;font-size:20px;color:#fff}
+.chat-ui-confirm-copy p{margin:0;color:#a1a1aa;font-size:13px;line-height:1.5}
+.chat-ui-toast{position:fixed;z-index:1400;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translate(-50%,12px);max-width:calc(100vw - 32px);padding:11px 15px;border-radius:12px;background:#27272a;color:#f4f4f5;font-size:12px;line-height:1.4;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.2s}
+.chat-ui-toast.active{opacity:1;transform:translate(-50%,0)}
+.chat-ui-message-highlight{outline:2px solid rgba(59,130,246,.9);box-shadow:0 0 0 6px rgba(59,130,246,.16);transition:outline .2s,box-shadow .2s}
+@media(max-width:360px){.chat-ui-content{padding-left:13px;padding-right:13px}.chat-ui-actions{gap:7px}.chat-ui-action-button{font-size:10px}}
+
 </style>
 </head>
 
@@ -1136,8 +1233,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    </div>
    <div class="settings-row">
     <div class="settings-row-info">
-     <p class="settings-row-title">Mostrar estado de actividad</p>
-     <p class="settings-row-desc">Permite que otros vean el punto verde cuando estás en línea.</p>
+     <p class="settings-row-title">Mostrar estado en línea y última conexión</p>
+     <p class="settings-row-desc">Una preferencia global compartida con la privacidad del chat.</p>
     </div>
     <label class="toggle-switch">
      <input type="checkbox" id="activityStatusToggle" checked onchange="saveMenuPreferences()">
@@ -1394,7 +1491,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <small id="chatRoomStatusSub" style="color:#71717a;font-size:11px;display:block;">Desconectado</small>
    </div>
   </div>
-
+  <button class="chat-ui-icon-button" onclick="openChatDetails()" aria-label="Detalles del chat">⋯</button>
  </div>
 
  <div class="chat-messages-container" id="chatMessagesContainer"></div>
@@ -1415,25 +1512,179 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 </main>
 
-<!-- ========================================================================= -->
-<!-- PARTE 1: PANEL DESPLEGABLE DE PERFIL DESDE EL CHAT                        -->
-<!-- ========================================================================= -->
-<div id="chatProfileDrawer" class="chat-profile-drawer-overlay" onclick="closeChatProfileDrawer()">
- <div class="chat-profile-drawer" onclick="event.stopPropagation()">
-  <div style="width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin-bottom:20px"></div>
-  
-  <div class="drawer-avatar-outer">
-   <div class="drawer-avatar-inner" id="drawerAvatarBox">👤</div>
+
+<!-- PANTALLAS COMPLETAS DE DETALLES Y AJUSTES DEL CHAT -->
+<div id="chatDetailsPage" class="chat-ui-screen" aria-hidden="true">
+ <div class="chat-ui-header">
+  <button class="chat-ui-icon-button" onclick="closeChatProfileDrawer()" aria-label="Volver a la conversación">‹</button>
+  <div class="chat-ui-header-title">Detalles del chat</div>
+  <button class="chat-ui-icon-button" data-chat-action-menu-toggle onclick="toggleChatActionsMenu(event)" aria-label="Más opciones">⋯</button>
+ </div>
+ <div class="chat-ui-content">
+  <section class="chat-ui-profile">
+   <div id="chatDetailsAvatar" class="chat-ui-avatar" aria-hidden="true">👤</div>
+   <h2 id="chatDetailsDisplayName">Usuario</h2>
+   <p id="chatDetailsUsername">@usuario</p>
+   <p id="chatDetailsActivity" class="chat-ui-activity">Estado de actividad</p>
+  </section>
+  <div class="chat-ui-actions">
+   <button class="chat-ui-action-button" onclick="navigateToTargetProfile()"><span class="chat-ui-action-icon">◉</span>PERFIL</button>
+   <button class="chat-ui-action-button" onclick="openChatSearch()"><span class="chat-ui-action-icon">⌕</span>BUSCAR</button>
+   <button class="chat-ui-action-button" onclick="openChatMuteSettings()"><span class="chat-ui-action-icon">◖</span>SILENCIAR</button>
   </div>
-
-  <strong id="drawerDisplayName" style="font-size:18px;color:#fff;margin-bottom:2px">Usuario</strong>
-  <span id="drawerUsername" style="font-size:13px;color:#71717a;margin-bottom:8px">@usuario</span>
-  <span id="drawerActivityStatus" style="font-size:12px;color:#22c55e;margin-bottom:24px">En línea</span>
-
-  <button class="primary" style="width:100%;margin-bottom:10px;font-weight:600;" onclick="navigateToTargetProfile()">Perfil</button>
-  <button class="secondary" style="width:100%;background:transparent;border:0;color:#71717a;" onclick="closeChatProfileDrawer()">Cerrar</button>
+  <div class="chat-ui-section-label">Configuración de la conversación</div>
+  <div class="chat-ui-list">
+   <button class="chat-ui-row" onclick="openChatScreen('chatPrivacyPage')"><span class="chat-ui-row-icon">♢</span><span class="chat-ui-row-label">Privacidad y seguridad</span><span class="chat-ui-chevron">›</span></button>
+   <button class="chat-ui-row" onclick="openChatScreen('chatEphemeralPage')"><span class="chat-ui-row-icon">◷</span><span class="chat-ui-row-label">Mensajes temporales</span><span class="chat-ui-chevron">›</span></button>
+   <button class="chat-ui-row" onclick="openChatScreen('chatNicknamesPage')"><span class="chat-ui-row-icon">✎</span><span class="chat-ui-row-label">Apodos</span><span class="chat-ui-chevron">›</span></button>
+   <button class="chat-ui-row" onclick="openChatScreen('chatAppearancePage')"><span class="chat-ui-row-icon">◐</span><span class="chat-ui-row-label">Personalizar estilo y fuente</span><span class="chat-ui-chevron">›</span></button>
+  </div>
  </div>
 </div>
+
+<div id="chatSearchPage" class="chat-ui-screen" aria-hidden="true">
+ <div class="chat-ui-header">
+  <button class="chat-ui-icon-button" onclick="openChatScreen('chatDetailsPage')" aria-label="Volver a detalles">‹</button>
+  <div class="chat-ui-header-title">Buscar mensajes</div><div class="chat-ui-spacer"></div>
+ </div>
+ <div class="chat-ui-content">
+  <label class="chat-ui-searchbar"><span>⌕</span><input id="chatMessageSearchInput" type="search" autocomplete="off" placeholder="Buscar en esta conversación" oninput="handleChatSearchInput(this.value)"></label>
+  <div id="chatSearchStatus" class="chat-ui-state" aria-live="polite">Busca palabras o frases en los mensajes de este chat.</div>
+  <div id="chatSearchResults" role="list"></div>
+ </div>
+</div>
+
+<div id="chatMutePage" class="chat-ui-screen" aria-hidden="true">
+ <div class="chat-ui-header">
+  <button class="chat-ui-icon-button" onclick="openChatScreen('chatDetailsPage')" aria-label="Volver a detalles">‹</button>
+  <div class="chat-ui-header-title">Silenciar notificaciones</div><div class="chat-ui-spacer"></div>
+ </div>
+ <div class="chat-ui-content">
+  <div class="chat-ui-card"><h3>Notificaciones de este chat</h3><p>Elige cuánto tiempo quieres silenciar esta conversación. Puedes volver a activar las notificaciones cuando quieras.</p></div>
+  <div class="chat-ui-options" role="group" aria-label="Duración del silencio">
+   <button class="chat-ui-option" aria-pressed="false" onclick="selectMuteDuration('24h',this)"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">24 horas</span><span class="chat-ui-option-desc">Silenciar hasta mañana</span></span><span>○</span></button>
+   <button class="chat-ui-option" aria-pressed="false" onclick="selectMuteDuration('7d',this)"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">7 días</span><span class="chat-ui-option-desc">Silenciar por una semana</span></span><span>○</span></button>
+   <button class="chat-ui-option" aria-pressed="false" onclick="selectMuteDuration('always',this)"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">Siempre</span><span class="chat-ui-option-desc">Hasta que lo desactives</span></span><span>○</span></button>
+  </div>
+  <button class="chat-ui-secondary" onclick="selectMuteDuration('off',null);saveMuteChoice()">Desactivar silencio</button>
+  <div class="chat-ui-button-stack"><button class="chat-ui-primary" onclick="saveMuteChoice()">Guardar selección</button></div>
+  <div id="chatMuteStatus" class="chat-ui-status" aria-live="polite"></div>
+ </div>
+</div>
+
+<div id="chatPrivacyPage" class="chat-ui-screen" aria-hidden="true">
+ <div class="chat-ui-header">
+  <button class="chat-ui-icon-button" onclick="openChatScreen('chatDetailsPage')" aria-label="Volver a detalles">‹</button>
+  <div class="chat-ui-header-title">Privacidad y seguridad</div><div class="chat-ui-spacer"></div>
+ </div>
+ <div class="chat-ui-content">
+  <div class="chat-ui-section-label">Estado de actividad</div>
+  <div class="chat-ui-card">
+   <label class="chat-ui-toggle-row"><span class="chat-ui-toggle-copy"><strong>Mostrar estado en línea y última conexión</strong><small>Usa la misma preferencia global de Privacidad de Ög.</small></span><span class="chat-ui-switch"><input id="chatActivityStatusToggle" type="checkbox" checked onchange="syncGlobalActivitySetting(this.checked)"><span></span></span></label>
+  </div>
+  <div class="chat-ui-section-label">Confirmaciones de lectura</div>
+  <div class="chat-ui-card">
+   <label class="chat-ui-toggle-row"><span class="chat-ui-toggle-copy"><strong>Enviar confirmaciones de lectura</strong><small>Permite que otros participantes sepan cuándo leíste sus mensajes.</small></span><span class="chat-ui-switch"><input id="chatReadReceiptsToggle" type="checkbox" onchange="changeChatPrivacyToggle('readReceipts',this.checked)"><span></span></span></label>
+   <label class="chat-ui-toggle-row"><span class="chat-ui-toggle-copy"><strong>Mostrar indicadores de lectura</strong><small>Controla si ves las confirmaciones de lectura de otras personas.</small></span><span class="chat-ui-switch"><input id="chatReadIndicatorsToggle" type="checkbox" onchange="changeChatPrivacyToggle('readIndicators',this.checked)"><span></span></span></label>
+  </div>
+  <div class="chat-ui-section-label">Seguridad de la conversación</div>
+  <div class="chat-ui-card"><h3>Información de protección</h3><p>Esta interfaz no afirma que exista cifrado de extremo a extremo. El almacenamiento y el acceso a mensajes dependen de la configuración de Supabase de Ög.</p></div>
+  <div class="chat-ui-section-label">Usuarios bloqueados</div>
+  <div id="chatBlockedUsersList" class="chat-ui-card"><p>No hay usuarios bloqueados para mostrar.</p></div>
+ </div>
+</div>
+
+<div id="chatEphemeralPage" class="chat-ui-screen" aria-hidden="true">
+ <div class="chat-ui-header">
+  <button class="chat-ui-icon-button" onclick="openChatScreen('chatDetailsPage')" aria-label="Volver a detalles">‹</button>
+  <div class="chat-ui-header-title">Mensajes temporales</div><div class="chat-ui-spacer"></div>
+ </div>
+ <div class="chat-ui-content">
+  <div class="chat-ui-card"><h3>Duración de los mensajes</h3><p>El vencimiento se aplica a los mensajes enviados después de activar esta opción. Los mensajes anteriores conservan su duración actual.</p></div>
+  <div class="chat-ui-options" role="group" aria-label="Duración de los mensajes temporales">
+   <button class="chat-ui-option" aria-pressed="true" onclick="selectEphemeralDuration('off',this)"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">Desactivados</span><span class="chat-ui-option-desc">Los mensajes no se programan para vencer</span></span><span>○</span></button>
+   <button class="chat-ui-option" aria-pressed="false" onclick="selectEphemeralDuration('24h',this)"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">24 horas</span><span class="chat-ui-option-desc">Un día después del envío</span></span><span>○</span></button>
+   <button class="chat-ui-option" aria-pressed="false" onclick="selectEphemeralDuration('7d',this)"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">7 días</span><span class="chat-ui-option-desc">Una semana después del envío</span></span><span>○</span></button>
+   <button class="chat-ui-option" aria-pressed="false" onclick="selectEphemeralDuration('90d',this)"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">90 días</span><span class="chat-ui-option-desc">Tres meses después del envío</span></span><span>○</span></button>
+  </div>
+  <div id="chatEphemeralStatus" class="chat-ui-status" aria-live="polite">Selecciona una duración para continuar.</div>
+  <div class="chat-ui-button-stack"><button class="chat-ui-primary" onclick="requestEphemeralChange()">Continuar</button></div>
+ </div>
+</div>
+
+<div id="chatNicknamesPage" class="chat-ui-screen" aria-hidden="true">
+ <div class="chat-ui-header">
+  <button class="chat-ui-icon-button" onclick="openChatScreen('chatDetailsPage')" aria-label="Volver a detalles">‹</button>
+  <div class="chat-ui-header-title">Apodos</div><div class="chat-ui-spacer"></div>
+ </div>
+ <div class="chat-ui-content">
+  <div class="chat-ui-profile" style="padding-top:10px"><div id="chatNicknameAvatar" class="chat-ui-avatar" style="width:72px;height:72px;font-size:27px">👤</div><h2 id="chatNicknameDisplayName" style="font-size:17px">Usuario</h2><p id="chatNicknameUsername">@usuario</p></div>
+  <form onsubmit="saveChatNickname(event)">
+   <div class="chat-ui-field"><label for="chatNicknameInput">Apodo para esta conversación</label><input id="chatNicknameInput" type="text" maxlength="40" placeholder="Escribe un apodo"><span class="chat-ui-hint">Solo tú verás este apodo. No cambia el nombre de perfil de la otra persona.</span></div>
+   <div class="chat-ui-button-stack"><button class="chat-ui-primary" type="submit">Guardar apodo</button><button class="chat-ui-secondary" type="button" onclick="removeChatNickname()">Eliminar apodo</button></div>
+   <div id="chatNicknameStatus" class="chat-ui-status" aria-live="polite"></div>
+  </form>
+ </div>
+</div>
+
+<div id="chatAppearancePage" class="chat-ui-screen" aria-hidden="true">
+ <div class="chat-ui-header">
+  <button class="chat-ui-icon-button" onclick="openChatScreen('chatDetailsPage')" aria-label="Volver a detalles">‹</button>
+  <div class="chat-ui-header-title">Personalizar estilo y fuente</div><div class="chat-ui-spacer"></div>
+ </div>
+ <div class="chat-ui-content">
+  <div class="chat-ui-section-label">Vista previa</div>
+  <div id="chatAppearancePreview" class="chat-ui-preview"><span class="chat-ui-preview-label">Vista previa de la conversación</span><div id="chatPreviewIncoming" class="chat-ui-preview-bubble incoming">Hola, ¿cómo va todo?</div><div id="chatPreviewOutgoing" class="chat-ui-preview-bubble outgoing">¡Todo bien! 😊</div></div>
+  <div class="chat-ui-field"><label for="chatStyleColor">Color del chat</label><select id="chatStyleColor" onchange="updateChatAppearancePreview()"><option value="#3b82f6">Azul</option><option value="#8b5cf6">Violeta</option><option value="#10b981">Verde</option><option value="#ec4899">Rosa</option><option value="#f97316">Naranja</option></select></div>
+  <div class="chat-ui-field"><label for="chatStyleBackground">Fondo</label><select id="chatStyleBackground" onchange="updateChatAppearancePreview()"><option value="#101012">Oscuro</option><option value="#17151d">Grafito</option><option value="linear-gradient(145deg,#111827,#241632)">Noche violeta</option><option value="linear-gradient(145deg,#08211e,#101012)">Verde profundo</option></select></div>
+  <div class="chat-ui-field"><label for="chatStyleBubbles">Estilo de mensajes</label><select id="chatStyleBubbles" onchange="updateChatAppearancePreview()"><option value="classic">Clásico</option><option value="rounded">Redondeado</option><option value="compact">Compacto</option></select></div>
+  <div class="chat-ui-field"><label for="chatStyleFont">Tipo de letra</label><select id="chatStyleFont" onchange="updateChatAppearancePreview()"><option value="system">Sistema</option><option value="serif">Serif</option><option value="mono">Monoespaciada</option></select></div>
+  <div class="chat-ui-field"><label for="chatStyleFontSize">Tamaño de letra: <span id="chatStyleFontSizeValue">14 px</span></label><input id="chatStyleFontSize" class="chat-ui-range" type="range" min="12" max="22" value="14" oninput="updateChatAppearancePreview()"></div>
+  <div class="chat-ui-button-stack"><button class="chat-ui-primary" onclick="saveChatAppearance()">Guardar</button><button class="chat-ui-secondary" onclick="resetChatAppearance()">Restaurar estilo original</button></div>
+  <div id="chatAppearanceStatus" class="chat-ui-status" aria-live="polite"></div>
+ </div>
+</div>
+
+<div id="chatReportPage" class="chat-ui-screen" aria-hidden="true">
+ <div class="chat-ui-header">
+  <button class="chat-ui-icon-button" onclick="openChatScreen('chatDetailsPage')" aria-label="Volver a detalles">‹</button>
+  <div class="chat-ui-header-title">Reportar usuario</div><div class="chat-ui-spacer"></div>
+ </div>
+ <div class="chat-ui-content">
+  <div class="chat-ui-card"><h3>Cuéntanos qué pasó</h3><p>Elige el motivo que mejor describe el problema. El campo de descripción es opcional.</p></div>
+  <form onsubmit="submitChatReport(event)">
+   <div class="chat-ui-options" role="radiogroup" aria-label="Motivo del reporte">
+    <label class="chat-ui-option"><input type="radio" name="chatReportReason" value="harassment"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">Acoso o contenido abusivo</span></span></label>
+    <label class="chat-ui-option"><input type="radio" name="chatReportReason" value="spam"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">Spam o estafa</span></span></label>
+    <label class="chat-ui-option"><input type="radio" name="chatReportReason" value="impersonation"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">Suplantación de identidad</span></span></label>
+    <label class="chat-ui-option"><input type="radio" name="chatReportReason" value="other"><span class="chat-ui-option-copy"><span class="chat-ui-option-title">Otro motivo</span></span></label>
+   </div>
+   <div class="chat-ui-field"><label for="chatReportDescription">Descripción (opcional)</label><textarea id="chatReportDescription" maxlength="1000" placeholder="Agrega detalles que ayuden a revisar el reporte"></textarea></div>
+   <button class="chat-ui-primary" type="submit">Enviar reporte</button>
+   <div id="chatReportStatus" class="chat-ui-status" aria-live="polite"></div>
+  </form>
+ </div>
+</div>
+
+<div id="chatConfirmPage" class="chat-ui-screen" aria-hidden="true">
+ <div class="chat-ui-header">
+  <button class="chat-ui-icon-button" onclick="openChatScreen('chatDetailsPage')" aria-label="Cancelar y volver">‹</button>
+  <div class="chat-ui-header-title">Confirmar acción</div><div class="chat-ui-spacer"></div>
+ </div>
+ <div class="chat-ui-content">
+  <div class="chat-ui-confirm-icon" id="chatConfirmIcon">!</div>
+  <div class="chat-ui-confirm-copy"><h2 id="chatConfirmTitle">Confirmar</h2><p id="chatConfirmDescription"></p></div>
+  <div class="chat-ui-button-stack"><button id="chatConfirmButton" class="chat-ui-danger" onclick="confirmChatAction()">Confirmar</button><button class="chat-ui-secondary" onclick="openChatScreen('chatDetailsPage')">Cancelar</button></div>
+  <div id="chatConfirmStatus" class="chat-ui-status" aria-live="polite"></div>
+ </div>
+</div>
+
+<div id="chatActionMenu" class="chat-action-menu" role="menu" aria-label="Acciones del chat">
+ <button role="menuitem" onclick="selectChatAction('block')">Bloquear</button>
+ <button role="menuitem" onclick="selectChatAction('report')">Reportar</button>
+ <button role="menuitem" onclick="selectChatAction('restrict')">Restringir</button>
+</div>
+<div id="chatUIToast" class="chat-ui-toast" role="status" aria-live="polite"></div>
 
 <!-- MODAL SEGUIDORES / SEGUIDOS -->
 <div id="followListModal" class="settings-overlay" onclick="closeFollowListModal()">
@@ -1487,8 +1738,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const SUPABASE_URL="https://axxafvggyetnnaumqefi.supabase.co";
-const SUPABASE_KEY="sb_publishable_O4wRZft0LCo3DYiCWT4iqg_E5_c8B2A";
+const SUPABASE_URL = window.OG_SUPABASE_URL || "https://your-project.supabase.co";
+const SUPABASE_KEY = window.OG_SUPABASE_PUBLISHABLE_KEY || "YOUR_SUPABASE_PUBLISHABLE_KEY";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
  auth:{
   persistSession:true,
@@ -1817,6 +2068,7 @@ function loadMenuPreferences(){
   if(document.getElementById('cfgAutoplayToggle')) document.getElementById('cfgAutoplayToggle').checked = prefs.autoplay !== false;
   if(document.getElementById('privateAccountToggle')) document.getElementById('privateAccountToggle').checked = !!prefs.privateAccount;
   if(document.getElementById('activityStatusToggle')) document.getElementById('activityStatusToggle').checked = prefs.activityStatus !== false;
+  if(document.getElementById('chatActivityStatusToggle')) document.getElementById('chatActivityStatusToggle').checked = prefs.activityStatus !== false;
   if(document.getElementById('showFollowersListToggle')) document.getElementById('showFollowersListToggle').checked = prefs.showFollowersList !== false;
   if(document.getElementById('allowDmToggle')) document.getElementById('allowDmToggle').checked = prefs.allowDm !== false;
   if(document.getElementById('notifLikesToggle')) document.getElementById('notifLikesToggle').checked = prefs.notifLikes !== false;
@@ -3402,6 +3654,7 @@ function appendChatMessageNode(msg){
 
  const bubble = document.createElement('div');
  bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
+ if(msg.id) bubble.dataset.messageId = String(msg.id);
  bubble.title = "Toca para responder à este mensaje";
  bubble.onclick = () => startReplyingTo(msg);
 
@@ -4211,6 +4464,400 @@ window.addEventListener('DOMContentLoaded', async () => {
   }, 200);
  }
 });
+
+/* Acciones visuales del chat. La integración de datos escucha "og:chat-ui-action" en document. */
+let chatFeatureSearchTimer = null;
+let chatSearchRequestNumber = 0;
+let chatActiveScreenId = null;
+let chatMuteSelection = null;
+let chatEphemeralSelection = 'off';
+let chatConfirmActionName = null;
+let chatToastTimer = null;
+
+function emitChatUIAction(action, payload){
+ const detail = Object.assign({action:action, conversationId:activeConversationId, otherUserId:activeRecipientProfile ? activeRecipientProfile.id : null}, payload || {});
+ document.dispatchEvent(new CustomEvent('og:chat-ui-action', {detail:detail}));
+ return detail;
+}
+
+function showChatUIToast(message){
+ const toast = document.getElementById('chatUIToast');
+ if(!toast) return;
+ toast.textContent = message;
+ toast.classList.add('active');
+ clearTimeout(chatToastTimer);
+ chatToastTimer = setTimeout(function(){toast.classList.remove('active');}, 2600);
+}
+
+function setChatUIScreen(screenId){
+ document.querySelectorAll('.chat-ui-screen').forEach(function(screen){screen.classList.remove('active');screen.setAttribute('aria-hidden','true');});
+ const menu = document.getElementById('chatActionMenu');
+ if(menu) menu.classList.remove('active');
+ chatActiveScreenId = screenId || null;
+ if(screenId){
+  const screen = document.getElementById(screenId);
+  if(screen){screen.classList.add('active');screen.setAttribute('aria-hidden','false');}
+ }
+}
+
+function openChatScreen(screenId){
+ if(screenId === 'chatDetailsPage') populateChatDetails();
+ if(screenId === 'chatPrivacyPage'){
+  loadMenuPreferences();
+  emitChatUIAction('loadChatPrivacySettings',{});
+  emitChatUIAction('loadBlockedUsers',{});
+ }
+ if(screenId === 'chatMutePage') emitChatUIAction('loadMuteSettings',{});
+ if(screenId === 'chatEphemeralPage') emitChatUIAction('loadEphemeralSettings',{});
+ if(screenId === 'chatNicknamesPage'){
+  populateChatNicknameForm();
+  emitChatUIAction('loadNickname',{});
+ }
+ if(screenId === 'chatAppearancePage') emitChatUIAction('loadAppearance',{});
+ setChatUIScreen(screenId);
+}
+
+function closeChatUIScreens(){setChatUIScreen(null);}
+function closeChatSubpage(){if(chatActiveScreenId === 'chatDetailsPage') closeChatUIScreens(); else openChatScreen('chatDetailsPage');}
+function openChatDetails(){populateChatDetails();setChatUIScreen('chatDetailsPage');}
+
+function populateChatDetails(){
+ if(!activeRecipientProfile) return;
+ const p = activeRecipientProfile;
+ const displayName = p.display_name || p.username || 'Usuario';
+ const nameNode = document.getElementById('chatDetailsDisplayName');
+ const userNode = document.getElementById('chatDetailsUsername');
+ const avatar = document.getElementById('chatDetailsAvatar');
+ if(nameNode) nameNode.textContent = displayName;
+ if(userNode) userNode.textContent = p.username ? '@' + p.username : '';
+ if(avatar){
+  avatar.replaceChildren();
+  if(p.avatar_url){const img=document.createElement('img');img.src=p.avatar_url;img.alt='Foto de perfil';img.loading='lazy';avatar.append(img);}else{avatar.textContent='👤';}
+ }
+ const activity = document.getElementById('chatDetailsActivity');
+ if(activity){
+  let status = 'Estado de actividad oculto';
+  if(p.show_activity_status !== false && typeof formatLastSeen === 'function') status = formatLastSeen(p.last_seen, true);
+  activity.textContent = status;
+  activity.style.color = status === 'En línea' ? '#22c55e' : '#a1a1aa';
+ }
+ const nickName = document.getElementById('chatNicknameDisplayName');
+ const nickUser = document.getElementById('chatNicknameUsername');
+ if(nickName) nickName.textContent = displayName;
+ if(nickUser) nickUser.textContent = p.username ? '@' + p.username : '';
+ const nickAvatar = document.getElementById('chatNicknameAvatar');
+ if(nickAvatar){nickAvatar.replaceChildren();if(p.avatar_url){const img=document.createElement('img');img.src=p.avatar_url;img.alt='Foto de perfil';img.loading='lazy';nickAvatar.append(img);}else{nickAvatar.textContent='👤';}}
+}
+
+function openChatProfileDrawer(){openChatDetails();}
+function closeChatProfileDrawer(){closeChatUIScreens();}
+function navigateToTargetProfile(){
+ closeChatUIScreens();
+ if(activeRecipientProfile && activeRecipientProfile.id) openPublicProfile(activeRecipientProfile.id);
+}
+
+function toggleChatActionsMenu(event){
+ if(event) event.stopPropagation();
+ const menu = document.getElementById('chatActionMenu');
+ if(menu) menu.classList.toggle('active');
+}
+
+document.addEventListener('click', function(event){
+ const menu = document.getElementById('chatActionMenu');
+ if(!menu || !menu.classList.contains('active')) return;
+ if(!menu.contains(event.target) && !event.target.closest('[data-chat-action-menu-toggle]')) menu.classList.remove('active');
+});
+
+function selectChatAction(action){
+ const menu = document.getElementById('chatActionMenu');
+ if(menu) menu.classList.remove('active');
+ if(action === 'report'){openChatScreen('chatReportPage');return;}
+ beginChatConfirmation(action);
+}
+
+function beginChatConfirmation(action){
+ chatConfirmActionName = action;
+ const title = document.getElementById('chatConfirmTitle');
+ const desc = document.getElementById('chatConfirmDescription');
+ const btn = document.getElementById('chatConfirmButton');
+ const icon = document.getElementById('chatConfirmIcon');
+ if(action === 'block'){
+  title.textContent = '¿Bloquear a esta persona?';
+  desc.textContent = 'No podrá enviarte mensajes ni iniciar nuevas interacciones, según las reglas de Ög. Podrás desbloquearla desde Privacidad y seguridad.';
+  btn.textContent = 'Bloquear';icon.textContent='⊘';
+ }else if(action === 'restrict'){
+  title.textContent = '¿Restringir a esta persona?';
+  desc.textContent = 'La restricción limita algunas interacciones sin eliminar mensajes ni conversaciones. Podrás quitarla más adelante.';
+  btn.textContent = 'Restringir';icon.textContent='◌';
+ }else if(action === 'ephemeral'){
+  title.textContent = chatEphemeralSelection === 'off' ? '¿Desactivar mensajes temporales?' : '¿Activar mensajes temporales?';
+  desc.textContent = chatEphemeralSelection === 'off' ? 'Los mensajes futuros dejarán de recibir una duración de vencimiento.' : 'Los mensajes enviados a partir del cambio usarán la duración seleccionada. Los anteriores no se modificarán.';
+  btn.textContent = 'Confirmar';icon.textContent='◷';
+ }
+ document.getElementById('chatConfirmStatus').textContent = '';
+ openChatScreen('chatConfirmPage');
+}
+
+function confirmChatAction(){
+ if(!chatConfirmActionName) return;
+ const action = chatConfirmActionName;
+ if(action === 'block') emitChatUIAction('blockUser', {});
+ else if(action === 'restrict') emitChatUIAction('restrictUser', {});
+ else if(action === 'ephemeral') emitChatUIAction('setEphemeralDuration', {duration:chatEphemeralSelection});
+ chatConfirmActionName = null;
+ closeChatUIScreens();
+ showChatUIToast('Confirmación lista; conecta esta acción a la lógica del chat.');
+}
+
+function openChatSearch(){
+ const input = document.getElementById('chatMessageSearchInput');
+ if(input) input.value = '';
+ renderChatSearchResults([], 'idle', '');
+ openChatScreen('chatSearchPage');
+ setTimeout(function(){if(input) input.focus();}, 80);
+}
+
+function handleChatSearchInput(value){
+ clearTimeout(chatFeatureSearchTimer);
+ const query = String(value || '').trim();
+ const requestNumber = ++chatSearchRequestNumber;
+ if(query.length < 1){renderChatSearchResults([], 'idle', '');return;}
+ renderChatSearchResults([], 'loading', query);
+ chatFeatureSearchTimer = setTimeout(function(){
+  emitChatUIAction('searchMessages', {query:query, requestId:requestNumber});
+  const status = document.getElementById('chatSearchStatus');
+  if(status && requestNumber === chatSearchRequestNumber) status.textContent = 'Conecta la búsqueda del historial para mostrar resultados.';
+ }, 300);
+}
+
+function renderHighlightedChatText(container, text, query){
+ const source = String(text || '');
+ const term = String(query || '').trim();
+ if(!term){container.textContent = source;return;}
+ const lower = source.toLocaleLowerCase();
+ const needle = term.toLocaleLowerCase();
+ let start = 0;
+ let index = lower.indexOf(needle, start);
+ while(index !== -1){
+  container.append(document.createTextNode(source.slice(start,index)));
+  const mark = document.createElement('mark');mark.textContent = source.slice(index,index+term.length);container.append(mark);
+  start = index + term.length;
+  index = lower.indexOf(needle,start);
+ }
+ container.append(document.createTextNode(source.slice(start)));
+}
+
+function renderChatSearchResults(results, state, query){
+ const status = document.getElementById('chatSearchStatus');
+ const list = document.getElementById('chatSearchResults');
+ if(!status || !list) return;
+ list.replaceChildren();
+ if(state === 'loading'){status.textContent='Buscando mensajes…';return;}
+ if(state === 'error'){status.textContent='No se pudieron cargar los resultados. Intenta otra vez.';return;}
+ if(state === 'idle'){status.textContent='Busca palabras o frases en los mensajes de este chat.';return;}
+ if(!results || !results.length){status.textContent='No se encontraron mensajes para esta búsqueda.';return;}
+ status.textContent=results.length + (results.length === 1 ? ' resultado' : ' resultados');
+ results.forEach(function(message){
+  const profile = message.profile || message.sender || (message.sender_id === currentUser?.id ? myProfile : activeRecipientProfile) || {};
+  const row = document.createElement('div');row.className='chat-search-result';row.setAttribute('role','listitem');
+  const avatar = document.createElement('div');avatar.className='chat-ui-mini-avatar';
+  if(profile.avatar_url){const img=document.createElement('img');img.src=profile.avatar_url;img.alt='';img.loading='lazy';avatar.append(img);}else{avatar.textContent='👤';}
+  const body = document.createElement('div');body.className='chat-search-result-body';
+  const head = document.createElement('div');head.className='chat-search-result-head';
+  const name = document.createElement('span');name.className='chat-search-result-name';name.textContent=profile.display_name || profile.username || (message.sender_id === currentUser?.id ? 'Tú' : 'Participante');
+  const time = document.createElement('span');time.className='chat-search-result-time';
+  const date = message.created_at ? new Date(message.created_at) : null;
+  time.textContent = date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString() + ' · ' + date.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+  head.append(name,time);
+  const snippet = document.createElement('div');snippet.className='chat-search-result-text';renderHighlightedChatText(snippet,message.content || '',query || (document.getElementById('chatMessageSearchInput')?.value || ''));
+  body.append(head,snippet);row.append(avatar,body);
+  row.addEventListener('click',function(){selectChatSearchResult(message);});
+  list.append(row);
+ });
+}
+
+function selectChatSearchResult(message){
+ closeChatUIScreens();
+ showTab('chatRoomPage');
+ emitChatUIAction('jumpToMessage', {messageId:message.id, message:message});
+ setTimeout(function(){highlightChatMessage(message.id);}, 100);
+}
+
+function highlightChatMessage(messageId){
+ if(!messageId) return false;
+ const container = document.getElementById('chatMessagesContainer');
+ if(!container) return false;
+ const bubbles = Array.from(container.querySelectorAll('.chat-bubble'));
+ const target = bubbles.find(function(node){return node.dataset.messageId === String(messageId);});
+ if(!target) return false;
+ target.scrollIntoView({behavior:'smooth',block:'center'});
+ target.classList.add('chat-ui-message-highlight');
+ setTimeout(function(){target.classList.remove('chat-ui-message-highlight');}, 1800);
+ return true;
+}
+
+function openChatMuteSettings(){chatMuteSelection=null;document.querySelectorAll('#chatMutePage .chat-ui-option').forEach(function(node){node.setAttribute('aria-pressed','false');node.classList.remove('selected');});document.getElementById('chatMuteStatus').textContent='';openChatScreen('chatMutePage');}
+function selectMuteDuration(duration, button){
+ chatMuteSelection=duration;
+ document.querySelectorAll('#chatMutePage .chat-ui-option').forEach(function(node){node.setAttribute('aria-pressed','false');node.classList.remove('selected');});
+ if(button){button.setAttribute('aria-pressed','true');button.classList.add('selected');}
+ const status=document.getElementById('chatMuteStatus');if(status)status.textContent=duration==='off'?'Las notificaciones se volverán a activar.':'Duración seleccionada: '+(duration==='24h'?'24 horas':duration==='7d'?'7 días':'Siempre')+'.';
+}
+function saveMuteChoice(){
+ if(!chatMuteSelection){const status=document.getElementById('chatMuteStatus');if(status)status.textContent='Selecciona una duración o desactiva el silencio.';return;}
+ emitChatUIAction(chatMuteSelection==='off'?'unmuteConversation':'muteConversation',{duration:chatMuteSelection});
+ closeChatUIScreens();showChatUIToast('Selección lista; conecta el guardado de notificaciones.');
+}
+
+function syncGlobalActivitySetting(enabled){
+ const globalToggle=document.getElementById('activityStatusToggle');
+ if(globalToggle) globalToggle.checked=!!enabled;
+ saveMenuPreferences();
+ emitChatUIAction('activityStatusChanged',{enabled:!!enabled});
+}
+function changeChatPrivacyToggle(preference, enabled){emitChatUIAction('chatPrivacyChanged',{preference:preference,enabled:!!enabled});}
+
+function renderChatBlockedUsers(users){
+ const container=document.getElementById('chatBlockedUsersList');if(!container)return;
+ container.replaceChildren();
+ if(!users || !users.length){const p=document.createElement('p');p.textContent='No hay usuarios bloqueados para mostrar.';container.append(p);return;}
+ users.forEach(function(user){
+  const row=document.createElement('div');row.className='chat-ui-blocked-user';
+  const avatar=document.createElement('div');avatar.className='chat-ui-mini-avatar';
+  if(user.avatar_url){const img=document.createElement('img');img.src=user.avatar_url;img.alt='';avatar.append(img);}else{avatar.textContent='👤';}
+  const name=document.createElement('div');name.className='chat-ui-blocked-name';name.textContent=user.display_name || user.username || 'Usuario';
+  const button=document.createElement('button');button.className='chat-ui-unblock';button.textContent='Desbloquear';
+  button.addEventListener('click',function(){emitChatUIAction('unblockUser',{userId:user.id});});
+  row.append(avatar,name,button);container.append(row);
+ });
+}
+
+function setChatActivityPreference(enabled){
+ const toggle=document.getElementById('chatActivityStatusToggle');if(toggle)toggle.checked=!!enabled;
+ const globalToggle=document.getElementById('activityStatusToggle');if(globalToggle)globalToggle.checked=!!enabled;
+}
+function setChatPrivacyPreferences(prefs){
+ const values=prefs||{};
+ const receipts=document.getElementById('chatReadReceiptsToggle');
+ const indicators=document.getElementById('chatReadIndicatorsToggle');
+ if(receipts && values.readReceipts !== undefined) receipts.checked=!!values.readReceipts;
+ if(indicators && values.readIndicators !== undefined) indicators.checked=!!values.readIndicators;
+ if(values.activityStatus !== undefined) setChatActivityPreference(values.activityStatus);
+}
+function setChatMutePreference(duration){
+ const button=Array.from(document.querySelectorAll('#chatMutePage .chat-ui-option')).find(function(node){
+  return node.getAttribute('onclick') && node.getAttribute('onclick').indexOf("'" + duration + "'") !== -1;
+ });
+ selectMuteDuration(duration,button||null);
+}
+function setChatEphemeralPreference(duration){
+ const button=Array.from(document.querySelectorAll('#chatEphemeralPage .chat-ui-option')).find(function(node){
+  return node.getAttribute('onclick') && node.getAttribute('onclick').indexOf("'" + duration + "'") !== -1;
+ });
+ selectEphemeralDuration(duration,button||null);
+}
+function setChatNicknameValue(nickname){
+ const input=document.getElementById('chatNicknameInput');
+ if(input) input.value=nickname||'';
+}
+function setChatAppearanceValues(values){
+ if(!values) return;
+ if(values.color) document.getElementById('chatStyleColor').value=values.color;
+ if(values.background) document.getElementById('chatStyleBackground').value=values.background;
+ if(values.bubbleStyle) document.getElementById('chatStyleBubbles').value=values.bubbleStyle;
+ if(values.font) document.getElementById('chatStyleFont').value=values.font;
+ if(values.fontSize) document.getElementById('chatStyleFontSize').value=String(values.fontSize);
+ updateChatAppearancePreview();
+}
+
+function populateChatNicknameForm(){
+ const input=document.getElementById('chatNicknameInput');if(input)input.value='';
+ const status=document.getElementById('chatNicknameStatus');if(status)status.textContent='';
+ populateChatDetails();
+}
+function saveChatNickname(event){
+ if(event)event.preventDefault();
+ const input=document.getElementById('chatNicknameInput');
+ const nickname=input ? input.value.trim() : '';
+ if(!nickname){const status=document.getElementById('chatNicknameStatus');if(status)status.textContent='Escribe un apodo antes de guardar.';return;}
+ emitChatUIAction('saveNickname',{nickname:nickname});
+ const status=document.getElementById('chatNicknameStatus');if(status)status.textContent='Apodo listo para conectar con el guardado de esta conversación.';
+}
+function removeChatNickname(){
+ emitChatUIAction('removeNickname',{});
+ const input=document.getElementById('chatNicknameInput');if(input)input.value='';
+ const status=document.getElementById('chatNicknameStatus');if(status)status.textContent='Solicitud de eliminación lista para conectar.';
+}
+function applyChatNickname(nickname){
+ const title=document.getElementById('chatRoomTitle');
+ if(title)title.textContent=nickname || (activeRecipientProfile && (activeRecipientProfile.display_name || activeRecipientProfile.username)) || 'Chat';
+}
+
+function updateChatAppearancePreview(){
+ const color=document.getElementById('chatStyleColor');
+ const bg=document.getElementById('chatStyleBackground');
+ const bubble=document.getElementById('chatStyleBubbles');
+ const font=document.getElementById('chatStyleFont');
+ const size=document.getElementById('chatStyleFontSize');
+ const preview=document.getElementById('chatAppearancePreview');
+ const outgoing=document.getElementById('chatPreviewOutgoing');
+ const incoming=document.getElementById('chatPreviewIncoming');
+ if(!color || !bg || !bubble || !font || !size || !preview || !outgoing || !incoming)return;
+ outgoing.style.background=color.value;
+ preview.style.background=bg.value;
+ const fontFamily=font.value==='serif'?'Georgia,serif':font.value==='mono'?'ui-monospace,monospace':'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+ preview.style.fontFamily=fontFamily;
+ outgoing.style.fontSize=size.value+'px';incoming.style.fontSize=size.value+'px';
+ const radius=bubble.value==='rounded'?'24px':bubble.value==='compact'?'12px':'18px';
+ outgoing.style.borderRadius=radius;incoming.style.borderRadius=radius;
+ document.getElementById('chatStyleFontSizeValue').textContent=size.value+' px';
+}
+function getChatAppearanceValues(){return {color:document.getElementById('chatStyleColor').value,background:document.getElementById('chatStyleBackground').value,bubbleStyle:document.getElementById('chatStyleBubbles').value,font:document.getElementById('chatStyleFont').value,fontSize:Number(document.getElementById('chatStyleFontSize').value)};}
+function saveChatAppearance(){
+ updateChatAppearancePreview();emitChatUIAction('saveAppearance',{appearance:getChatAppearanceValues()});
+ document.getElementById('chatAppearanceStatus').textContent='Vista previa actualizada; conecta el guardado para conservarla.';
+}
+function resetChatAppearance(){
+ document.getElementById('chatStyleColor').value='#3b82f6';document.getElementById('chatStyleBackground').value='#101012';document.getElementById('chatStyleBubbles').value='classic';document.getElementById('chatStyleFont').value='system';document.getElementById('chatStyleFontSize').value='14';
+ updateChatAppearancePreview();emitChatUIAction('restoreAppearance',{});document.getElementById('chatAppearanceStatus').textContent='Vista previa original restaurada.';
+}
+
+function selectEphemeralDuration(duration,button){
+ chatEphemeralSelection=duration;
+ document.querySelectorAll('#chatEphemeralPage .chat-ui-option').forEach(function(node){node.setAttribute('aria-pressed','false');node.classList.remove('selected');});
+ if(button){button.setAttribute('aria-pressed','true');button.classList.add('selected');}
+ const status=document.getElementById('chatEphemeralStatus');if(status)status.textContent='Duración seleccionada: '+({off:'desactivados', '24h':'24 horas','7d':'7 días','90d':'90 días'}[duration])+'.';
+}
+function requestEphemeralChange(){beginChatConfirmation('ephemeral');}
+
+function submitChatReport(event){
+ if(event)event.preventDefault();
+ const selected=document.querySelector('input[name="chatReportReason"]:checked');
+ const status=document.getElementById('chatReportStatus');
+ if(!selected){status.textContent='Selecciona un motivo para continuar.';return;}
+ const description=document.getElementById('chatReportDescription').value.trim();
+ emitChatUIAction('submitReport',{reason:selected.value,description:description});
+ status.textContent='Formulario preparado; conecta el envío seguro del reporte.';
+}
+function setChatReportState(state,message){
+ const status=document.getElementById('chatReportStatus');if(!status)return;
+ status.textContent=message || (state==='success'?'Reporte enviado.':'No se pudo enviar el reporte.');
+ status.style.color=state==='success'?'#4ade80':state==='error'?'#fb7185':'#a1a1aa';
+}
+
+window.renderChatSearchResults=renderChatSearchResults;
+window.renderChatBlockedUsers=renderChatBlockedUsers;
+window.highlightChatMessage=highlightChatMessage;
+window.setChatActivityPreference=setChatActivityPreference;
+window.setChatPrivacyPreferences=setChatPrivacyPreferences;
+window.setChatMutePreference=setChatMutePreference;
+window.setChatEphemeralPreference=setChatEphemeralPreference;
+window.setChatNicknameValue=setChatNicknameValue;
+window.setChatAppearanceValues=setChatAppearanceValues;
+window.applyChatNickname=applyChatNickname;
+window.setChatReportState=setChatReportState;
+window.openChatDetails=openChatDetails;
+
 </script>
 </body>
 </html>
