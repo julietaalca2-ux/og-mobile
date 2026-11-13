@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Ög — Social (Etapa 3)</title>
+<title>Ög — Social (Etapa 3 - AntiDuplicación)</title>
 
 <!-- CONFIGURACIÓN PWA -->
 <link rel="manifest" href="manifest.json">
@@ -598,7 +598,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <p id="authOverlayStatus" class="status" style="margin-top:8px"></p>
   </div>
  </div>
- <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine (Etapa 3)</div>
+ <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine (AntiDuplicación)</div>
 </div>
 
 <header>
@@ -755,7 +755,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <label class="muted" style="font-size:12px;font-weight:600">Título / Descripción</label>
   <textarea id="newpost" placeholder="Escribe un título llamativo (ej. ¡Atardecer increíble! 🌅✨)..."></textarea>
   
-  <button class="primary" style="margin-top:16px" onclick="publish()">Compartir publicación</button>
+  <button class="primary" id="publishBtn" style="margin-top:16px" onclick="publish()">Compartir publicación</button>
   <p id="publishStatus" class="status"></p>
  </div>
 </div>
@@ -919,7 +919,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.9.0 (Supabase Performance Optimization - Stage 3)</p>
+    <p class="settings-row-desc">1.9.1 (Anti-Duplicación de Publicaciones)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -1122,7 +1122,7 @@ let currentFacingMode = 'user';
 let currentZoom = 1;
 let currentActiveStoryId = null;
 
-// Paginación eficiente del Feed (Etapa 3)
+// Paginación eficiente del Feed
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedLoading = false;
@@ -1133,6 +1133,9 @@ let activeConversationId = null;
 let activeRecipientProfile = null;
 let replyingToMessageId = null;
 let replyingToSnippet = null;
+
+// Bandera estricta antiduplicación para publicaciones
+let isPublishing = false;
 
 let visitorId = localStorage.getItem('og_visitor_uuid');
 if (!visitorId) {
@@ -1156,7 +1159,6 @@ feedElement.addEventListener('touchend', e => {
  handleSwipeGesture();
 }, {passive: true});
 
-// Scroll infinito optimizado para Supabase
 window.addEventListener('scroll', () => {
  if(!document.getElementById('feed').classList.contains('active')) return;
  if((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
@@ -1171,7 +1173,6 @@ function handleSwipeGesture(){
  }
 }
 
-/* GESTIÓN DE PANTALLA DE BIENVENIDA Y AUTH */
 function switchAuthSubView(viewName){
  document.getElementById('authWelcomePanel').classList.remove('active');
  document.getElementById('authSignupPanel').classList.remove('active');
@@ -1446,7 +1447,6 @@ async function loadAccount(user){
  updateProfileUI();
  updateNavAvatarUI();
  
- // Consultas paralelas optimizadas para reducir latencia inicial
  await Promise.all([
   loadInitialPosts(),
   loadStoriesData(),
@@ -1457,7 +1457,6 @@ async function loadAccount(user){
  setupPresenceChannel();
 }
 
-/* SISTEMA REALTIME PRESENCE (PUNTITO VERDE ACTIVO) */
 function setupPresenceChannel(){
  if(presenceChannel) db.removeChannel(presenceChannel);
 
@@ -1561,7 +1560,6 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('headerUnreadDot').classList.remove('active');
 }
 
-/* SISTEMA DE MENSAJERÍA PRIVADA (DIRECTS) Y RESPUESTAS */
 async function loadConversations(){
  const container = document.getElementById('dmConversationsList');
  if(!currentUser) return;
@@ -1900,7 +1898,6 @@ function scrollToBottomChat(){
  container.scrollTop = container.scrollHeight;
 }
 
-/* MODALES DE SEGUIDORES Y SEGUIDOS CON PRIVACIDAD */
 async function openFollowersModal(targetUserId = null){
  if(!currentUser) return;
  const userId = targetUserId || currentUser.id;
@@ -2826,7 +2823,6 @@ async function loadActivity(){
  }
 }
 
-/* CARGA INICIAL Y PAGINACIÓN INFINITA OPTIMIZADA DE SUPABASE (ETAPA 3) */
 async function loadInitialPosts(){
  feedPage = 0;
  feedHasMore = true;
@@ -3073,15 +3069,17 @@ async function showAllCommentsModal(postId){
  alert(comments.map(c=>'@'+(profilesCache[c.user_id]?.username||'usuario')+': '+c.content).join('\n\n'));
 }
 
+/* FUNCIÓN PUBLISH CORREGIDA CON BLOQUEO ANTIDUPLICACIÓN ESTRICTO */
 async function publish(){
- if(!currentUser){
-  showAuthOverlay();
-  return;
- }
+ if(!currentUser || isPublishing) return;
 
  const input=document.getElementById('newpost');
  const content=input.value.trim();
- if(!content && !postImageBlob)return alert('Escribí un título o agregá una imagen.');
+ if(!content && !postImageBlob) return alert('Escribí un título o agregá una imagen.');
+
+ isPublishing = true;
+ const pubBtn = document.getElementById('publishBtn');
+ if(pubBtn) pubBtn.disabled = true;
 
  status('publishStatus','Publicando...');
 
@@ -3093,6 +3091,8 @@ async function publish(){
    .upload(path, postImageBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
 
   if(uploadError){
+   isPublishing = false;
+   if(pubBtn) pubBtn.disabled = false;
    status('publishStatus','Error al subir imagen.');
    return;
   }
@@ -3106,6 +3106,9 @@ async function publish(){
   image_url: imageUrl,
   views: 0
  });
+
+ isPublishing = false;
+ if(pubBtn) pubBtn.disabled = false;
 
  if(error){
   status('publishStatus','Error al publicar: '+error.message);
