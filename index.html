@@ -786,11 +786,11 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
      <span class="ig-stat-label">publicaciones</span>
     </div>
     <div class="ig-stat-item">
-     <span class="ig-stat-num" id="myfollowerscount">0</span>
+     <span class="ig-stat-num" id="myfollowerscount" onclick="openFollowersModal(currentUser?.id)" style="cursor:pointer">0</span>
      <span class="ig-stat-label">seguidores</span>
     </div>
     <div class="ig-stat-item">
-     <span class="ig-stat-num" id="myfollowingcount">0</span>
+     <span class="ig-stat-num" id="myfollowingcount" onclick="openFollowingModal(currentUser?.id)" style="cursor:pointer">0</span>
      <span class="ig-stat-label">seguidos</span>
     </div>
    </div>
@@ -877,6 +877,16 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <span class="toggle-slider"></span>
    </label>
   </div>
+  <div class="settings-row">
+   <div class="settings-row-info">
+    <p class="settings-row-title">Mostrar lista de seguidores y seguidos</p>
+    <p class="settings-row-desc">Permite que otros usuarios vean quiénes te siguen y a quiénes sigues.</p>
+   </div>
+   <label class="toggle-switch">
+    <input type="checkbox" id="showFollowersListToggle" checked onchange="saveLocalSettings()">
+    <span class="toggle-slider"></span>
+   </label>
+  </div>
  </div>
 
  <div class="settings-group">
@@ -908,7 +918,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.8.7 (Realtime Presence + Message Replies)</p>
+    <p class="settings-row-desc">1.8.8 (Full Features + Privacy Lists)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -944,11 +954,11 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
      <span class="ig-stat-label">publicaciones</span>
     </div>
     <div class="ig-stat-item">
-     <span class="ig-stat-num" id="publicfollowerscount">0</span>
+     <span class="ig-stat-num" id="publicfollowerscount" onclick="openFollowersModal(viewedProfile?.id)" style="cursor:pointer">0</span>
      <span class="ig-stat-label">seguidores</span>
     </div>
     <div class="ig-stat-item">
-     <span class="ig-stat-num" id="publicfollowingcount">0</span>
+     <span class="ig-stat-num" id="publicfollowingcount" onclick="openFollowingModal(viewedProfile?.id)" style="cursor:pointer">0</span>
      <span class="ig-stat-label">seguidos</span>
     </div>
    </div>
@@ -1005,6 +1015,20 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 </div>
 
 </main>
+
+<!-- MODAL PARA VER SEGUIDORES / SEGUIDOS -->
+<div id="followListModal" class="settings-overlay" onclick="closeFollowListModal()">
+ <div class="settings-drawer" style="max-height: 80vh; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
+  <div class="settings-handle"></div>
+  <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 10px;">
+   <strong id="followModalTitle" style="font-size: 16px; color: #fff;">Seguidores</strong>
+   <button class="secondary" style="padding: 4px 10px; font-size: 12px;" onclick="closeFollowListModal()">✕</button>
+  </div>
+  <div id="followListContainer" style="overflow-y: auto; flex: 1; min-height: 200px;">
+   <div class="activity-empty">Cargando...</div>
+  </div>
+ </div>
+</div>
 
 <!-- MODAL PARA VER PUBLICACIÓN -->
 <div id="postDetailModal" onclick="closePostDetailModal()">
@@ -1270,6 +1294,7 @@ function saveLocalSettings(){
  const prefs = {
   privateAccount: document.getElementById('privateAccountToggle').checked,
   activityStatus: document.getElementById('activityStatusToggle').checked,
+  showFollowersList: document.getElementById('showFollowersListToggle').checked,
   notifLikes: document.getElementById('notifLikesToggle').checked,
   notifFollows: document.getElementById('notifFollowsToggle').checked
  };
@@ -1284,6 +1309,7 @@ function loadLocalSettings(){
   const prefs = JSON.parse(raw);
   document.getElementById('privateAccountToggle').checked = !!prefs.privateAccount;
   document.getElementById('activityStatusToggle').checked = prefs.activityStatus !== false;
+  document.getElementById('showFollowersListToggle').checked = prefs.showFollowersList !== false;
   document.getElementById('notifLikesToggle').checked = prefs.notifLikes !== false;
   document.getElementById('notifFollowsToggle').checked = prefs.notifFollows !== false;
  }catch(e){}
@@ -1421,7 +1447,7 @@ function setupPresenceChannel(){
  try{
   const raw = localStorage.getItem('og_user_settings_' + (currentUser?.id || 'guest'));
   const prefs = raw ? JSON.parse(raw) : {};
-  if(prefs.activityStatus === false) return; // Si desactivó el estado, no transmite
+  if(prefs.activityStatus === false) return;
  }catch(e){}
 
  presenceChannel = db.channel('online-users-room', {
@@ -1436,7 +1462,6 @@ function setupPresenceChannel(){
     onlineUsersMap[userId] = true;
    });
    
-   // Actualizar puntos verdes en pantalla de forma dinámica
    document.querySelectorAll('.online-dot').forEach(dot => dot.classList.remove('active'));
    Object.keys(onlineUsersMap).forEach(userId => {
     const d = document.getElementById(`online-dot-${userId}`);
@@ -1855,6 +1880,107 @@ async function markConversationAsRead(conversationId){
 function scrollToBottomChat(){
  const container = document.getElementById('chatMessagesContainer');
  container.scrollTop = container.scrollHeight;
+}
+
+/* MODALES DE SEGUIDORES Y SEGUIDOS CON PRIVACIDAD */
+async function openFollowersModal(targetUserId = null){
+ if(!currentUser) return;
+ const userId = targetUserId || currentUser.id;
+ 
+ if(userId !== currentUser.id){
+  const targetPrefs = JSON.parse(localStorage.getItem('og_user_settings_' + userId) || '{"showFollowersList": true}');
+  if(targetPrefs.showFollowersList === false){
+   alert('Este usuario ha ocultado su lista de seguidores por privacidad.');
+   return;
+  }
+ }
+
+ document.getElementById('followModalTitle').textContent = 'Seguidores';
+ document.getElementById('followListModal').classList.add('open');
+ const container = document.getElementById('followListContainer');
+ container.innerHTML = '<div class="activity-empty">Cargando seguidores...</div>';
+
+ const { data, error } = await db.from('follows').select('follower_id').eq('following_id', userId);
+ if(error || !data || !data.length){
+  container.innerHTML = '<div class="activity-empty">No hay seguidores para mostrar.</div>';
+  return;
+ }
+
+ const userIds = data.map(f => f.follower_id);
+ renderUsersInFollowModal(userIds);
+}
+
+async function openFollowingModal(targetUserId = null){
+ if(!currentUser) return;
+ const userId = targetUserId || currentUser.id;
+
+ if(userId !== currentUser.id){
+  const targetPrefs = JSON.parse(localStorage.getItem('og_user_settings_' + userId) || '{"showFollowersList": true}');
+  if(targetPrefs.showFollowersList === false){
+   alert('Este usuario ha ocultado su lista de seguidos por privacidad.');
+   return;
+  }
+ }
+
+ document.getElementById('followModalTitle').textContent = 'Seguidos';
+ document.getElementById('followListModal').classList.add('open');
+ const container = document.getElementById('followListContainer');
+ container.innerHTML = '<div class="activity-empty">Cargando seguidos...</div>';
+
+ const { data, error } = await db.from('follows').select('following_id').eq('follower_id', userId);
+ if(error || !data || !data.length){
+  container.innerHTML = '<div class="activity-empty">No sigue a nadie todavía.</div>';
+  return;
+ }
+
+ const userIds = data.map(f => f.following_id);
+ renderUsersInFollowModal(userIds);
+}
+
+async function renderUsersInFollowModal(userIds){
+ const container = document.getElementById('followListContainer');
+ const missing = userIds.filter(id => !profilesCache[id]);
+ 
+ if(missing.length > 0){
+  const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
+  (profs || []).forEach(p => profilesCache[p.id] = p);
+ }
+
+ const fragment = document.createDocumentFragment();
+ userIds.forEach(id => {
+  const profile = profilesCache[id];
+  if(!profile) return;
+
+  const item = document.createElement('div');
+  item.className = 'public-user';
+  item.style.padding = '8px 0';
+  
+  const av = createAvatarNode(profile, false);
+  const info = document.createElement('div');
+  info.className = 'public-user-info';
+  
+  const name = document.createElement('strong');
+  name.textContent = profile.display_name || profile.username;
+  
+  const username = document.createElement('small');
+  username.textContent = '@' + profile.username;
+  
+  info.append(name, username);
+  item.append(av, info);
+  
+  item.onclick = () => {
+   closeFollowListModal();
+   openPublicProfile(profile.id);
+  };
+
+  fragment.append(item);
+ });
+
+ container.replaceChildren(fragment);
+}
+
+function closeFollowListModal(){
+ document.getElementById('followListModal').classList.remove('open');
 }
 
 async function loadStoriesData(){
