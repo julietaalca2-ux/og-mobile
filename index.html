@@ -1094,7 +1094,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <div class="settings-row">
     <div class="settings-row-info">
      <p class="settings-row-title">Versión de Ög</p>
-     <p class="settings-row-desc">2.7.1 (Autenticación Optimizada)</p>
+     <p class="settings-row-desc">2.7.2 (Autenticación Optimizada)</p>
     </div>
    </div>
    <div class="settings-row">
@@ -1671,17 +1671,21 @@ function hideSplashScreen(){
 }
 
 /* ========================================================================= */
-/* RECUPERACIÓN CRÍTICA DE AUTENTICACIÓN Y SESIÓN                            */
+/* RECUPERACIÓN CORREGIDA Y ROBUSTA DE SESIÓN Y PERFIL                       */
 /* ========================================================================= */
 
 async function loadAccount(user){
  if(!user) return;
  currentUser = user;
 
- const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
- if(profile){
-  myProfile = profile;
-  profilesCache[user.id] = profile;
+ try {
+  const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  if(profile){
+   myProfile = profile;
+   profilesCache[user.id] = profile;
+  }
+ } catch(err) {
+  console.warn('No se pudo cargar el perfil detallado, usando datos base:', err);
  }
 
  updateProfileUI();
@@ -1702,7 +1706,7 @@ async function executeSignUp(){
  if(!/^[a-z0-9_]{3,20}$/.test(username)) return status('authOverlayStatus','Usuario: 3 a 20 caracteres alfanuméricos.');
  if(password.length < 8) return status('authOverlayStatus','Contraseña mínima de 8 caracteres.');
 
- status('authOverlayStatus','Creando cuenta...');
+ status('authOverlayStatus','Registrando cuenta...');
 
  const {data, error} = await db.auth.signUp({
   email, password, options: { data: { username } }
@@ -1710,17 +1714,11 @@ async function executeSignUp(){
 
  if(error) return status('authOverlayStatus', error.message);
 
- if(data.session?.user){
+ if(data?.session?.user){
   await loadAccount(data.session.user);
- } else if(data.user){
-  // Si requiere confirmación o inicia directo
-  const { data: signInData, error: signInErr } = await db.auth.signInWithPassword({email, password});
-  if(!signInErr && signInData?.session?.user){
-   await loadAccount(signInData.session.user);
-  } else {
-   status('authOverlayStatus','¡Cuenta creada! Ya podés iniciar sesión.');
-   setTimeout(() => switchAuthSubView('signin'), 1500);
-  }
+ } else {
+  status('authOverlayStatus','¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
+  setTimeout(() => switchAuthSubView('signin'), 1500);
  }
 }
 
