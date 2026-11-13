@@ -49,8 +49,14 @@ header{
  padding-top:env(safe-area-inset-top);
 }
 .logo{font-size:26px;font-weight:900;letter-spacing:-1.5px;color:#fff}
-.icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative}
 .icon svg{width:24px;height:24px}
+
+/* INSIGNIA DE MENSAJES NO LEÍDOS EN HEADER */
+.msg-badge-dot{
+ position:absolute;top:6px;right:6px;width:9px;height:9px;background:#ef4444;border-radius:50%;border:2px solid #000;display:none;
+}
+.msg-badge-dot.active{display:block}
 
 /* HISTORIAS ESTILO INSTAGRAM */
 .stories{
@@ -87,7 +93,7 @@ header{
 main{max-width:470px;margin:auto}
 main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
-#feed.active, #profile.active, #publicprofile.active, #settingsPage.active {padding: 0 !important;}
+#feed.active, #profile.active, #publicprofile.active, #settingsPage.active, #messagesPage.active, #chatRoomPage.active {padding: 0 !important;}
 #explore.active {padding: 0 !important;}
 
 /* CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM */
@@ -187,6 +193,40 @@ main > div.active {display: block !important;}
 .story-action-icon-btn:active{transform:scale(0.85)}
 .story-action-icon-btn svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2}
 .story-action-icon-btn.liked svg{fill:#ef4444;stroke:#ef4444}
+
+/* ESTILOS DE MENSAJERÍA PRIVADA (DIRECTS) */
+.dm-conv-item{
+ display:flex;align-items:center;gap:14px;padding:12px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s;
+}
+.dm-conv-item:active{background:rgba(255,255,255,0.06)}
+.dm-conv-avatar{width:54px;height:54px;min-width:54px;margin:0}
+.dm-conv-info{flex:1;min-width:0}
+.dm-conv-name{font-weight:600;font-size:14px;color:#fff;display:flex;justify-content:space-between;align-items:center}
+.dm-conv-snippet{font-size:13px;color:#a1a1aa;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-conv-time{font-size:11px;color:#71717a;font-weight:normal}
+.dm-unread-dot{width:8px;height:8px;background:#3b82f6;border-radius:50%;display:inline-block}
+
+/* SALA DE CHAT PRIVADO */
+#chatRoomPage{display:flex;flex-direction:column;height:calc(100vh - 120px);position:relative}
+.chat-messages-container{
+ flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;
+ background:#000;
+}
+.chat-bubble{
+ max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;overflow-wrap:anywhere;position:relative;
+}
+.chat-bubble.sent{
+ background:#3b82f6;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;
+}
+.chat-bubble.received{
+ background:#27272a;color:#f4f4f5;align-self:flex-start;border-bottom-left-radius:4px;
+}
+.chat-bubble-time{font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;text-align:right}
+.chat-input-footer{
+ padding:12px 16px;background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);
+ border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;
+ position:sticky;bottom:0;
+}
 
 /* ESTILO DE PUBLICACIONES */
 .post{background:#000;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
@@ -500,6 +540,10 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <button class="icon" onclick="openCameraModal()" aria-label="Cámara">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
   </button>
+  <button class="icon" onclick="showTab('messagesPage')" aria-label="Mensajes">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+   <span id="headerUnreadDot" class="msg-badge-dot"></span>
+  </button>
   <button class="icon" onclick="showTab('notifications')" aria-label="Actividad">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
   </button>
@@ -527,6 +571,40 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   </div>
  </div>
  <div id="posts"></div>
+</div>
+
+<!-- BANDEJA DE MENSAJES (DIRECTS) -->
+<div id="messagesPage" class="section">
+ <div style="padding:16px;border-bottom:1px solid rgba(255,255,255,0.08)">
+  <h2 style="margin:0 0 10px 0">Mensajes</h2>
+  <div class="explore-search-wrapper">
+   <svg class="explore-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+   <input class="explore-search-input" id="dmSearchInput" placeholder="Buscar usuario para chatear..." oninput="searchUsersForChat()">
+  </div>
+ </div>
+ <div id="dmSearchResults" style="padding: 0 16px;"></div>
+ <div id="dmConversationsList">
+  <div class="activity-empty">Cargando conversaciones...</div>
+ </div>
+</div>
+
+<!-- SALA DE CHAT PRIVADO -->
+<div id="chatRoomPage" class="section">
+ <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);position:sticky;top:56px;z-index:40">
+  <button class="secondary" style="padding:6px 12px" onclick="showTab('messagesPage')">← Volver</button>
+  <div id="chatRoomHeaderAvatar" style="width:36px;height:36px"></div>
+  <div>
+   <strong id="chatRoomTitle" style="font-size:14px;display:block;color:#fff">Chat</strong>
+   <small style="color:#71717a;font-size:11px">En línea</small>
+  </div>
+ </div>
+
+ <div class="chat-messages-container" id="chatMessagesContainer"></div>
+
+ <div class="chat-input-footer">
+  <input type="text" class="story-reply-input" id="chatMessageInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+  <button class="primary" style="width:auto;padding:10px 18px;border-radius:24px" onclick="sendChatMessage()">Enviar</button>
+ </div>
 </div>
 
 <!-- CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM -->
@@ -784,7 +862,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.6.0 (iOS Glass Liquid Engine)</p>
+    <p class="settings-row-desc">1.8.0 (Supabase Direct + RLS Messaging)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -837,6 +915,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
   <div class="ig-action-buttons">
    <button class="primary" id="publicfollow" onclick="toggleFollow()">Seguir</button>
+   <button class="secondary" id="publicMsgBtn" onclick="openDirectChatWithUser(viewedProfile?.id)">Mensaje</button>
   </div>
   <p id="publicstatus" class="status"></p>
  </div>
@@ -917,8 +996,10 @@ let myProfile=null;
 let viewedProfile=null;
 let isFollowing=false;
 let searchTimer=null;
+let dmSearchTimer=null;
 let profilesCache={};
 let realtimeChannel=null;
+let dmRealtimeChannel=null;
 let myActiveStory=null;
 let mediaStream=null;
 let capturedBlob=null;
@@ -926,6 +1007,10 @@ let postImageBlob = null;
 let currentFacingMode = 'user';
 let currentZoom = 1;
 let currentActiveStoryId = null;
+
+// Variables de Chat Activo
+let activeConversationId = null;
+let activeRecipientProfile = null;
 
 let visitorId = localStorage.getItem('og_visitor_uuid');
 if (!visitorId) {
@@ -1047,6 +1132,7 @@ function showTab(id,btn){
 
  if(id==='notifications') loadActivity();
  if(id==='explore') loadExploreGrid();
+ if(id==='messagesPage') loadConversations();
  if(id==='profile' && currentUser) loadMyPostsGrid();
  window.scrollTo(0,0);
 }
@@ -1169,6 +1255,7 @@ async function signOut(){
  if(error)return alert(error.message);
 
  if(realtimeChannel) db.removeChannel(realtimeChannel);
+ if(dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
  currentUser=null;
  myProfile=null;
  viewedProfile=null;
@@ -1214,7 +1301,8 @@ async function loadAccount(user){
  
  await Promise.all([
   loadPosts(),
-  loadStoriesData()
+  loadStoriesData(),
+  checkGlobalUnreadMessages()
  ]);
  
  setupRealtimeNotifications();
@@ -1222,6 +1310,7 @@ async function loadAccount(user){
 
 function setupRealtimeNotifications(){
  if(realtimeChannel) db.removeChannel(realtimeChannel);
+ if(dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
 
  realtimeChannel=db.channel('public-notifications')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows'},payload=>{
@@ -1245,6 +1334,303 @@ function setupRealtimeNotifications(){
    badges.forEach(b => { b.textContent = updated.views || 0; });
   })
   .subscribe();
+
+ // Canal global en tiempo real para mensajes privados
+ dmRealtimeChannel = db.channel('global-dm-listener')
+  .on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'messages'}, payload => {
+   const newMsg = payload.new;
+   if(newMsg.sender_id !== currentUser?.id){
+    document.getElementById('headerUnreadDot').classList.add('active');
+    if(document.getElementById('messagesPage').classList.contains('active')){
+     loadConversations();
+    }
+    if(activeConversationId === newMsg.conversation_id){
+     appendChatMessageNode(newMsg);
+     scrollToBottomChat();
+    }
+   }
+  })
+  .subscribe();
+}
+
+async function checkGlobalUnreadMessages(){
+ if(!currentUser) return;
+ const { data: parts } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
+ if(!parts || !parts.length) return;
+
+ for(const p of parts){
+  const { data: latest } = await db.from('messages').select('created_at, sender_id').eq('conversation_id', p.conversation_id).order('created_at', {ascending:false}).limit(1).maybeSingle();
+  if(latest && latest.sender_id !== currentUser.id){
+   if(!p.last_read_at || new Date(latest.created_at) > new Date(p.last_read_at)){
+    document.getElementById('headerUnreadDot').classList.add('active');
+    return;
+   }
+  }
+ }
+ document.getElementById('headerUnreadDot').classList.remove('active');
+}
+
+/* SISTEMA DE MENSAJERÍA PRIVADA (DIRECTS) */
+async function loadConversations(){
+ const container = document.getElementById('dmConversationsList');
+ if(!currentUser) return;
+
+ container.innerHTML = '<div class="activity-empty">Cargando conversaciones...</div>';
+
+ const { data: myParts, error: partErr } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
+ if(partErr || !myParts || !myParts.length){
+  container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá a alguien arriba para iniciar un chat.</div>';
+  document.getElementById('headerUnreadDot').classList.remove('active');
+  return;
+ }
+
+ const convIds = myParts.map(p => p.conversation_id);
+ const { data: allParts } = await db.from('conversation_participants').select('conversation_id, user_id').in('conversation_id', convIds);
+ 
+ const convMap = {};
+ convIds.forEach(id => { convMap[id] = { otherUserId: null, last_read_at: myParts.find(p=>p.conversation_id===id)?.last_read_at }; });
+
+ (allParts || []).forEach(p => {
+  if(p.user_id !== currentUser.id && convMap[p.conversation_id]){
+   convMap[p.conversation_id].otherUserId = p.user_id;
+  }
+ });
+
+ const otherUserIds = [...new Set(Object.values(convMap).map(c => c.otherUserId).filter(Boolean))];
+ const missing = otherUserIds.filter(id => !profilesCache[id]);
+ if(missing.length > 0){
+  const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
+  (profs || []).forEach(p => profilesCache[p.id] = p);
+ }
+
+ const conversationsList = [];
+ for(const convId of convIds){
+  const otherId = convMap[convId].otherUserId;
+  const profile = profilesCache[otherId];
+  if(!profile) continue;
+
+  const { data: lastMsg } = await db.from('messages')
+   .select('content, created_at, sender_id')
+   .eq('conversation_id', convId)
+   .order('created_at', {ascending: false})
+   .limit(1)
+   .maybeSingle();
+
+  const isUnread = lastMsg && lastMsg.sender_id !== currentUser.id && (!convMap[convId].last_read_at || new Date(lastMsg.created_at) > new Date(convMap[convId].last_read_at));
+
+  conversationsList.push({
+   conversationId: convId,
+   profile,
+   lastMessage: lastMsg ? lastMsg.content : 'Conversación iniciada',
+   time: lastMsg ? formatDate(lastMsg.created_at) : '',
+   timestamp: lastMsg ? new Date(lastMsg.created_at).getTime() : 0,
+   isUnread
+  });
+ }
+
+ conversationsList.sort((a,b) => b.timestamp - a.timestamp);
+
+ if(!conversationsList.length){
+  container.innerHTML = '<div class="activity-empty">No hay conversaciones recientes.</div>';
+  return;
+ }
+
+ const fragment = document.createDocumentFragment();
+ let hasUnreadGlobal = false;
+
+ conversationsList.forEach(item => {
+  if(item.isUnread) hasUnreadGlobal = true;
+
+  const row = document.createElement('div');
+  row.className = 'dm-conv-item';
+  row.onclick = () => openChatRoom(item.conversationId, item.profile);
+
+  const av = createAvatarNode(item.profile, false);
+  av.className += ' dm-conv-avatar';
+
+  const info = document.createElement('div');
+  info.className = 'dm-conv-info';
+
+  const nameRow = document.createElement('div');
+  nameRow.className = 'dm-conv-name';
+  const nameSpan = document.createElement('span');
+  nameSpan.textContent = item.profile.display_name || item.profile.username;
+  
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'dm-conv-time';
+  timeSpan.textContent = item.time;
+  nameRow.append(nameSpan, timeSpan);
+
+  const snippetRow = document.createElement('div');
+  snippetRow.className = 'dm-conv-snippet';
+  snippetRow.textContent = item.lastMessage;
+
+  info.append(nameRow, snippetRow);
+
+  if(item.isUnread){
+   const dot = document.createElement('span');
+   dot.className = 'dm-unread-dot';
+   info.append(dot);
+  }
+
+  row.append(av, info);
+  fragment.append(row);
+ });
+
+ container.replaceChildren(fragment);
+ if(hasUnreadGlobal) document.getElementById('headerUnreadDot').classList.add('active');
+ else document.getElementById('headerUnreadDot').classList.remove('active');
+}
+
+async function searchUsersForChat(){
+ clearTimeout(dmSearchTimer);
+ const val = document.getElementById('dmSearchInput').value.trim();
+ const resultBox = document.getElementById('dmSearchResults');
+
+ if(val.length < 2){
+  resultBox.replaceChildren();
+  return;
+ }
+
+ dmSearchTimer = setTimeout(async () => {
+  const { data } = await db.from('profiles').select('id, username, display_name, avatar_url').ilike('username', '%' + val + '%').limit(10);
+  if(!data || !data.length){
+   resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>';
+   return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  data.forEach(profile => {
+   if(profile.id === currentUser?.id) return;
+   profilesCache[profile.id] = profile;
+
+   const item = document.createElement('div');
+   item.className = 'public-user';
+   const av = createAvatarNode(profile, false);
+   const info = document.createElement('div');
+   info.className = 'public-user-info';
+   const name = document.createElement('strong');
+   name.textContent = profile.display_name || profile.username;
+   const username = document.createElement('small');
+   username.textContent = '@' + profile.username;
+   info.append(name, username);
+   item.append(av, info);
+   item.onclick = () => openDirectChatWithUser(profile.id);
+   fragment.append(item);
+  });
+  resultBox.replaceChildren(fragment);
+ }, 300);
+}
+
+async function openDirectChatWithUser(recipientId){
+ if(!currentUser || !recipientId) return;
+
+ const { data: convId, error } = await db.rpc('get_or_create_private_conversation', { recipient_id: recipientId });
+ if(error || !convId){
+  alert('No se pudo abrir la conversación: ' + (error?.message || 'Error desconocido'));
+  return;
+ }
+
+ let profile = profilesCache[recipientId];
+ if(!profile){
+  const { data: prof } = await db.from('profiles').select('*').eq('id', recipientId).single();
+  profile = prof;
+  profilesCache[recipientId] = prof;
+ }
+
+ document.getElementById('dmSearchInput').value = '';
+ document.getElementById('dmSearchResults').replaceChildren();
+ openChatRoom(convId, profile);
+}
+
+async function openChatRoom(conversationId, recipientProfile){
+ activeConversationId = conversationId;
+ activeRecipientProfile = recipientProfile;
+
+ document.getElementById('chatRoomTitle').textContent = recipientProfile.display_name || recipientProfile.username;
+ document.getElementById('chatRoomHeaderAvatar').replaceChildren(createAvatarNode(recipientProfile, false));
+
+ showTab('chatRoomPage');
+ await loadChatMessages(conversationId);
+ markConversationAsRead(conversationId);
+}
+
+async function loadChatMessages(conversationId){
+ const container = document.getElementById('chatMessagesContainer');
+ container.innerHTML = '<div class="activity-empty">Cargando mensajes...</div>';
+
+ const { data: messages, error } = await db.from('messages')
+  .select('*')
+  .eq('conversation_id', conversationId)
+  .order('created_at', {ascending: true});
+
+ if(error){
+  container.innerHTML = '<div class="activity-empty">Error al cargar mensajes.</div>';
+  return;
+ }
+
+ container.replaceChildren();
+ if(!messages || !messages.length){
+  container.innerHTML = '<div class="activity-empty">No hay mensajes aún. ¡Escribe el primero!</div>';
+  return;
+ }
+
+ messages.forEach(msg => {
+  appendChatMessageNode(msg);
+ });
+
+ scrollToBottomChat();
+}
+
+function appendChatMessageNode(msg){
+ const container = document.getElementById('chatMessagesContainer');
+ const isMe = msg.sender_id === currentUser.id;
+
+ const bubble = document.createElement('div');
+ bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
+ 
+ const textNode = document.createElement('div');
+ textNode.textContent = msg.content;
+ 
+ const timeNode = document.createElement('div');
+ timeNode.className = 'chat-bubble-time';
+ timeNode.textContent = formatDate(msg.created_at);
+
+ bubble.append(textNode, timeNode);
+ container.append(bubble);
+}
+
+async function sendChatMessage(){
+ const input = document.getElementById('chatMessageInput');
+ const text = input.value.trim();
+ if(!text || !activeConversationId || !currentUser) return;
+
+ input.value = '';
+
+ const { error } = await db.from('messages').insert({
+  conversation_id: activeConversationId,
+  sender_id: currentUser.id,
+  content: text
+ });
+
+ if(error){
+  alert('Error al enviar mensaje: ' + error.message);
+ }
+}
+
+async function markConversationAsRead(conversationId){
+ if(!currentUser) return;
+ await db.from('conversation_participants')
+  .update({ last_read_at: new Date().toISOString() })
+  .eq('conversation_id', conversationId)
+  .eq('user_id', currentUser.id);
+
+ checkGlobalUnreadMessages();
+}
+
+function scrollToBottomChat(){
+ const container = document.getElementById('chatMessagesContainer');
+ container.scrollTop = container.scrollHeight;
 }
 
 async function loadStoriesData(){
