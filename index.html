@@ -605,14 +605,16 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine</div>
 </div>
 
-<!-- HEADER ACTUALIZADO ESTILO INSTAGRAM -->
+<!-- HEADER ACTUALIZADO CON VISIBILIDAD DINÁMICA -->
 <header>
  <div class="header-left-slot">
-  <button class="icon" onclick="showTab('create')" aria-label="Crear publicación">
+  <!-- Botón + (ÚNICAMENTE visible en la sección PERFIL) -->
+  <button class="icon" id="headerPlusBtn" onclick="showTab('create')" aria-label="Crear publicación" style="display:none;">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
  </div>
- <div class="header-center-slot">
+ <div class="header-center-slot" id="headerLogoSlot" style="display:flex;">
+  <!-- Logo ÖG (ÚNICAMENTE visible en la sección INICIO) -->
   <div class="logo">Ög<span style="color:#3b82f6">.</span></div>
  </div>
  <div class="header-right-slot" id="header-default-icons">
@@ -781,7 +783,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- PERFIL ACTUALIZADO (CON BIOGRAFÍA MULTILÍNEA) -->
+<!-- PERFIL -->
 <div id="profile" class="section">
  <div class="ig-cover" id="mycover"></div>
  
@@ -927,7 +929,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">2.2.1 (Biografía Multilínea)</p>
+    <p class="settings-row-desc">2.2.2 (Navegación Header Optimizada)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -1262,6 +1264,17 @@ function showTab(id,btn){
 
  const defaultIcons=document.getElementById('header-default-icons');
  const profileIcons=document.getElementById('header-profile-icons');
+
+ // CONTROL DE VISIBILIDAD DINÁMICA DE LA BARRA SUPERIOR
+ const headerPlusBtn = document.getElementById('headerPlusBtn');
+ const headerLogoSlot = document.getElementById('headerLogoSlot');
+
+ if(headerPlusBtn){
+  headerPlusBtn.style.display = (id === 'profile') ? 'inline-flex' : 'none';
+ }
+ if(headerLogoSlot){
+  headerLogoSlot.style.display = (id === 'feed') ? 'flex' : 'none';
+ }
 
  if(id==='profile' || id==='settingsPage'){
   defaultIcons.style.display='none';
