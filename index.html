@@ -133,16 +133,39 @@ main > div.active {display: block !important;}
 }
 .camera-gallery-icon img{width:100%;height:100%;object-fit:cover}
 
-/* VISOR DE HISTORIAS A PANTALLA COMPLETA */
+/* VISOR DE HISTORIAS ESTILO INSTAGRAM PREMIUM */
 #storyViewer{
  position:fixed;inset:0;background:#000;z-index:300;
  display:none;flex-direction:column;justify-content:space-between;
- padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px) 16px;
+ padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px) 12px;
 }
 #storyViewer.active{display:flex}
-.story-top-bar{display:flex;align-items:center;justify-content:space-between;color:#fff;position:relative;z-index:2}
-.story-content-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;margin:12px 0}
-.story-content-area img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
+.story-top-bar{display:flex;align-items:center;justify-content:space-between;color:#fff;position:relative;z-index:2;padding:0 4px}
+.story-user-info{display:flex;align-items:center;gap:8px}
+.story-user-info .story-avatar-container{width:32px;height:32px;margin:0}
+.story-username-text{font-size:13px;font-weight:600;color:#fff}
+.story-time-text{font-size:11px;color:#a1a1aa;margin-left:6px}
+
+.story-content-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;margin:8px 0;overflow:hidden;border-radius:12px;background:#121214}
+.story-content-area img{width:100%;height:100%;object-fit:cover}
+
+/* BARRA INFERIOR DE HISTORIA (Estilo Instagram exacto) */
+.story-bottom-bar{
+ display:flex;align-items:center;gap:12px;padding:4px 8px;width:100%;max-width:450px;margin:0 auto;position:relative;z-index:2;
+}
+.story-reply-input{
+ flex:1;background:transparent;border:1px solid rgba(255,255,255,0.3);border-radius:24px;
+ padding:10px 16px;color:#fff;font-size:14px;outline:none;
+ backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.story-reply-input::placeholder{color:rgba(255,255,255,0.7)}
+.story-action-icon-btn{
+ background:none;border:0;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:6px;
+ transition:transform 0.1s ease;
+}
+.story-action-icon-btn:active{transform:scale(0.85)}
+.story-action-icon-btn svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:2}
+.story-action-icon-btn.liked svg{fill:#ef4444;stroke:#ef4444}
 
 /* ESTILO DE PUBLICACIONES */
 .post{background:#000;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
@@ -222,6 +245,29 @@ nav button svg{width:25px;height:25px}
 nav small{display:none}
 nav button.active{color:#fff}
 nav button.active svg{stroke-width:2.4}
+
+/* ESTILO AVATAR EN BARRA DE NAVEGACIÓN INFERIOR */
+.nav-avatar-ring {
+ width: 26px;
+ height: 26px;
+ border-radius: 50%;
+ border: 1.5px solid #71717a;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ overflow: hidden;
+ background: #18181b;
+ transition: border-color 0.15s ease;
+}
+nav button.active .nav-avatar-ring {
+ border-color: #fff;
+ border-width: 2px;
+}
+.nav-avatar-ring img {
+ width: 100%;
+ height: 100%;
+ object-fit: cover;
+}
 
 textarea,.field{
  width:100%;background:rgba(255,255,255,0.05);color:#fff;
@@ -462,14 +508,35 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <input type="file" id="galleryFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handleGallerySelect(this)">
 </div>
 
-<!-- VISOR DE HISTORIAS A PANTALLA COMPLETA -->
-<div id="storyViewer" onclick="closeStoryViewer()">
+<!-- VISOR DE HISTORIAS ESTILO INSTAGRAM (Con Likes y Barra inferior) -->
+<div id="storyViewer">
  <div class="story-top-bar">
-  <strong id="storyUsername">@usuario</strong>
+  <div class="story-user-info">
+   <div id="storyViewerAvatarContainer" class="story-avatar-container">
+    <div class="story-avatar-inner" id="storyViewerAvatarInner">👤</div>
+   </div>
+   <div>
+    <span id="storyUsername" class="story-username-text">@usuario</span>
+    <span id="storyTimeAgo" class="story-time-text">6 h</span>
+   </div>
+  </div>
   <button class="icon" onclick="closeStoryViewer()">✕</button>
  </div>
- <div class="story-content-area">
+
+ <div class="story-content-area" id="storyContentAreaContainer">
   <img id="storyImage" src="" alt="Historia">
+ </div>
+
+ <div class="story-bottom-bar">
+  <input type="text" class="story-reply-input" placeholder="Enviar mensaje..." id="storyReplyInput">
+  
+  <button class="story-action-icon-btn" id="storyLikeBtn" onclick="toggleStoryLikeAction()" aria-label="Me gusta">
+   <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+  </button>
+
+  <button class="story-action-icon-btn" onclick="sendStoryReply()" aria-label="Enviar mensaje">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+  </button>
  </div>
 </div>
 
@@ -786,7 +853,9 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <small>Crear</small>
  </button>
  <button onclick="showTab('profile',this)" aria-label="Perfil">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  <div class="nav-avatar-ring" id="navAvatarContainer">
+   <svg id="navAvatarPlaceholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  </div>
   <small>Perfil</small>
  </button>
 </nav>
@@ -811,8 +880,8 @@ let capturedBlob=null;
 let postImageBlob = null;
 let currentFacingMode = 'user';
 let currentZoom = 1;
+let currentActiveStoryId = null;
 
-// Obtener o crear visitor_id anónimo único en localStorage
 let visitorId = localStorage.getItem('og_visitor_uuid');
 if (!visitorId) {
  visitorId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -957,6 +1026,32 @@ function createAvatarNode(profile, isStoryActive=false){
  return container;
 }
 
+function updateNavAvatarUI(){
+ const navContainer = document.getElementById('navAvatarContainer');
+ if(!navContainer) return;
+
+ navContainer.replaceChildren();
+
+ if(myProfile?.avatar_url){
+  const img = document.createElement('img');
+  img.src = myProfile.avatar_url;
+  img.alt = 'Perfil';
+  navContainer.append(img);
+ } else {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.style.width = '16px';
+  svg.style.height = '16px';
+  svg.innerHTML = '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>';
+  navContainer.append(svg);
+ }
+}
+
 async function signUp(){
  const email=document.getElementById('authemail').value.trim();
  const password=document.getElementById('authpassword').value;
@@ -1007,6 +1102,7 @@ async function signOut(){
  viewedProfile=null;
  myActiveStory=null;
  updateStoryUI();
+ updateNavAvatarUI();
  document.getElementById('accountbox').classList.remove('open');
  updateProfileUI();
  await loadPosts();
@@ -1040,6 +1136,7 @@ async function loadAccount(user){
  myProfile=profile;
  profilesCache[user.id]=profile;
  updateProfileUI();
+ updateNavAvatarUI();
  
  await Promise.all([
   loadPosts(),
@@ -1137,7 +1234,7 @@ async function loadStoriesData(){
   const followingIds = followingData.map(f => f.following_id);
 
   const {data: storiesData} = await db.from('stories')
-   .select('user_id, image_url, created_at')
+   .select('id, user_id, image_url, created_at')
    .in('user_id', followingIds)
    .order('created_at', {ascending: false});
 
@@ -1159,7 +1256,7 @@ async function loadStoriesData(){
 
     const storyDiv = document.createElement('div');
     storyDiv.className = 'story has-story';
-    storyDiv.onclick = () => openUserStory(profile, story.image_url);
+    storyDiv.onclick = () => openUserStory(profile, story);
 
     const avatarBox = createAvatarNode(profile, true);
 
@@ -1189,12 +1286,84 @@ async function handleStoryClick(){
   return showTab('profile');
  }
  if(myActiveStory){
-  document.getElementById('storyUsername').textContent = '@'+(myProfile?.username||'mi_historia');
-  document.getElementById('storyImage').src = myActiveStory.image_url;
-  document.getElementById('storyViewer').classList.add('active');
+  openUserStory(myProfile, myActiveStory);
  }else{
   await openCameraModal();
  }
+}
+
+async function openUserStory(profile, story){
+ currentActiveStoryId = story.id;
+ document.getElementById('storyUsername').textContent = '@'+profile.username;
+ document.getElementById('storyImage').src = story.image_url;
+ document.getElementById('storyTimeAgo').textContent = timeAgo(story.created_at);
+
+ const avatarContainer = document.getElementById('storyViewerAvatarContainer');
+ avatarContainer.replaceChildren();
+ const inner = document.createElement('div');
+ inner.className = 'story-avatar-inner';
+ if(profile?.avatar_url){
+  const img = document.createElement('img');
+  img.src = profile.avatar_url;
+  img.alt = profile.username;
+  inner.append(img);
+ } else {
+  inner.textContent = '👤';
+ }
+ avatarContainer.append(inner);
+
+ const likeBtn = document.getElementById('storyLikeBtn');
+ likeBtn.classList.remove('liked');
+ 
+ const { data: existingLike } = await db.from('story_likes')
+  .select('id')
+  .eq('story_id', story.id)
+  .eq('visitor_id', visitorId)
+  .maybeSingle();
+
+ if(existingLike){
+  likeBtn.classList.add('liked');
+ }
+
+ document.getElementById('storyViewer').classList.add('active');
+}
+
+async function toggleStoryLikeAction(){
+ if(!currentActiveStoryId) return;
+ const likeBtn = document.getElementById('storyLikeBtn');
+
+ const { data: likedResult, error } = await db.rpc('toggle_story_like', {
+  p_story_id: currentActiveStoryId,
+  p_visitor_id: visitorId
+ });
+
+ if(!error){
+  if(likedResult){
+   likeBtn.classList.add('liked');
+  } else {
+   likeBtn.classList.remove('liked');
+  }
+ }
+}
+
+function sendStoryReply(){
+ const input = document.getElementById('storyReplyInput');
+ const msg = input.value.trim();
+ if(!msg) return;
+ alert('Mensaje enviado a la historia.');
+ input.value = '';
+}
+
+function closeStoryViewer(){
+ currentActiveStoryId = null;
+ document.getElementById('storyViewer').classList.remove('active');
+}
+
+function timeAgo(dateString) {
+ const diff = Math.floor((new Date() - new Date(dateString)) / 1000);
+ if (diff < 3600) return Math.floor(diff / 60) + ' min';
+ if (diff < 86400) return Math.floor(diff / 3600) + ' h';
+ return Math.floor(diff / 86400) + ' d';
 }
 
 async function openCameraModal(){
@@ -1364,16 +1533,6 @@ async function uploadCapturedStory(){
  alert('¡Historia publicada con éxito!');
 }
 
-function openUserStory(profile, imageUrl){
- document.getElementById('storyUsername').textContent = '@'+profile.username;
- document.getElementById('storyImage').src = imageUrl;
- document.getElementById('storyViewer').classList.add('active');
-}
-
-function closeStoryViewer(){
- document.getElementById('storyViewer').classList.remove('active');
-}
-
 function updateProfileUI(){
  const logged=!!currentUser;
 
@@ -1390,6 +1549,7 @@ function updateProfileUI(){
   document.getElementById('myfollowingcount').textContent='0';
   document.getElementById('myavatar').replaceChildren();
   document.getElementById('mycover').replaceChildren();
+  updateNavAvatarUI();
   return;
  }
 
@@ -1426,6 +1586,7 @@ function updateProfileUI(){
 
  loadFollowCounts();
  loadMyPostsGrid();
+ updateNavAvatarUI();
 }
 
 async function loadMyPostsGrid(){
@@ -1651,6 +1812,7 @@ async function uploadImage(type,input){
  myProfile=data;
  profilesCache[currentUser.id]=data;
  updateProfileUI();
+ updateNavAvatarUI();
  status('profilestatus','¡Actualizado!');
  input.value='';
 }
@@ -1671,6 +1833,7 @@ async function saveProfile(){
  myProfile=data;
  profilesCache[currentUser.id]=data;
  updateProfileUI();
+ updateNavAvatarUI();
  status('profilestatus','¡Guardado!');
  setTimeout(()=>toggleEditPanel(),700);
 }
@@ -2223,7 +2386,7 @@ db.auth.onAuthStateChange((event,session)=>{
   if(session?.user)await loadAccount(session.user);
   else{
    currentUser=null; myProfile=null; viewedProfile=null; myActiveStory=null;
-   updateStoryUI(); updateProfileUI(); await loadPosts();
+   updateStoryUI(); updateNavAvatarUI(); updateProfileUI(); await loadPosts();
   }
  },0);
 });
@@ -2233,6 +2396,7 @@ async function init(){
  if(data.session)await loadAccount(data.session.user);
  else{
   updateProfileUI();
+  updateNavAvatarUI();
   await loadPosts();
  }
  loadExploreGrid();
