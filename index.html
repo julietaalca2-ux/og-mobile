@@ -6,12 +6,15 @@
 <meta name="theme-color" content="#000000">
 <title>Ög — Social</title>
 
-<!-- CONFIGURACIÓN PWA -->
-<link rel="manifest" href="manifest.json">
+<!-- CONFIGURACIÓN PWA PARA ANDROID E IOS -->
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Ög">
+
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ög">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -672,7 +675,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <input type="file" id="galleryFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handleGallerySelect(this)">
 </div>
 
-<!-- VISOR DE HISTORIAS ESTILO INSTAGRAM (Con Likes y Barra inferior) -->
+<!-- VISOR DE HISTORIAS ESTILO INSTAGRAM -->
 <div id="storyViewer">
  <div class="story-top-bar">
   <div class="story-user-info">
@@ -704,7 +707,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- EXPLORAR ESTILO INSTAGRAM -->
+<!-- EXPLORAR -->
 <div id="explore" class="section">
  <div class="explore-top-bar">
   <div class="explore-search-wrapper">
@@ -818,7 +821,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- VISTA COMPLETA DE CONFIGURACIÓN -->
+<!-- CONFIGURACIÓN -->
 <div id="settingsPage" class="section" style="padding: 16px;">
  <div class="settings-header" style="top:0;margin:-16px -16px 16px -16px;">
   <button class="secondary" style="padding:6px 12px" onclick="showTab('profile')">← Volver</button>
@@ -955,7 +958,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div class="ig-posts-grid" id="publicposts"></div>
 </div>
 
-<!-- SALA DE CHAT PRIVADO FIJA Y FUNCIONAL -->
+<!-- SALA DE CHAT -->
 <div id="chatRoomPage" class="section">
  <div class="chat-room-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('messagesPage')">← Volver</button>
@@ -1067,7 +1070,6 @@ let currentFacingMode = 'user';
 let currentZoom = 1;
 let currentActiveStoryId = null;
 
-// Variables de Chat Activo
 let activeConversationId = null;
 let activeRecipientProfile = null;
 
@@ -1100,7 +1102,6 @@ function handleSwipeGesture(){
  }
 }
 
-/* GESTIÓN DE PANTALLA DE BIENVENIDA Y AUTH (ESTILO INSTAGRAM) */
 function switchAuthSubView(viewName){
  document.getElementById('authWelcomePanel').classList.remove('active');
  document.getElementById('authSignupPanel').classList.remove('active');
@@ -1428,7 +1429,6 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('headerUnreadDot').classList.remove('active');
 }
 
-/* SISTEMA DE MENSAJERÍA PRIVADA (DIRECTS) */
 async function loadConversations(){
  const container = document.getElementById('dmConversationsList');
  if(!currentUser) return;
@@ -2986,7 +2986,7 @@ init();
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
+      navigator.serviceWorker.register('/service-worker.js')
         .then((reg) => {
           console.log('Service Worker registrado con éxito:', reg.scope);
         })
