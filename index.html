@@ -13,10 +13,17 @@
 <meta name="apple-mobile-web-app-title" content="Ög">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<!-- Sistema Independiente de Optimización ÖG -->
+<!-- Sistema Independiente de Optimización y Animaciones ÖG -->
+<link rel="stylesheet" href="./optimization/animation.css">
 <script type="module">
   import { ÖGOptimizer } from './optimization/optimizer.js';
+  import { ÖGAnimationEngine } from './optimization/animation.js';
+  
   ÖGOptimizer.init();
+  document.addEventListener('DOMContentLoaded', () => {
+    ÖGAnimationEngine.init();
+    window.ÖGAnimationEngine = ÖGAnimationEngine;
+  });
 </script>
 
 <style>
@@ -42,73 +49,6 @@ body{
 * {
  scrollbar-width: none !important;
 }
-
-/* ========================================================================= */
-/* MÓDULO DE ANIMACIONES INTEGRADO ÖG                                      */
-/* ========================================================================= */
-@keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes fadeOutScale {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(0.95); }
-}
-
-@keyframes slideUpModal {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes slideDownModal {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(100%); opacity: 0; }
-}
-
-/* Transiciones de pantallas y modales */
-#postDetailModal, #editProfileModal, #storyViewer, #cameraModal, #logoutConfirmModal, #followListModal {
-  transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-#postDetailModal.active, #editProfileModal.active, #storyViewer.active, #cameraModal.active, #logoutConfirmModal.active, #followListModal.open {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-#postDetailModal.active .post-modal-card,
-#editProfileModal.active .edit-modal-card,
-#logoutConfirmModal.active .confirm-card {
-  animation: fadeInScale 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-}
-
-#followListModal.open .settings-drawer {
-  animation: slideUpModal 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-}
-
-/* Efectos de rebote y pulso en interacciones */
-button, .story, .post-action-btn, .chat-action-pill, .menu-list-btn, .explore-grid-item, .ig-grid-item {
-  transition: transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.15s ease, background-color 0.15s ease;
-}
-
-button:active, .post-action-btn:active, .story:active {
-  transform: scale(0.94);
-}
-
-/* Microanimación de carga */
-@keyframes pulseLoader {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-
-.activity-empty {
-  animation: pulseLoader 1.5s ease-in-out infinite;
-}
-/* ========================================================================= */
 
 /* SPLASH SCREEN */
 #appSplashScreen{
@@ -210,14 +150,6 @@ header{
  border:2px solid #000;display:grid;place-items:center;font-size:13px;font-weight:700;
  z-index:2;
 }
-
-main{max-width:470px;margin:auto}
-main > div {display: none !important;padding: 16px;content-visibility: auto;}
-main > div.active {display: block !important;}
-#feed.active, #profile.active, #publicprofile.active, #messagesPage.active, #chatRoomPage.active, #chatDetailsPage.active, #chatSubSettingsPage.active, #menuSectionPage.active,
-#menuConfigPage.active, #menuPrivacyPage.active, #menuNotifPage.active, #menuActivityPage.active,
-#menuSavedPage.active, #menuHelpPage.active, #menuAccountsPage.active {padding: 0 !important;}
-#explore.active {padding: 0 !important;}
 
 /* CÁMARA */
 #cameraModal{
@@ -1682,9 +1614,6 @@ let currentActiveStoryId = null;
 let stagedAvatarBlob = null;
 let stagedCoverBlob = null;
 
-/* ========================================================================= */
-/* VARIABLES DE OPTIMIZACIÓN Y CACHÉ DEL SISTEMA DE PUBLICACIONES           */
-/* ========================================================================= */
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedLoading = false;
@@ -1734,6 +1663,8 @@ function handleSwipeGesture(){
  const swipeDistance = touchEndX - touchStartX;
  if(swipeDistance > 70){
   openCameraModal();
+ } else if(swipeDistance < -70){
+  showTab('messagesPage');
  }
 }
 
@@ -1805,17 +1736,23 @@ async function executeSignIn(){
  hideAuthOverlay();
 }
 
-function showTab(id,btn){
+function showTab(id, btn){
  if(!currentUser && id !== 'profile'){
   showAuthOverlay();
   return;
  }
 
- document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
- document.getElementById(id).classList.add('active');
+ // Integración con ÖG Animation Engine para slide lateral fluido
+ if(window.ÖGAnimationEngine && typeof window.ÖGAnimationEngine.transitionTo === 'function'){
+  window.ÖGAnimationEngine.transitionTo(id);
+ } else {
+  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+ }
+
  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
 
- if(btn)btn.classList.add('active');
+ if(btn) btn.classList.add('active');
  else{
   const tabIds=['feed','messagesPage','explore','profile'];
   const index = tabIds.indexOf(id);
@@ -1853,10 +1790,6 @@ function showTab(id,btn){
  if(id==='profile' && currentUser) loadMyPostsGrid();
  window.scrollTo(0,0);
 }
-
-/* ========================================================================= */
-/* MENÚ Y SUB-PANTALLAS                                                      */
-/* ========================================================================= */
 
 function openMenuSection(){
  if(!currentUser){
@@ -2363,10 +2296,6 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('navUnreadDot').classList.remove('active');
 }
 
-/* ========================================================================= */
-/* SISTEMA DE PUBLICACIONES OPTIMIZADO                                       */
-/* ========================================================================= */
-
 async function loadInitialPosts(){
  feedPage = 0;
  feedHasMore = true;
@@ -2524,6 +2453,23 @@ function buildPostDOMElement(post){
   img.src = post.image_url;
   img.alt = 'Imagen';
   img.loading = 'lazy';
+  
+  // Integración de Doble Toque (Double-Tap Like con animation.js)
+  let lastTapTime = 0;
+  img.addEventListener('click', (e) => {
+   const currentTime = new Date().getTime();
+   const tapLength = currentTime - lastTapTime;
+   if (tapLength < 300 && tapLength > 0) {
+    if (window.ÖGAnimationEngine && typeof window.ÖGAnimationEngine.handleDoubleTapLike === 'function') {
+     window.ÖGAnimationEngine.handleDoubleTapLike(e, img, () => {
+      toggleLike(post.id, likeBtn, likesCountDiv);
+     });
+    }
+    e.preventDefault();
+   }
+   lastTapTime = currentTime;
+  });
+
   article.append(img);
  }
 
@@ -2772,10 +2718,6 @@ async function publish(){
  showTab('feed');
  await loadInitialPosts();
 }
-
-/* ========================================================================= */
-/* OTRAS SECCIONES (EXPLORAR, PERFIL, CHAT, ACTIVIDAD, HISTORIAS)            */
-/* ========================================================================= */
 
 function searchUsers(){
  clearTimeout(searchTimer);
@@ -3476,10 +3418,6 @@ async function openChatRoom(conversationId, recipientProfile){
  await loadChatMessages(conversationId);
  markConversationAsRead(conversationId);
 }
-
-/* ========================================================================= */
-/* LÓGICA DE PANTALLA “DETALLES DEL CHAT”                                     */
-/* ========================================================================= */
 
 function openChatDetailsPage(){
  if(!activeRecipientProfile) return;
