@@ -468,7 +468,7 @@ textarea{height:110px;resize:none}
 .ig-bio-section{text-align:left;margin-bottom:14px}
 .ig-display-name{font-size:15px;font-weight:700;color:#fff;margin:0}
 .ig-username-tag{font-size:13px;color:#71717a;margin:2px 0 6px 0}
-.ig-bio-text{font-size:14px;line-height:1.4;color:#e4e4e7;margin:0;white-space:pre-wrap}
+.ig-bio-text{font-size:14px;line-height:1.4;color:#e4e4e7;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 .ig-action-buttons{display:flex;gap:8px}
 .ig-action-buttons button{flex:1}
 
@@ -781,7 +781,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- PERFIL ACTUALIZADO (SIN TÍTULO PUBLICACIONES NI BOTÓN CONFIGURACIÓN) -->
+<!-- PERFIL ACTUALIZADO (CON BIOGRAFÍA MULTILÍNEA) -->
 <div id="profile" class="section">
  <div class="ig-cover" id="mycover"></div>
  
@@ -834,7 +834,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <input class="hidden-file" id="coverfile" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadImage('cover',this)">
   
   <input class="field" id="editname" placeholder="Nombre visible">
-  <input class="field" id="editbio" placeholder="Biografía">
+  <textarea class="field" id="editbio" placeholder="Biografía (usa Enter para saltos de línea o dejar espacios entre párrafos)" rows="4" style="height:auto;min-height:95px;resize:vertical;white-space:pre-wrap;"></textarea>
   <button class="primary" style="margin-top:12px" onclick="saveProfile()">Guardar cambios</button>
   <p id="profilestatus" class="status"></p>
  </div>
@@ -927,7 +927,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">2.2.0 (Interfaz Rediseñada)</p>
+    <p class="settings-row-desc">2.2.1 (Biografía Multilínea)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -2696,7 +2696,7 @@ async function saveProfile(){
  if(!currentUser)return;
 
  const display_name=document.getElementById('editname').value.trim();
- const bio=document.getElementById('editbio').value.trim();
+ const bio=document.getElementById('editbio').value;
 
  const {data,error}=await db.from('profiles')
   .update({display_name,bio})
