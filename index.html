@@ -93,8 +93,130 @@ header{
 main{max-width:470px;margin:auto}
 main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
-#feed.active, #profile.active, #publicprofile.active, #settingsPage.active, #messagesPage.active, #chatRoomPage.active {padding: 0 !important;}
+#feed.active, #profile.active, #publicprofile.active, #settingsPage.active, #messagesPage.active {padding: 0 !important;}
 #explore.active {padding: 0 !important;}
+
+/* SALA DE CHAT PRIVADO ESTILO INSTAGRAM DIRECT */
+#chatRoomPage{
+ display:none;
+ flex-direction:column;
+ height: 100vh;
+ position:fixed;
+ inset:0;
+ background:#000;
+ z-index: 250;
+}
+#chatRoomPage.active{
+ display:flex !important;
+}
+
+.chat-messages-container{
+ flex:1;
+ overflow-y:auto;
+ padding:16px 16px 90px 16px;
+ display:flex;
+ flex-direction:column;
+ gap:12px;
+ background:#000;
+}
+.chat-bubble{
+ max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;overflow-wrap:anywhere;position:relative;
+}
+.chat-bubble.sent{
+ background:#3b82f6;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;
+}
+.chat-bubble.received{
+ background:#27272a;color:#f4f4f5;align-self:flex-start;border-bottom-left-radius:4px;
+}
+.chat-bubble-time{font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;text-align:right}
+
+/* BARRA INFERIOR EXACTA A INSTAGRAM DIRECT */
+.chat-input-footer{
+ padding: 10px 12px calc(env(safe-area-inset-bottom) + 12px) 12px;
+ background: rgba(0,0,0,0.95);
+ backdrop-filter: blur(20px);
+ -webkit-backdrop-filter: blur(20px);
+ border-top: 1px solid rgba(255,255,255,0.08);
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ position: absolute;
+ bottom: 0;
+ left: 0;
+ right: 0;
+ z-index: 300;
+ max-width: 470px;
+ margin: 0 auto;
+}
+
+/* CONTENEDOR TIPO PASTILLA PARA EL INPUT DE MENSAJE */
+.chat-input-pill{
+ flex: 1;
+ display: flex;
+ align-items: center;
+ background: #121214;
+ border: 1px solid rgba(255,255,255,0.15);
+ border-radius: 26px;
+ padding: 4px 6px 4px 12px;
+ gap: 8px;
+}
+
+.chat-input-pill input{
+ flex: 1;
+ background: transparent;
+ border: none;
+ color: #fff;
+ font-size: 14px;
+ outline: none;
+ padding: 8px 0;
+}
+.chat-input-pill input::placeholder{
+ color: #71717a;
+}
+
+/* BOTONES ICONOS DE LA BARRA DE CHAT */
+.chat-icon-action{
+ background: none;
+ border: none;
+ color: #fff;
+ cursor: pointer;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ padding: 6px;
+ flex-shrink: 0;
+ transition: transform 0.1s ease;
+}
+.chat-icon-action:active{
+ transform: scale(0.85);
+}
+.chat-icon-action svg{
+ width: 24px;
+ height: 24px;
+ stroke: #fff;
+ fill: none;
+ stroke-width: 2;
+}
+
+/* BOTÓN REDONDO DE CÁMARA (ESTILO IG) */
+.chat-camera-btn{
+ width: 36px;
+ height: 36px;
+ border-radius: 50%;
+ background: linear-gradient(135deg, #3b82f6, #8134af);
+ border: none;
+ display: grid;
+ place-items: center;
+ cursor: pointer;
+ flex-shrink: 0;
+}
+.chat-camera-btn svg {
+ width: 18px;
+ height: 18px;
+ stroke: #fff;
+ fill: none;
+ stroke-width: 2;
+}
 
 /* CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM */
 #cameraModal{
@@ -200,33 +322,15 @@ main > div.active {display: block !important;}
 }
 .dm-conv-item:active{background:rgba(255,255,255,0.06)}
 .dm-conv-avatar{width:54px;height:54px;min-width:54px;margin:0}
+.dm-conv-avatar .story-avatar-inner{
+ width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#18181b;
+}
+.dm-conv-avatar .story-avatar-inner img{width:100%;height:100%;object-fit:cover}
 .dm-conv-info{flex:1;min-width:0}
 .dm-conv-name{font-weight:600;font-size:14px;color:#fff;display:flex;justify-content:space-between;align-items:center}
 .dm-conv-snippet{font-size:13px;color:#a1a1aa;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dm-conv-time{font-size:11px;color:#71717a;font-weight:normal}
 .dm-unread-dot{width:8px;height:8px;background:#3b82f6;border-radius:50%;display:inline-block}
-
-/* SALA DE CHAT PRIVADO */
-#chatRoomPage{display:flex;flex-direction:column;height:calc(100vh - 120px);position:relative}
-.chat-messages-container{
- flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;
- background:#000;
-}
-.chat-bubble{
- max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;overflow-wrap:anywhere;position:relative;
-}
-.chat-bubble.sent{
- background:#3b82f6;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;
-}
-.chat-bubble.received{
- background:#27272a;color:#f4f4f5;align-self:flex-start;border-bottom-left-radius:4px;
-}
-.chat-bubble-time{font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;text-align:right}
-.chat-input-footer{
- padding:12px 16px;background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);
- border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;
- position:sticky;bottom:0;
-}
 
 /* ESTILO DE PUBLICACIONES */
 .post{background:#000;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
@@ -590,7 +694,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 <!-- SALA DE CHAT PRIVADO -->
 <div id="chatRoomPage" class="section">
- <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);position:sticky;top:56px;z-index:40">
+ <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:40">
   <button class="secondary" style="padding:6px 12px" onclick="showTab('messagesPage')">← Volver</button>
   <div id="chatRoomHeaderAvatar" style="width:36px;height:36px"></div>
   <div>
@@ -602,9 +706,31 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div class="chat-messages-container" id="chatMessagesContainer"></div>
 
  <div class="chat-input-footer">
-  <input type="text" class="story-reply-input" id="chatMessageInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
-  <button class="primary" style="width:auto;padding:10px 18px;border-radius:24px" onclick="sendChatMessage()">Enviar</button>
+  <button class="chat-camera-btn" onclick="openCameraModal()" aria-label="Cámara">
+   <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+  </button>
+
+  <div class="chat-input-pill">
+   <input type="text" id="chatMessageInput" placeholder="Mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+   
+   <button class="chat-icon-action" aria-label="Audio">
+    <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+   </button>
+
+   <button class="chat-icon-action" onclick="document.getElementById('chatImageFileInput').click()" aria-label="Galería">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+   </button>
+
+   <button class="chat-icon-action" aria-label="Stickers">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+   </button>
+  </div>
+
+  <button class="chat-icon-action" aria-label="Más opciones">
+   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+  </button>
  </div>
+ <input type="file" id="chatImageFileInput" class="hidden-file" accept="image/*">
 </div>
 
 <!-- CÁMARA A PANTALLA COMPLETA CON SLIDER DE ZOOM -->
@@ -862,7 +988,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.8.0 (Supabase Direct + RLS Messaging)</p>
+    <p class="settings-row-desc">1.8.1 (Supabase Direct + RLS Messaging)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -1008,7 +1134,6 @@ let currentFacingMode = 'user';
 let currentZoom = 1;
 let currentActiveStoryId = null;
 
-// Variables de Chat Activo
 let activeConversationId = null;
 let activeRecipientProfile = null;
 
@@ -1041,7 +1166,6 @@ function handleSwipeGesture(){
  }
 }
 
-/* GESTIÓN DE PANTALLA DE BIENVENIDA Y AUTH (ESTILO INSTAGRAM) */
 function switchAuthSubView(viewName){
  document.getElementById('authWelcomePanel').classList.remove('active');
  document.getElementById('authSignupPanel').classList.remove('active');
@@ -1335,7 +1459,6 @@ function setupRealtimeNotifications(){
   })
   .subscribe();
 
- // Canal global en tiempo real para mensajes privados
  dmRealtimeChannel = db.channel('global-dm-listener')
   .on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'messages'}, payload => {
    const newMsg = payload.new;
@@ -1370,7 +1493,6 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('headerUnreadDot').classList.remove('active');
 }
 
-/* SISTEMA DE MENSAJERÍA PRIVADA (DIRECTS) */
 async function loadConversations(){
  const container = document.getElementById('dmConversationsList');
  if(!currentUser) return;
@@ -1446,7 +1568,7 @@ async function loadConversations(){
   row.onclick = () => openChatRoom(item.conversationId, item.profile);
 
   const av = createAvatarNode(item.profile, false);
-  av.className += ' dm-conv-avatar';
+  av.classList.add('dm-conv-avatar');
 
   const info = document.createElement('div');
   info.className = 'dm-conv-info';
