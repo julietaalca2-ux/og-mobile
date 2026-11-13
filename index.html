@@ -623,7 +623,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 .settings-overlay.open .settings-drawer{transform:translateY(0)}
 .settings-handle{width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin:0 auto 20px auto}
 
-/* ESTILOS ESPECÍFICOS: DETALLES DEL CHAT (PASO 1) */
+/* ESTILOS DE DETALLES DEL CHAT (PASO 1) */
 .chat-details-user-header{
  display:flex;flex-direction:column;align-items:center;padding:24px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.08);
 }
@@ -644,7 +644,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 }
 .chat-details-action-btn:active{background:rgba(255,255,255,0.1)}
 .chat-details-action-btn svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
-
 </style>
 </head>
 
@@ -1227,7 +1226,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div class="menu-section-content">
   <p class="muted" style="margin:4px 0 12px 0;">Historial de tus interacciones realizadas en Ög (Me gusta dados, comentarios enviados y cuentas seguidas).</p>
   <div id="userOwnActivityContainer">
-   <div class="activity-empty">Cargando tu historial de actividad...</div>
+   <div class="activity-empty">Cargando tu historial...</div>
   </div>
  </div>
 </div>
@@ -1307,7 +1306,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- NUEVA PANTALLA: DETALLES DEL CHAT (PASO 1) -->
+<!-- PANTALLA: DETALLES DEL CHAT (PASO 1) -->
 <div id="chatDetailsPage" class="fullscreen-menu-view">
  <div class="menu-section-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="closeChatDetailsPage()">← Volver</button>
@@ -1410,7 +1409,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <div id="logoutConfirmModal" onclick="closeLogoutConfirmation()">
  <div class="confirm-card" onclick="event.stopPropagation()">
   <h3 style="margin:0 0 8px 0;font-size:18px;color:#fff;">¿Cerrar sesión en Ög?</h3>
-  <p class="muted" style="margin:0 0 20px 0;line-height:1.4;">Tendrás que volver a ingresar tu correo y contraseña para acceder a tu cuenta.</p>
+  <p class="muted" style="margin:0 0 20px 0;line-height:1.4;">Tendrás que volver a ingresar tu correo y contraseña para acceder à tu cuenta.</p>
   <div style="display:flex;flex-direction:column;gap:10px;">
    <button class="danger-btn" onclick="executeConfirmedSignOut()">Sí, cerrar sesión</button>
    <button class="secondary" onclick="closeLogoutConfirmation()">Cancelar</button>
@@ -1814,13 +1813,11 @@ function openChatDetailsPageFromRoom(){
  const bottomNavBar = document.getElementById('bottomNavBar');
  if(bottomNavBar) bottomNavBar.style.display = 'none';
 
- // Ocultar header principal
  document.getElementById('headerLogoSlot').style.display = 'none';
  document.getElementById('headerPlusBtn').style.display = 'none';
  document.getElementById('header-default-icons').style.display = 'none';
  document.getElementById('header-profile-icons').style.display = 'none';
 
- // Poblar datos del usuario en la pantalla
  document.getElementById('chatDetailsName').textContent = activeRecipientProfile.display_name || activeRecipientProfile.username;
  document.getElementById('chatDetailsUsername').textContent = '@' + activeRecipientProfile.username;
  
@@ -1835,7 +1832,6 @@ function openChatDetailsPageFromRoom(){
   avBox.textContent = '👤';
  }
 
- // Respetar privacidad de estado de actividad
  const targetPrefs = JSON.parse(localStorage.getItem('og_user_settings_' + activeRecipientProfile.id) || '{"activityStatus": true}');
  const statusElem = document.getElementById('chatDetailsStatus');
  if(targetPrefs.activityStatus === false){
@@ -1924,344 +1920,381 @@ function chatActionRestrict(){
 }
 
 /* ========================================================================= */
+/* CHAT OPTIMIZADO: LISTAS, MENSAJES EN TIEMPO REAL Y RENDIMIENTO            */
+/* ========================================================================= */
 
-function saveMenuPreferences(){
- const prefs = {
-  dataSaver: document.getElementById('cfgDataSaverToggle')?.checked || false,
-  autoplay: document.getElementById('cfgAutoplayToggle')?.checked !== false,
-  privateAccount: document.getElementById('privateAccountToggle')?.checked || false,
-  activityStatus: document.getElementById('activityStatusToggle')?.checked !== false,
-  showFollowersList: document.getElementById('showFollowersListToggle')?.checked !== false,
-  allowDm: document.getElementById('allowDmToggle')?.checked !== false,
-  notifLikes: document.getElementById('notifLikesToggle')?.checked !== false,
-  notifComments: document.getElementById('notifCommentsToggle')?.checked !== false,
-  notifFollows: document.getElementById('notifFollowsToggle')?.checked !== false,
-  notifDm: document.getElementById('notifDmToggle')?.checked !== false
- };
- localStorage.setItem('og_user_settings_' + (currentUser?.id || 'guest'), JSON.stringify(prefs));
- setupPresenceChannel();
-}
-
-function loadMenuPreferences(){
- try{
-  const raw = localStorage.getItem('og_user_settings_' + (currentUser?.id || 'guest'));
-  if(!raw) return;
-  const prefs = JSON.parse(raw);
-  if(document.getElementById('cfgDataSaverToggle')) document.getElementById('cfgDataSaverToggle').checked = !!prefs.dataSaver;
-  if(document.getElementById('cfgAutoplayToggle')) document.getElementById('cfgAutoplayToggle').checked = prefs.autoplay !== false;
-  if(document.getElementById('privateAccountToggle')) document.getElementById('privateAccountToggle').checked = !!prefs.privateAccount;
-  if(document.getElementById('activityStatusToggle')) document.getElementById('activityStatusToggle').checked = prefs.activityStatus !== false;
-  if(document.getElementById('showFollowersListToggle')) document.getElementById('showFollowersListToggle').checked = prefs.showFollowersList !== false;
-  if(document.getElementById('allowDmToggle')) document.getElementById('allowDmToggle').checked = prefs.allowDm !== false;
-  if(document.getElementById('notifLikesToggle')) document.getElementById('notifLikesToggle').checked = prefs.notifLikes !== false;
-  if(document.getElementById('notifCommentsToggle')) document.getElementById('notifCommentsToggle').checked = prefs.notifComments !== false;
-  if(document.getElementById('notifFollowsToggle')) document.getElementById('notifFollowsToggle').checked = prefs.notifFollows !== false;
-  if(document.getElementById('notifDmToggle')) document.getElementById('notifDmToggle').checked = prefs.notifDm !== false;
- }catch(e){}
-}
-
-async function loadUserOwnActivity(){
- const container = document.getElementById('userOwnActivityContainer');
+async function loadConversations(){
+ const container = document.getElementById('dmConversationsList');
  if(!currentUser) return;
- container.innerHTML = '<div class="activity-empty">Cargando tu historial...</div>';
 
- try{
-  const [myLikes, myComments, myFollows] = await Promise.all([
-   db.from('likes').select('post_id, created_at').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(25),
-   db.from('comments').select('post_id, content, created_at').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(25),
-   db.from('follows').select('following_id, created_at').eq('follower_id', currentUser.id).order('created_at', {ascending:false}).limit(25)
-  ]);
+ if(cachedConversationsList && cachedConversationsList.length > 0){
+  renderConversationsDOM(cachedConversationsList, container);
+ } else {
+  container.innerHTML = '<div class="activity-empty">Cargando conversaciones...</div>';
+ }
 
-  const events = [];
-  (myLikes.data || []).forEach(l => events.push({ type: 'liked_post', post_id: l.post_id, created_at: l.created_at }));
-  (myComments.data || []).forEach(c => events.push({ type: 'commented_post', post_id: c.post_id, content: c.content, created_at: c.created_at }));
-  (myFollows.data || []).forEach(f => events.push({ type: 'followed_user', user_id: f.following_id, created_at: f.created_at }));
-
-  events.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-
-  if(!events.length){
-   container.innerHTML = '<div class="activity-empty">Aún no realizaste interacciones en Ög.</div>';
+ try {
+  const { data: myParts, error: partErr } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
+  if(partErr || !myParts || !myParts.length){
+   cachedConversationsList = [];
+   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá a alguien arriba para iniciar un chat.</div>';
+   document.getElementById('navUnreadDot').classList.remove('active');
    return;
   }
 
-  const missingUserIds = [...new Set(events.map(e => e.user_id).filter(Boolean))].filter(id => !profilesCache[id]);
-  if(missingUserIds.length > 0){
-   const {data: profs} = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missingUserIds);
+  const convIds = myParts.map(p => p.conversation_id);
+  const { data: allParts } = await db.from('conversation_participants').select('conversation_id, user_id').in('conversation_id', convIds);
+  
+  const convMap = {};
+  convIds.forEach(id => { convMap[id] = { otherUserId: null, last_read_at: myParts.find(p=>p.conversation_id===id)?.last_read_at }; });
+
+  (allParts || []).forEach(p => {
+   if(p.user_id !== currentUser.id && convMap[p.conversation_id]){
+    convMap[p.conversation_id].otherUserId = p.user_id;
+   }
+  });
+
+  const otherUserIds = [...new Set(Object.values(convMap).map(c => c.otherUserId).filter(Boolean))];
+  const missing = otherUserIds.filter(id => !profilesCache[id]);
+  if(missing.length > 0){
+   const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
    (profs || []).forEach(p => profilesCache[p.id] = p);
   }
 
-  const fragment = document.createDocumentFragment();
-  events.forEach(ev => {
-   const row = document.createElement('div');
-   row.className = 'activity-item';
+  const conversationsList = await Promise.all(convIds.map(async convId => {
+   const otherId = convMap[convId].otherUserId;
+   const profile = profilesCache[otherId];
+   if(!profile) return null;
 
-   const info = document.createElement('div');
-   info.className = 'activity-info';
+   const { data: lastMsg } = await db.from('messages')
+    .select('content, created_at, sender_id')
+    .eq('conversation_id', convId)
+    .order('created_at', {ascending: false})
+    .limit(1)
+    .maybeSingle();
 
-   const text = document.createElement('div');
-   const date = document.createElement('div');
-   date.className = 'activity-date';
-   date.textContent = formatDate(ev.created_at);
+   const isUnread = lastMsg && lastMsg.sender_id !== currentUser.id && (!convMap[convId].last_read_at || new Date(lastMsg.created_at) > new Date(convMap[convId].last_read_at));
 
-   if(ev.type === 'liked_post'){
-    text.innerHTML = '❤️ Le diste <strong>Me gusta</strong> a una publicación.';
-   } else if(ev.type === 'commented_post'){
-    text.innerHTML = `💬 Comentaste: <span style="color:#a1a1aa">“${ev.content}”</span>`;
-   } else if(ev.type === 'followed_user'){
-    const p = profilesCache[ev.user_id];
-    text.innerHTML = `👤 Empezaste a seguir a <strong>@${p?.username || 'usuario'}</strong>.`;
-   }
+   return {
+    conversationId: convId,
+    profile,
+    lastMessage: lastMsg ? lastMsg.content : 'Conversación iniciada',
+    time: lastMsg ? formatDate(lastMsg.created_at) : '',
+    timestamp: lastMsg ? new Date(lastMsg.created_at).getTime() : 0,
+    isUnread
+   };
+  }));
 
-   info.append(text, date);
-   row.append(info);
-   fragment.append(row);
-  });
+  const validConversations = conversationsList.filter(Boolean);
+  validConversations.sort((a,b) => b.timestamp - a.timestamp);
 
-  container.replaceChildren(fragment);
+  cachedConversationsList = validConversations;
+  renderConversationsDOM(validConversations, container);
+
  }catch(e){
-  container.innerHTML = '<div class="activity-empty">No se pudo cargar el historial.</div>';
+  if(!cachedConversationsList){
+   container.innerHTML = '<div class="activity-empty">No se pudieron cargar las conversaciones.</div>';
+  }
  }
 }
 
-function getSavedPostIds(){
- if(!currentUser) return [];
- try{
-  return JSON.parse(localStorage.getItem('og_saved_posts_' + currentUser.id) || '[]');
- }catch(e){ return []; }
-}
-
-function toggleSavePost(postId, btn){
- if(!currentUser){ showAuthOverlay(); return; }
- let saved = getSavedPostIds();
- if(saved.includes(postId)){
-  saved = saved.filter(id => id !== postId);
-  btn.classList.remove('saved');
- } else {
-  saved.unshift(postId);
-  btn.classList.add('saved');
- }
- localStorage.setItem('og_saved_posts_' + currentUser.id, JSON.stringify(saved));
-}
-
-async function loadSavedPostsGrid(){
- const grid = document.getElementById('savedPostsGrid');
- const savedIds = getSavedPostIds();
- grid.replaceChildren();
-
- if(!savedIds.length){
-  grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #71717a; padding: 50px 20px; font-size: 14px;">Todavía no guardaste ninguna publicación.<br><small>Tocá el ícono de marcador en cualquier publicación del inicio para guardarla acá.</small></div>';
-  return;
- }
-
- const { data: posts } = await db.from('posts').select('*').in('id', savedIds);
- if(!posts || !posts.length){
-  grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #71717a; padding: 40px;">No se encontraron publicaciones guardadas.</div>';
+function renderConversationsDOM(conversationsList, container){
+ if(!conversationsList.length){
+  container.innerHTML = '<div class="activity-empty">No hay conversaciones recientes.</div>';
   return;
  }
 
  const fragment = document.createDocumentFragment();
- posts.forEach(post => {
-  const item = document.createElement('div');
-  item.className = 'ig-grid-item';
-  item.onclick = () => openPostDetail(post);
+ let hasUnreadGlobal = false;
 
-  if(post.image_url){
-   const img = document.createElement('img');
-   img.src = post.image_url;
-   img.loading = 'lazy';
-   item.append(img);
-  } else {
-   item.textContent = (post.content || '').slice(0, 55);
+ conversationsList.forEach(item => {
+  if(item.isUnread) hasUnreadGlobal = true;
+
+  const row = document.createElement('div');
+  row.className = 'dm-conv-item';
+  row.onclick = () => openChatRoom(item.conversationId, item.profile);
+
+  const av = createAvatarNode(item.profile, false);
+  av.className += ' dm-conv-avatar';
+
+  const info = document.createElement('div');
+  info.className = 'dm-conv-info';
+
+  const nameRow = document.createElement('div');
+  nameRow.className = 'dm-conv-name';
+  const nameSpan = document.createElement('span');
+  nameSpan.textContent = item.profile.display_name || item.profile.username;
+  
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'dm-conv-time';
+  timeSpan.textContent = item.time;
+  nameRow.append(nameSpan, timeSpan);
+
+  const snippetRow = document.createElement('div');
+  snippetRow.className = 'dm-conv-snippet';
+  snippetRow.textContent = item.lastMessage;
+
+  info.append(nameRow, snippetRow);
+
+  if(item.isUnread){
+   const dot = document.createElement('span');
+   dot.className = 'dm-unread-dot';
+   info.append(dot);
   }
-  fragment.append(item);
+
+  row.append(av, info);
+  fragment.append(row);
  });
- grid.replaceChildren(fragment);
+
+ container.replaceChildren(fragment);
+ if(hasUnreadGlobal) document.getElementById('navUnreadDot').classList.add('active');
+ else document.getElementById('navUnreadDot').classList.remove('active');
 }
 
-function submitHelpReport(){
- const val = document.getElementById('helpReportInput').value.trim();
- if(!val) return status('helpReportStatus', 'Escribí tu mensaje antes de enviar.');
- document.getElementById('helpReportInput').value = '';
- status('helpReportStatus', '¡Gracias! Tu mensaje fue enviado al equipo de soporte de Ög.');
- setTimeout(() => status('helpReportStatus', ''), 3500);
-}
+async function searchUsersForChat(){
+ clearTimeout(dmSearchTimer);
+ const val = document.getElementById('dmSearchInput').value.trim();
+ const resultBox = document.getElementById('dmSearchResults');
 
-function populateAccountCenter(){
- if(!currentUser) return;
- document.getElementById('accCenterName').textContent = myProfile?.display_name || myProfile?.username || 'Usuario';
- document.getElementById('accCenterEmail').textContent = currentUser.email || 'Sin correo';
- document.getElementById('accCenterId').textContent = currentUser.id;
- document.getElementById('passwordStatus').textContent = '';
- document.getElementById('newPasswordInput').value = '';
-
- const avBox = document.getElementById('accCenterAvatar');
- avBox.replaceChildren();
- if(myProfile?.avatar_url){
-  const img = document.createElement('img');
-  img.src = myProfile.avatar_url;
-  img.style.width = '100%';
-  img.style.height = '100%';
-  img.style.objectFit = 'cover';
-  avBox.append(img);
- } else {
-  avBox.textContent = '👤';
- }
-}
-
-async function updateUserPassword(){
- const newPassword = document.getElementById('newPasswordInput').value;
- if(!newPassword || newPassword.length < 8){
-  return status('passwordStatus', 'La contraseña debe tener al menos 8 caracteres.');
- }
-
- status('passwordStatus', 'Actualizando contraseña...');
- const { error } = await db.auth.updateUser({ password: newPassword });
-
- if(error){
-  return status('passwordStatus', 'Error: ' + error.message);
- }
-
- document.getElementById('newPasswordInput').value = '';
- status('passwordStatus', '¡Contraseña actualizada correctamente!');
-}
-
-function promptLogoutConfirmation(){
- document.getElementById('logoutConfirmModal').classList.add('active');
-}
-
-function closeLogoutConfirmation(){
- document.getElementById('logoutConfirmModal').classList.remove('active');
-}
-
-async function executeConfirmedSignOut(){
- closeLogoutConfirmation();
- const {error}=await db.auth.signOut();
- if(error)return alert(error.message);
-
- if(realtimeChannel) db.removeChannel(realtimeChannel);
- if(dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
- if(postsRealtimeChannel) db.removeChannel(postsRealtimeChannel);
- if(presenceChannel) db.removeChannel(presenceChannel);
-
- currentUser=null;
- myProfile=null;
- viewedProfile=null;
- myActiveStory=null;
- cachedConversationsList = null;
- cachedActivityEvents = null;
- cachedFeedPosts = null;
- loadedPostIds.clear();
- updateStoryUI();
- updateNavAvatarUI();
- updateProfileUI();
- showAuthOverlay();
- showTab('feed');
-}
-
-function status(id,message){
- document.getElementById(id).textContent=message;
-}
-
-function createAvatarNode(profile, isStoryActive=false){
- const container = document.createElement('div');
- container.className = 'story-avatar-container';
- 
- const inner = document.createElement('div');
- inner.className = 'story-avatar-inner';
- 
- if(profile?.avatar_url){
-  const img = document.createElement('img');
-  img.src = profile.avatar_url;
-  img.alt = 'Avatar';
-  img.loading = 'lazy';
-  inner.append(img);
- }else{
-  const placeholder = document.createElement('div');
-  placeholder.style.fontSize = '20px';
-  placeholder.textContent = '👤';
-  inner.append(placeholder);
- }
- container.append(inner);
-
- const dot = document.createElement('span');
- dot.className = 'online-dot';
- if(profile?.id && onlineUsersMap[profile.id]){
-  dot.classList.add('active');
- }
- dot.id = `online-dot-${profile?.id}`;
- container.append(dot);
-
- return container;
-}
-
-function updateNavAvatarUI(){
- const navContainer = document.getElementById('navAvatarContainer');
- if(!navContainer) return;
-
- const dot = document.getElementById('navOnlineDot');
- navContainer.replaceChildren();
-
- if(myProfile?.avatar_url){
-  const img = document.createElement('img');
-  img.src = myProfile.avatar_url;
-  img.alt = 'Perfil';
-  img.loading = 'lazy';
-  navContainer.append(img);
- } else {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('fill', 'none');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('stroke-linecap', 'round');
-  svg.setAttribute('stroke-linejoin', 'round');
-  svg.style.width = '16px';
-  svg.style.height = '16px';
-  svg.innerHTML = '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>';
-  navContainer.append(svg);
- }
- if(dot) navContainer.append(dot);
-}
-
-async function loadAccount(user){
- currentUser=user;
-
- let {data:profile,error}=await db.from('profiles')
-  .select('*').eq('id',user.id).maybeSingle();
-
- if(error){
-  console.error('Error al consultar perfil:', error.message);
+ if(val.length < 2){
+  resultBox.replaceChildren();
   return;
  }
 
- if(!profile){
-  const username=user.user_metadata?.username||('usuario_'+user.id.slice(0,8));
-  const {data:created,error:createError}=await db.from('profiles')
-   .insert({id:user.id,username,display_name:username})
-   .select().single();
-
-  if(createError){
-   console.error('No se pudo crear perfil:', createError.message);
+ dmSearchTimer = setTimeout(async () => {
+  const { data } = await db.from('profiles').select('id, username, display_name, avatar_url').ilike('username', '%' + val + '%').limit(10);
+  if(!data || !data.length){
+   resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>';
    return;
   }
-  profile=created;
+
+  const fragment = document.createDocumentFragment();
+  data.forEach(profile => {
+   if(profile.id === currentUser?.id) return;
+   profilesCache[profile.id] = profile;
+
+   const item = document.createElement('div');
+   item.className = 'public-user';
+   const av = createAvatarNode(profile, false);
+   const info = document.createElement('div');
+   info.className = 'public-user-info';
+   const name = document.createElement('strong');
+   name.textContent = profile.display_name || profile.username;
+   const username = document.createElement('small');
+   username.textContent = '@' + profile.username;
+   info.append(name, username);
+   item.append(av, info);
+   item.onclick = () => openDirectChatWithUser(profile.id);
+   fragment.append(item);
+  });
+  resultBox.replaceChildren(fragment);
+ }, 200);
+}
+
+async function openDirectChatWithUser(recipientId){
+ if(!currentUser || !recipientId) return;
+
+ const { data: convId, error } = await db.rpc('get_or_create_private_conversation', { recipient_id: recipientId });
+ if(error || !convId){
+  alert('No se pudo abrir la conversación: ' + (error?.message || 'Error desconocido'));
+  return;
  }
 
- myProfile=profile;
- profilesCache[user.id]=profile;
- hideAuthOverlay();
- updateProfileUI();
- updateNavAvatarUI();
- 
- await Promise.all([
-  loadInitialPosts(),
-  loadStoriesData(),
-  checkGlobalUnreadMessages()
- ]);
- 
- setupRealtimeNotifications();
- setupPresenceChannel();
+ let profile = profilesCache[recipientId];
+ if(!profile){
+  const { data: prof } = await db.from('profiles').select('*').eq('id', recipientId).single();
+  profile = prof;
+  profilesCache[recipientId] = prof;
+ }
+
+ document.getElementById('dmSearchInput').value = '';
+ document.getElementById('dmSearchResults').replaceChildren();
+ cachedConversationsList = null;
+ openChatRoom(convId, profile);
 }
+
+async function openChatRoom(conversationId, recipientProfile){
+ activeConversationId = conversationId;
+ activeRecipientProfile = recipientProfile;
+ cancelReply();
+
+ document.getElementById('chatRoomTitle').textContent = recipientProfile.display_name || recipientProfile.username;
+ 
+ const headerAvatarContainer = document.getElementById('chatRoomHeaderAvatar');
+ 
+ let img = headerAvatarContainer.querySelector('img');
+ if(!img){
+  headerAvatarContainer.replaceChildren();
+  if(recipientProfile.avatar_url){
+   img = document.createElement('img');
+   img.src = recipientProfile.avatar_url;
+   img.alt = 'Avatar';
+   img.loading = 'lazy';
+   headerAvatarContainer.append(img);
+  } else {
+   const ph = document.createElement('div');
+   ph.style.fontSize = '18px';
+   ph.textContent = '👤';
+   headerAvatarContainer.append(ph);
+  }
+  const dot = document.createElement('span');
+  dot.className = 'online-dot';
+  dot.id = 'chatRoomOnlineDot';
+  headerAvatarContainer.append(dot);
+ } else if(recipientProfile.avatar_url){
+  img.src = recipientProfile.avatar_url;
+ }
+
+ if(onlineUsersMap[recipientProfile.id]){
+  document.getElementById('chatRoomOnlineDot').classList.add('active');
+  document.getElementById('chatRoomStatusSub').textContent = 'En línea';
+ } else {
+  document.getElementById('chatRoomOnlineDot').classList.remove('active');
+  document.getElementById('chatRoomStatusSub').textContent = 'Desconectado';
+ }
+
+ showTab('chatRoomPage');
+ await loadChatMessages(conversationId);
+ markConversationAsRead(conversationId);
+}
+
+async function loadChatMessages(conversationId){
+ const container = document.getElementById('chatMessagesContainer');
+ container.innerHTML = '<div class="activity-empty">Cargando mensajes...</div>';
+
+ // Optimización: carga paginada progresiva (últimos 50 mensajes en orden cronológico eficiente)
+ const { data: messages, error } = await db.from('messages')
+  .select('*')
+  .eq('conversation_id', conversationId)
+  .order('created_at', {ascending: true})
+  .limit(50);
+
+ if(error){
+  container.innerHTML = '<div class="activity-empty">Error al cargar mensajes.</div>';
+  return;
+ }
+
+ container.replaceChildren();
+ if(!messages || !messages.length){
+  container.innerHTML = '<div class="activity-empty">No hay mensajes aún. ¡Escribe el primero!</div>';
+  return;
+ }
+
+ const fragment = document.createDocumentFragment();
+ messages.forEach(msg => {
+  fragment.append(buildChatMessageDOM(msg));
+ });
+ container.append(fragment);
+ scrollToBottomChat();
+}
+
+function buildChatMessageDOM(msg){
+ const isMe = msg.sender_id === currentUser.id;
+
+ const bubble = document.createElement('div');
+ bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
+ bubble.title = "Toca para responder a este mensaje";
+ bubble.onclick = () => startReplyingTo(msg);
+
+ if(msg.reply_to_snippet){
+  const replyPrev = document.createElement('div');
+  replyPrev.className = 'chat-bubble-reply-preview';
+  replyPrev.textContent = msg.reply_to_snippet;
+  bubble.append(replyPrev);
+ }
+ 
+ const textNode = document.createElement('div');
+ textNode.textContent = msg.content;
+ 
+ const timeNode = document.createElement('div');
+ timeNode.className = 'chat-bubble-time';
+ timeNode.textContent = formatDate(msg.created_at);
+
+ bubble.append(textNode, timeNode);
+ return bubble;
+}
+
+function appendChatMessageNode(msg){
+ const container = document.getElementById('chatMessagesContainer');
+ const bubble = buildChatMessageDOM(msg);
+ container.append(bubble);
+}
+
+function startReplyingTo(msg){
+ replyingToMessageId = msg.id;
+ replyingToSnippet = (msg.sender_id === currentUser.id ? 'Tú: ' : (activeRecipientProfile?.username || 'Usuario') + ': ') + msg.content;
+ 
+ document.getElementById('replyingTextSnippet').textContent = replyingToSnippet;
+ document.getElementById('replyingBar').classList.add('active');
+ document.getElementById('chatMessageInput').focus();
+}
+
+function cancelReply(){
+ replyingToMessageId = null;
+ replyingToSnippet = null;
+ document.getElementById('replyingBar').classList.remove('active');
+ document.getElementById('replyingTextSnippet').textContent = '';
+}
+
+async function sendChatMessage(){
+ const input = document.getElementById('chatMessageInput');
+ const text = input.value.trim();
+ if(!text || !activeConversationId || !currentUser) return;
+
+ input.value = '';
+ const currentReplySnippet = replyingToSnippet;
+ cancelReply();
+
+ const tempMsg = {
+  conversation_id: activeConversationId,
+  sender_id: currentUser.id,
+  content: text,
+  reply_to_snippet: currentReplySnippet,
+  created_at: new Date().toISOString()
+ };
+
+ appendChatMessageNode(tempMsg);
+ scrollToBottomChat();
+
+ cachedConversationsList = null;
+
+ const insertPayload = {
+  conversation_id: activeConversationId,
+  sender_id: currentUser.id,
+  content: text
+ };
+ if(replyingToMessageId){
+  insertPayload.reply_to_id = replyingToMessageId;
+  insertPayload.reply_to_snippet = currentReplySnippet;
+ }
+
+ const { error } = await db.from('messages').insert(insertPayload);
+ if(error){
+  alert('Error al enviar mensaje: ' + error.message);
+ }
+}
+
+async function markConversationAsRead(conversationId){
+ if(!currentUser) return;
+ await db.from('conversation_participants')
+  .update({ last_read_at: new Date().toISOString() })
+  .eq('conversation_id', conversationId)
+  .eq('user_id', currentUser.id);
+
+ cachedConversationsList = null;
+ checkGlobalUnreadMessages();
+}
+
+function scrollToBottomChat(){
+ requestAnimationFrame(() => {
+  const container = document.getElementById('chatMessagesContainer');
+  if(container) container.scrollTop = container.scrollHeight;
+ });
+}
+
+/* ========================================================================= */
+/* CONFIGURACIÓN Y TIEMPO REAL OPTIMIZADO                                    */
+/* ========================================================================= */
 
 function setupPresenceChannel(){
  if(presenceChannel) db.removeChannel(presenceChannel);
@@ -2389,6 +2422,10 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('navUnreadDot').classList.remove('active');
 }
 
+/* ========================================================================= */
+/* RESTO DE FUNCIONES GLOBALES DE SOPORTE                                    */
+/* ========================================================================= */
+
 async function loadInitialPosts(){
  feedPage = 0;
  feedHasMore = true;
@@ -2429,7 +2466,7 @@ async function fetchAndAppendPosts(isInitial){
 
   if(error){
    if(isInitial && (!cachedFeedPosts || !cachedFeedPosts.length)){
-    document.getElementById('posts').innerHTML = '<div class="activity-empty">Error al cargar publicaciones.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Volver a intentar</button></div>';
+    document.getElementById('posts').innerHTML = '<div class="activity-empty">Error al cargar publicaciones.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Volver à intentar</button></div>';
    }
    return;
   }
@@ -3258,465 +3295,6 @@ function renderActivityDOM(events, container){
 
   container.replaceChildren(fragment);
  })();
-}
-
-async function loadConversations(){
- const container = document.getElementById('dmConversationsList');
- if(!currentUser) return;
-
- if(cachedConversationsList && cachedConversationsList.length > 0){
-  renderConversationsDOM(cachedConversationsList, container);
- } else {
-  container.innerHTML = '<div class="activity-empty">Cargando conversaciones...</div>';
- }
-
- try {
-  const { data: myParts, error: partErr } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
-  if(partErr || !myParts || !myParts.length){
-   cachedConversationsList = [];
-   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá a alguien arriba para iniciar un chat.</div>';
-   document.getElementById('navUnreadDot').classList.remove('active');
-   return;
-  }
-
-  const convIds = myParts.map(p => p.conversation_id);
-  const { data: allParts } = await db.from('conversation_participants').select('conversation_id, user_id').in('conversation_id', convIds);
-  
-  const convMap = {};
-  convIds.forEach(id => { convMap[id] = { otherUserId: null, last_read_at: myParts.find(p=>p.conversation_id===id)?.last_read_at }; });
-
-  (allParts || []).forEach(p => {
-   if(p.user_id !== currentUser.id && convMap[p.conversation_id]){
-    convMap[p.conversation_id].otherUserId = p.user_id;
-   }
-  });
-
-  const otherUserIds = [...new Set(Object.values(convMap).map(c => c.otherUserId).filter(Boolean))];
-  const missing = otherUserIds.filter(id => !profilesCache[id]);
-  if(missing.length > 0){
-   const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
-   (profs || []).forEach(p => profilesCache[p.id] = p);
-  }
-
-  const conversationsList = await Promise.all(convIds.map(async convId => {
-   const otherId = convMap[convId].otherUserId;
-   const profile = profilesCache[otherId];
-   if(!profile) return null;
-
-   const { data: lastMsg } = await db.from('messages')
-    .select('content, created_at, sender_id')
-    .eq('conversation_id', convId)
-    .order('created_at', {ascending: false})
-    .limit(1)
-    .maybeSingle();
-
-   const isUnread = lastMsg && lastMsg.sender_id !== currentUser.id && (!convMap[convId].last_read_at || new Date(lastMsg.created_at) > new Date(convMap[convId].last_read_at));
-
-   return {
-    conversationId: convId,
-    profile,
-    lastMessage: lastMsg ? lastMsg.content : 'Conversación iniciada',
-    time: lastMsg ? formatDate(lastMsg.created_at) : '',
-    timestamp: lastMsg ? new Date(lastMsg.created_at).getTime() : 0,
-    isUnread
-   };
-  }));
-
-  const validConversations = conversationsList.filter(Boolean);
-  validConversations.sort((a,b) => b.timestamp - a.timestamp);
-
-  cachedConversationsList = validConversations;
-  renderConversationsDOM(validConversations, container);
-
- }catch(e){
-  if(!cachedConversationsList){
-   container.innerHTML = '<div class="activity-empty">No se pudieron cargar las conversaciones.</div>';
-  }
- }
-}
-
-function renderConversationsDOM(conversationsList, container){
- if(!conversationsList.length){
-  container.innerHTML = '<div class="activity-empty">No hay conversaciones recientes.</div>';
-  return;
- }
-
- const fragment = document.createDocumentFragment();
- let hasUnreadGlobal = false;
-
- conversationsList.forEach(item => {
-  if(item.isUnread) hasUnreadGlobal = true;
-
-  const row = document.createElement('div');
-  row.className = 'dm-conv-item';
-  row.onclick = () => openChatRoom(item.conversationId, item.profile);
-
-  const av = createAvatarNode(item.profile, false);
-  av.className += ' dm-conv-avatar';
-
-  const info = document.createElement('div');
-  info.className = 'dm-conv-info';
-
-  const nameRow = document.createElement('div');
-  nameRow.className = 'dm-conv-name';
-  const nameSpan = document.createElement('span');
-  nameSpan.textContent = item.profile.display_name || item.profile.username;
-  
-  const timeSpan = document.createElement('span');
-  timeSpan.className = 'dm-conv-time';
-  timeSpan.textContent = item.time;
-  nameRow.append(nameSpan, timeSpan);
-
-  const snippetRow = document.createElement('div');
-  snippetRow.className = 'dm-conv-snippet';
-  snippetRow.textContent = item.lastMessage;
-
-  info.append(nameRow, snippetRow);
-
-  if(item.isUnread){
-   const dot = document.createElement('span');
-   dot.className = 'dm-unread-dot';
-   info.append(dot);
-  }
-
-  row.append(av, info);
-  fragment.append(row);
- });
-
- container.replaceChildren(fragment);
- if(hasUnreadGlobal) document.getElementById('navUnreadDot').classList.add('active');
- else document.getElementById('navUnreadDot').classList.remove('active');
-}
-
-async function searchUsersForChat(){
- clearTimeout(dmSearchTimer);
- const val = document.getElementById('dmSearchInput').value.trim();
- const resultBox = document.getElementById('dmSearchResults');
-
- if(val.length < 2){
-  resultBox.replaceChildren();
-  return;
- }
-
- dmSearchTimer = setTimeout(async () => {
-  const { data } = await db.from('profiles').select('id, username, display_name, avatar_url').ilike('username', '%' + val + '%').limit(10);
-  if(!data || !data.length){
-   resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>';
-   return;
-  }
-
-  const fragment = document.createDocumentFragment();
-  data.forEach(profile => {
-   if(profile.id === currentUser?.id) return;
-   profilesCache[profile.id] = profile;
-
-   const item = document.createElement('div');
-   item.className = 'public-user';
-   const av = createAvatarNode(profile, false);
-   const info = document.createElement('div');
-   info.className = 'public-user-info';
-   const name = document.createElement('strong');
-   name.textContent = profile.display_name || profile.username;
-   const username = document.createElement('small');
-   username.textContent = '@' + profile.username;
-   info.append(name, username);
-   item.append(av, info);
-   item.onclick = () => openDirectChatWithUser(profile.id);
-   fragment.append(item);
-  });
-  resultBox.replaceChildren(fragment);
- }, 200);
-}
-
-async function openDirectChatWithUser(recipientId){
- if(!currentUser || !recipientId) return;
-
- const { data: convId, error } = await db.rpc('get_or_create_private_conversation', { recipient_id: recipientId });
- if(error || !convId){
-  alert('No se pudo abrir la conversación: ' + (error?.message || 'Error desconocido'));
-  return;
- }
-
- let profile = profilesCache[recipientId];
- if(!profile){
-  const { data: prof } = await db.from('profiles').select('*').eq('id', recipientId).single();
-  profile = prof;
-  profilesCache[recipientId] = prof;
- }
-
- document.getElementById('dmSearchInput').value = '';
- document.getElementById('dmSearchResults').replaceChildren();
- cachedConversationsList = null;
- openChatRoom(convId, profile);
-}
-
-async function openChatRoom(conversationId, recipientProfile){
- activeConversationId = conversationId;
- activeRecipientProfile = recipientProfile;
- cancelReply();
-
- document.getElementById('chatRoomTitle').textContent = recipientProfile.display_name || recipientProfile.username;
- 
- const headerAvatarContainer = document.getElementById('chatRoomHeaderAvatar');
- 
- let img = headerAvatarContainer.querySelector('img');
- if(!img){
-  headerAvatarContainer.replaceChildren();
-  if(recipientProfile.avatar_url){
-   img = document.createElement('img');
-   img.src = recipientProfile.avatar_url;
-   img.alt = 'Avatar';
-   img.loading = 'lazy';
-   headerAvatarContainer.append(img);
-  } else {
-   const ph = document.createElement('div');
-   ph.style.fontSize = '18px';
-   ph.textContent = '👤';
-   headerAvatarContainer.append(ph);
-  }
-  const dot = document.createElement('span');
-  dot.className = 'online-dot';
-  dot.id = 'chatRoomOnlineDot';
-  headerAvatarContainer.append(dot);
- } else if(recipientProfile.avatar_url){
-  img.src = recipientProfile.avatar_url;
- }
-
- if(onlineUsersMap[recipientProfile.id]){
-  document.getElementById('chatRoomOnlineDot').classList.add('active');
-  document.getElementById('chatRoomStatusSub').textContent = 'En línea';
- } else {
-  document.getElementById('chatRoomOnlineDot').classList.remove('active');
-  document.getElementById('chatRoomStatusSub').textContent = 'Desconectado';
- }
-
- showTab('chatRoomPage');
- await loadChatMessages(conversationId);
- markConversationAsRead(conversationId);
-}
-
-async function loadChatMessages(conversationId){
- const container = document.getElementById('chatMessagesContainer');
- container.innerHTML = '<div class="activity-empty">Cargando mensajes...</div>';
-
- const { data: messages, error } = await db.from('messages')
-  .select('*')
-  .eq('conversation_id', conversationId)
-  .order('created_at', {ascending: true});
-
- if(error){
-  container.innerHTML = '<div class="activity-empty">Error al cargar mensajes.</div>';
-  return;
- }
-
- container.replaceChildren();
- if(!messages || !messages.length){
-  container.innerHTML = '<div class="activity-empty">No hay mensajes aún. ¡Escribe el primero!</div>';
-  return;
- }
-
- messages.forEach(msg => {
-  appendChatMessageNode(msg);
- });
-
- scrollToBottomChat();
-}
-
-function appendChatMessageNode(msg){
- const container = document.getElementById('chatMessagesContainer');
- const isMe = msg.sender_id === currentUser.id;
-
- const bubble = document.createElement('div');
- bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
- bubble.title = "Toca para responder a este mensaje";
- bubble.onclick = () => startReplyingTo(msg);
-
- if(msg.reply_to_snippet){
-  const replyPrev = document.createElement('div');
-  replyPrev.className = 'chat-bubble-reply-preview';
-  replyPrev.textContent = msg.reply_to_snippet;
-  bubble.append(replyPrev);
- }
- 
- const textNode = document.createElement('div');
- textNode.textContent = msg.content;
- 
- const timeNode = document.createElement('div');
- timeNode.className = 'chat-bubble-time';
- timeNode.textContent = formatDate(msg.created_at);
-
- bubble.append(textNode, timeNode);
- container.append(bubble);
-}
-
-function startReplyingTo(msg){
- replyingToMessageId = msg.id;
- replyingToSnippet = (msg.sender_id === currentUser.id ? 'Tú: ' : (activeRecipientProfile?.username || 'Usuario') + ': ') + msg.content;
- 
- document.getElementById('replyingTextSnippet').textContent = replyingToSnippet;
- document.getElementById('replyingBar').classList.add('active');
- document.getElementById('chatMessageInput').focus();
-}
-
-function cancelReply(){
- replyingToMessageId = null;
- replyingToSnippet = null;
- document.getElementById('replyingBar').classList.remove('active');
- document.getElementById('replyingTextSnippet').textContent = '';
-}
-
-async function sendChatMessage(){
- const input = document.getElementById('chatMessageInput');
- const text = input.value.trim();
- if(!text || !activeConversationId || !currentUser) return;
-
- input.value = '';
- const currentReplySnippet = replyingToSnippet;
- cancelReply();
-
- const tempMsg = {
-  conversation_id: activeConversationId,
-  sender_id: currentUser.id,
-  content: text,
-  reply_to_snippet: currentReplySnippet,
-  created_at: new Date().toISOString()
- };
-
- appendChatMessageNode(tempMsg);
- scrollToBottomChat();
-
- cachedConversationsList = null;
-
- const insertPayload = {
-  conversation_id: activeConversationId,
-  sender_id: currentUser.id,
-  content: text
- };
- if(replyingToMessageId){
-  insertPayload.reply_to_id = replyingToMessageId;
-  insertPayload.reply_to_snippet = currentReplySnippet;
- }
-
- const { error } = await db.from('messages').insert(insertPayload);
- if(error){
-  alert('Error al enviar mensaje: ' + error.message);
- }
-}
-
-async function markConversationAsRead(conversationId){
- if(!currentUser) return;
- await db.from('conversation_participants')
-  .update({ last_read_at: new Date().toISOString() })
-  .eq('conversation_id', conversationId)
-  .eq('user_id', currentUser.id);
-
- cachedConversationsList = null;
- checkGlobalUnreadMessages();
-}
-
-function scrollToBottomChat(){
- const container = document.getElementById('chatMessagesContainer');
- container.scrollTop = container.scrollHeight;
-}
-
-async function openFollowersModal(targetUserId = null){
- if(!currentUser) return;
- const userId = targetUserId || currentUser.id;
- 
- if(userId !== currentUser.id){
-  const targetPrefs = JSON.parse(localStorage.getItem('og_user_settings_' + userId) || '{"showFollowersList": true}');
-  if(targetPrefs.showFollowersList === false){
-   alert('Este usuario ha ocultado su lista de seguidores por privacidad.');
-   return;
-  }
- }
-
- document.getElementById('followModalTitle').textContent = 'Seguidores';
- document.getElementById('followListModal').classList.add('open');
- const container = document.getElementById('followListContainer');
- container.innerHTML = '<div class="activity-empty">Cargando seguidores...</div>';
-
- const { data, error } = await db.from('follows').select('follower_id').eq('following_id', userId);
- if(error || !data || !data.length){
-  container.innerHTML = '<div class="activity-empty">No hay seguidores para mostrar.</div>';
-  return;
- }
-
- const userIds = data.map(f => f.follower_id);
- renderUsersInFollowModal(userIds);
-}
-
-async function openFollowingModal(targetUserId = null){
- if(!currentUser) return;
- const userId = targetUserId || currentUser.id;
-
- if(userId !== currentUser.id){
-  const targetPrefs = JSON.parse(localStorage.getItem('og_user_settings_' + userId) || '{"showFollowersList": true}');
-  if(targetPrefs.showFollowersList === false){
-   alert('Este usuario ha ocultado su lista de seguidos por privacidad.');
-   return;
-  }
- }
-
- document.getElementById('followModalTitle').textContent = 'Seguidos';
- document.getElementById('followListModal').classList.add('open');
- const container = document.getElementById('followListContainer');
- container.innerHTML = '<div class="activity-empty">Cargando seguidos...</div>';
-
- const { data, error } = await db.from('follows').select('following_id').eq('follower_id', userId);
- if(error || !data || !data.length){
-  container.innerHTML = '<div class="activity-empty">No sigue a nadie todavía.</div>';
-  return;
- }
-
- const userIds = data.map(f => f.following_id);
- renderUsersInFollowModal(userIds);
-}
-
-async function renderUsersInFollowModal(userIds){
- const container = document.getElementById('followListContainer');
- const missing = userIds.filter(id => !profilesCache[id]);
- 
- if(missing.length > 0){
-  const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
-  (profs || []).forEach(p => profilesCache[p.id] = p);
- }
-
- const fragment = document.createDocumentFragment();
- userIds.forEach(id => {
-  const profile = profilesCache[id];
-  if(!profile) return;
-
-  const item = document.createElement('div');
-  item.className = 'public-user';
-  item.style.padding = '8px 0';
-  
-  const av = createAvatarNode(profile, false);
-  const info = document.createElement('div');
-  info.className = 'public-user-info';
-  
-  const name = document.createElement('strong');
-  name.textContent = profile.display_name || profile.username;
-  
-  const username = document.createElement('small');
-  username.textContent = '@' + profile.username;
-  
-  info.append(name, username);
-  item.append(av, info);
-  
-  item.onclick = () => {
-   closeFollowListModal();
-   openPublicProfile(profile.id);
-  };
-
-  fragment.append(item);
- });
-
- container.replaceChildren(fragment);
-}
-
-function closeFollowListModal(){
- document.getElementById('followListModal').classList.remove('open');
 }
 
 async function loadStoriesData(){
