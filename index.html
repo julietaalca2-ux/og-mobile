@@ -149,7 +149,7 @@ main > div.active {display: block !important;}
 .story-content-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;margin:8px 0;overflow:hidden;border-radius:12px;background:#121214}
 .story-content-area img{width:100%;height:100%;object-fit:cover}
 
-/* BARRA INFERIOR DE HISTORIA (Estilo Instagram exacto) */
+/* BARRA INFERIOR DE HISTORIA */
 .story-bottom-bar{
  display:flex;align-items:center;gap:12px;padding:4px 8px;width:100%;max-width:450px;margin:0 auto;position:relative;z-index:2;
 }
@@ -739,7 +739,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.5.0 (iOS Glass Liquid Engine)</p>
+    <p class="settings-row-desc">1.5.1 (iOS Glass Liquid Engine)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -1162,6 +1162,9 @@ function setupRealtimeNotifications(){
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'stories'},payload=>{
    loadStoriesData();
   })
+  .on('postgres_changes',{event:'INSERT',schema:'public',table:'story_likes'},payload=>{
+   loadActivity();
+  })
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'posts'},payload=>{
    const updated = payload.new;
    const badges = document.querySelectorAll(`[data-post-views="${updated.id}"]`);
@@ -1337,8 +1340,8 @@ async function toggleStoryLikeAction(){
   p_visitor_id: visitorId
  });
 
- if(!error){
-  if(likedResult){
+ if(!error && likedResult){
+  if(likedResult.liked){
    likeBtn.classList.add('liked');
   } else {
    likeBtn.classList.remove('liked');
@@ -1872,10 +1875,14 @@ async function loadActivity(){
 
   const postIds=(ownPosts||[]).map(p=>p.id);
 
-  const [followsResult,likesResult,commentsResult]=await Promise.all([
+  const {data:ownStories,error:storiesError}=await db.from('stories').select('id').eq('user_id',currentUser.id);
+  const storyIds=(ownStories||[]).map(s=>s.id);
+
+  const [followsResult,likesResult,commentsResult,storyLikesResult]=await Promise.all([
    db.from('follows').select('follower_id,created_at').eq('following_id',currentUser.id).order('created_at',{ascending:false}).limit(30),
    postIds.length?db.from('likes').select('user_id,post_id,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]}),
-   postIds.length?db.from('comments').select('id,user_id,post_id,content,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]})
+   postIds.length?db.from('comments').select('id,user_id,post_id,content,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]}),
+   storyIds.length?db.from('story_likes').select('visitor_id,story_id,created_at').in('story_id',storyIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]})
   ]);
 
   const events=[];
@@ -1888,6 +1895,12 @@ async function loadActivity(){
   (commentsResult.data||[]).forEach(c=>{
    if(c.user_id!==currentUser.id) events.push({type:'comment',user_id:c.user_id,content:c.content,created_at:c.created_at});
   });
+  
+  (storyLikesResult.data||[]).forEach(sl=>{
+   if(sl.visitor_id !== visitorId){
+    events.push({type:'story_like', visitor_id: sl.visitor_id, created_at: sl.created_at});
+   }
+  });
 
   events.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
 
@@ -1896,7 +1909,7 @@ async function loadActivity(){
    return;
   }
 
-  const missingUserIds=[...new Set(events.map(e=>e.user_id))].filter(id=>!profilesCache[id]);
+  const missingUserIds=[...new Set(events.map(e=>e.user_id).filter(Boolean))].filter(id=>!profilesCache[id]);
   if(missingUserIds.length>0){
    const {data:newProfiles}=await db.from('profiles').select('id,username,display_name,avatar_url').in('id',missingUserIds);
    (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
@@ -1904,43 +1917,54 @@ async function loadActivity(){
 
   const fragment=document.createDocumentFragment();
   events.forEach(event=>{
-   const profile=profilesCache[event.user_id];
-   if(!profile)return;
-
    const item=document.createElement('div');
    item.className='activity-item';
 
-   const av=createAvatarNode(profile, false);
-
    const info=document.createElement('div');
    info.className='activity-info';
-
    const message=document.createElement('div');
-   const name=document.createElement('strong');
-   name.textContent=profile.display_name||profile.username||'Usuario';
-   message.append(name);
-
-   if(event.type==='follow') message.append(document.createTextNode(' comenzó a seguirte.'));
-   else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
-   else if(event.type==='comment') message.append(document.createTextNode(' comentó tu publicación.'));
-
-   info.append(message);
-
-   if(event.type==='comment'){
-    const commentText=document.createElement('div');
-    commentText.style.color='#a1a1aa';
-    commentText.style.marginTop='3px';
-    commentText.textContent='“'+(event.content||'')+'”';
-    info.append(commentText);
-   }
-
    const date=document.createElement('div');
    date.className='activity-date';
    date.textContent=event.created_at?formatDate(event.created_at):'Reciente';
 
-   info.append(date);
-   item.append(av,info);
-   item.onclick=()=>openPublicProfile(profile.id);
+   if(event.type === 'story_like'){
+    const name=document.createElement('strong');
+    name.textContent = 'Alguien';
+    message.append(name, document.createTextNode(' le dio Me gusta a tu historia 📸❤️'));
+    info.append(message, date);
+    
+    const dummyAvatar = document.createElement('div');
+    dummyAvatar.className = 'story-avatar-container';
+    dummyAvatar.style.width = '42px';
+    dummyAvatar.style.height = '42px';
+    dummyAvatar.innerHTML = '<div class="story-avatar-inner" style="font-size:20px">❤️</div>';
+    item.append(dummyAvatar, info);
+   } else {
+    const profile=profilesCache[event.user_id];
+    if(!profile)return;
+    const av=createAvatarNode(profile, false);
+
+    const name=document.createElement('strong');
+    name.textContent=profile.display_name||profile.username||'Usuario';
+    message.append(name);
+
+    if(event.type==='follow') message.append(document.createTextNode(' comenzó a seguirte.'));
+    else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
+    else if(event.type==='comment') message.append(document.createTextNode(' comentó tu publicación.'));
+
+    info.append(message);
+
+    if(event.type==='comment'){
+     const commentText=document.createElement('div');
+     commentText.style.color='#a1a1aa';
+     commentText.style.marginTop='3px';
+     commentText.textContent='“'+(event.content||'')+'”';
+     info.append(commentText);
+    }
+    info.append(date);
+    item.append(av,info);
+    item.onclick=()=>openPublicProfile(profile.id);
+   }
 
    fragment.append(item);
   });
