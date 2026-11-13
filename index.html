@@ -309,6 +309,37 @@ main > div.active {display: block !important;}
 }
 .replying-bar.active{display:flex}
 
+/* -------------------------------------------------------------------------- */
+/* PARTE 1: PANEL DE PERFIL DESDE EL CHAT (ESTILO INSTAGRAM)                  */
+/* -------------------------------------------------------------------------- */
+.chat-profile-drawer-overlay{
+ position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+ z-index:400;display:none;align-items:flex-end;justify-content:center;
+}
+.chat-profile-drawer-overlay.active{display:flex}
+
+.chat-profile-drawer{
+ background:#18181b;width:100%;max-width:470px;border-top-left-radius:24px;border-top-right-radius:24px;
+ padding:24px 20px calc(env(safe-area-inset-bottom) + 24px) 20px;border-top:1px solid rgba(255,255,255,0.15);
+ display:flex;flex-direction:column;align-items:center;text-align:center;
+ animation:slideUpDrawer 0.25s cubic-bezier(0.1,0.9,0.2,1);
+}
+@keyframes slideUpDrawer{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+.drawer-avatar-outer{
+ width:96px;height:96px;border-radius:50%;padding:3px;
+ background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);margin-bottom:12px;
+}
+.drawer-avatar-inner{
+ width:100%;height:100%;border-radius:50%;overflow:hidden;background:#000;
+ border:3px solid #18181b;display:grid;place-items:center;
+}
+.drawer-avatar-inner img{width:100%;height:100%;object-fit:cover}
+
+.chat-header-profile-target{
+ display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;
+}
+
 /* PUBLICACIONES */
 .post{background:#000;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
 .posthead{display:flex;align-items:center;gap:12px;padding:12px 16px}
@@ -1352,7 +1383,9 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <div id="chatRoomPage" class="section">
  <div class="chat-room-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('messagesPage')">← Volver</button>
-  <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+  
+  <!-- ZONA TÁCTIL SUPERIOR (PARTE 1: Abre el panel de perfil) -->
+  <div class="chat-header-profile-target" onclick="openChatProfileDrawer()">
    <div id="chatRoomHeaderAvatar">
     <span id="chatRoomOnlineDot" class="online-dot"></span>
    </div>
@@ -1361,6 +1394,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <small id="chatRoomStatusSub" style="color:#71717a;font-size:11px;display:block;">Desconectado</small>
    </div>
   </div>
+
  </div>
 
  <div class="chat-messages-container" id="chatMessagesContainer"></div>
@@ -1380,6 +1414,26 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 </div>
 
 </main>
+
+<!-- ========================================================================= -->
+<!-- PARTE 1: PANEL DESPLEGABLE DE PERFIL DESDE EL CHAT                        -->
+<!-- ========================================================================= -->
+<div id="chatProfileDrawer" class="chat-profile-drawer-overlay" onclick="closeChatProfileDrawer()">
+ <div class="chat-profile-drawer" onclick="event.stopPropagation()">
+  <div style="width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin-bottom:20px"></div>
+  
+  <div class="drawer-avatar-outer">
+   <div class="drawer-avatar-inner" id="drawerAvatarBox">👤</div>
+  </div>
+
+  <strong id="drawerDisplayName" style="font-size:18px;color:#fff;margin-bottom:2px">Usuario</strong>
+  <span id="drawerUsername" style="font-size:13px;color:#71717a;margin-bottom:8px">@usuario</span>
+  <span id="drawerActivityStatus" style="font-size:12px;color:#22c55e;margin-bottom:24px">En línea</span>
+
+  <button class="primary" style="width:100%;margin-bottom:10px;font-weight:600;" onclick="navigateToTargetProfile()">Perfil</button>
+  <button class="secondary" style="width:100%;background:transparent;border:0;color:#71717a;" onclick="closeChatProfileDrawer()">Cerrar</button>
+ </div>
+</div>
 
 <!-- MODAL SEGUIDORES / SEGUIDOS -->
 <div id="followListModal" class="settings-overlay" onclick="closeFollowListModal()">
@@ -1476,7 +1530,7 @@ const FEED_PAGE_SIZE = 10;
 let feedLoading = false;
 let feedHasMore = true;
 let loadedPostIds = new Set();
-let cachedFeedPosts = null; // Caché persistente en memoria para carga instantánea
+let cachedFeedPosts = null;
 
 let activeConversationId = null;
 let activeRecipientProfile = null;
@@ -1638,6 +1692,62 @@ function showTab(id,btn){
  if(id==='messagesPage') loadConversations();
  if(id==='profile' && currentUser) loadMyPostsGrid();
  window.scrollTo(0,0);
+}
+
+/* ========================================================================= */
+/* PARTE 1: FUNCIONES DEL PANEL DESLIZANTE DESDE EL CHAT                     */
+/* ========================================================================= */
+
+function formatLastSeen(dateString, showActivityStatus = true){
+ if(!showActivityStatus || !dateString) return 'Desconectado';
+ const d = new Date(dateString);
+ const now = new Date();
+ const diffSec = Math.floor((now - d) / 1000);
+ if(diffSec < 60) return 'En línea';
+ 
+ const isToday = d.toDateString() === now.toDateString();
+ const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+ const isYesterday = d.toDateString() === yesterday.toDateString();
+ const hhmm = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+ if(isToday) return `Última vez hoy a las ${hhmm}`;
+ if(isYesterday) return `Última vez ayer a las ${hhmm}`;
+ 
+ const diffDays = Math.floor(diffSec / 86400);
+ if(diffDays < 7) return `Última vez el ${d.toLocaleDateString([], {weekday: 'long'})}`;
+ return `Última vez el ${d.toLocaleDateString([], {month: 'long', day: 'numeric'})}`;
+}
+
+function openChatProfileDrawer(){
+ if(!activeRecipientProfile) return;
+ document.getElementById('drawerDisplayName').textContent = activeRecipientProfile.display_name || activeRecipientProfile.username;
+ document.getElementById('drawerUsername').textContent = '@' + activeRecipientProfile.username;
+
+ const statusText = formatLastSeen(activeRecipientProfile.last_seen, activeRecipientProfile.show_activity_status !== false);
+ const statusElem = document.getElementById('drawerActivityStatus');
+ statusElem.textContent = statusText;
+ statusElem.style.color = (statusText === 'En línea') ? '#22c55e' : '#a1a1aa';
+
+ const avBox = document.getElementById('drawerAvatarBox');
+ avBox.replaceChildren();
+ if(activeRecipientProfile.avatar_url){
+  const img = document.createElement('img');
+  img.src = activeRecipientProfile.avatar_url;
+  avBox.append(img);
+ } else {
+  avBox.textContent = '👤';
+ }
+
+ document.getElementById('chatProfileDrawer').classList.add('active');
+}
+
+function closeChatProfileDrawer(){
+ document.getElementById('chatProfileDrawer').classList.remove('active');
+}
+
+function navigateToTargetProfile(){
+ closeChatProfileDrawer();
+ openPublicProfile(activeRecipientProfile.id);
 }
 
 /* ========================================================================= */
@@ -2155,7 +2265,6 @@ async function loadInitialPosts(){
  loadedPostIds.clear();
  const container = document.getElementById('posts');
 
- // 1. Renderizado instantáneo desde la caché local si está disponible (Cero espera)
  if(cachedFeedPosts && cachedFeedPosts.length > 0){
   renderPostsToDOM(cachedFeedPosts, container, true);
  } else {
@@ -2190,7 +2299,7 @@ async function fetchAndAppendPosts(isInitial){
 
   if(error){
    if(isInitial && (!cachedFeedPosts || !cachedFeedPosts.length)){
-    document.getElementById('posts').innerHTML = '<div class="activity-empty">Error al cargar publicaciones.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Volver a intentar</button></div>';
+    document.getElementById('posts').innerHTML = '<div class="activity-empty">Error al cargar publicaciones.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Volver à intentar</button></div>';
    }
    return;
   }
@@ -2551,7 +2660,7 @@ async function publish(){
  removePostImage();
  status('publishStatus', '¡Publicado con éxito!');
  setTimeout(() => status('publishStatus', ''), 2000);
- cachedFeedPosts = null; // Invalidar caché del feed para incluir el nuevo post
+ cachedFeedPosts = null;
  showTab('feed');
  await loadInitialPosts();
 }
@@ -2982,7 +3091,7 @@ function renderActivityDOM(events, container){
    if(event.type === 'story_like'){
     const name=document.createElement('strong');
     name.textContent = 'Visitante (' + event.visitor_id.slice(0, 6) + '...)';
-    message.append(name, document.createTextNode(' le dio Me gusta a tu historia 📸❤️'));
+    message.append(name, document.createTextNode(' le dio Me gusta à tu historia 📸❤️'));
     info.append(message, date);
     
     const dummyAvatar = document.createElement('div');
@@ -3000,7 +3109,7 @@ function renderActivityDOM(events, container){
     name.textContent=profile.display_name||profile.username||'Usuario';
     message.append(name);
 
-    if(event.type==='follow') message.append(document.createTextNode(' comenzó a seguirte.'));
+    if(event.type==='follow') message.append(document.createTextNode(' comenzó à seguirte.'));
     else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta à tu publicación.'));
     else if(event.type==='comment') message.append(document.createTextNode(' comentó tu publicación.'));
 
@@ -3039,7 +3148,7 @@ async function loadConversations(){
   const { data: myParts, error: partErr } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
   if(partErr || !myParts || !myParts.length){
    cachedConversationsList = [];
-   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá a alguien arriba para iniciar un chat.</div>';
+   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá à alguien arriba para iniciar un chat.</div>';
    document.getElementById('navUnreadDot').classList.remove('active');
    return;
   }
@@ -3293,7 +3402,7 @@ function appendChatMessageNode(msg){
 
  const bubble = document.createElement('div');
  bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
- bubble.title = "Toca para responder a este mensaje";
+ bubble.title = "Toca para responder à este mensaje";
  bubble.onclick = () => startReplyingTo(msg);
 
  if(msg.reply_to_snippet){
@@ -3430,7 +3539,7 @@ async function openFollowingModal(targetUserId = null){
 
  const { data, error } = await db.from('follows').select('following_id').eq('follower_id', userId);
  if(error || !data || !data.length){
-  container.innerHTML = '<div class="activity-empty">No sigue a nadie todavía.</div>';
+  container.innerHTML = '<div class="activity-empty">No sigue à nadie todavía.</div>';
   return;
  }
 
