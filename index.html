@@ -206,18 +206,22 @@ main > div.active {display: block !important;}
 .dm-conv-time{font-size:11px;color:#71717a;font-weight:normal}
 .dm-unread-dot{width:8px;height:8px;background:#3b82f6;border-radius:50%;display:inline-block}
 
-/* SALA DE CHAT PRIVADO MEJORADA Y FIJA (CORREGIDA LA ALINEACIÓN SUPERIOR) */
+/* SALA DE CHAT PRIVADO CORREGIDA EN SU ENCABEZADO */
 #chatRoomPage{
  display:none;flex-direction:column;height:100vh;height:100dvh;position:fixed;inset:0;background:#000;z-index:250;
 }
 #chatRoomPage.active{display:flex !important}
 
 .chat-room-header{
- padding:calc(env(safe-area-inset-top) + 10px) 16px 10px 16px;
+ padding-top: max(12px, env(safe-area-inset-top));
+ padding-bottom: 12px;
+ padding-left: 16px;
+ padding-right: 16px;
  border-bottom:1px solid rgba(255,255,255,0.08);
  display:flex;align-items:center;gap:12px;
- background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);
+ background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
  z-index:40;flex-shrink:0;
+ min-height: 64px;
 }
 
 .chat-messages-container{
