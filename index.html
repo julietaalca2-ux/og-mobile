@@ -142,7 +142,9 @@ header{
 main{max-width:470px;margin:auto}
 main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
-#feed.active, #profile.active, #publicprofile.active, #settingsPage.active, #messagesPage.active, #chatRoomPage.active, #menuSectionPage.active {padding: 0 !important;}
+#feed.active, #profile.active, #publicprofile.active, #messagesPage.active, #chatRoomPage.active, #menuSectionPage.active,
+#menuConfigPage.active, #menuPrivacyPage.active, #menuNotifPage.active, #menuActivityPage.active,
+#menuSavedPage.active, #menuHelpPage.active, #menuAccountsPage.active {padding: 0 !important;}
 #explore.active {padding: 0 !important;}
 
 /* CÁMARA */
@@ -318,6 +320,7 @@ main > div.active {display: block !important;}
 .post-action-btn:active{transform:scale(0.85)}
 .post-action-btn svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2}
 .post-action-btn.liked svg{fill:#ef4444;stroke:#ef4444}
+.post-action-btn.saved svg{fill:#3b82f6;stroke:#3b82f6}
 .likes-count{font-size:13px;font-weight:600;color:#fff;padding:0 16px 6px 16px}
 
 .post-comments-section{padding:0 16px 12px 16px;font-size:13px}
@@ -422,6 +425,11 @@ textarea{height:110px;resize:none}
  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
 }
 .secondary:active{background:rgba(255,255,255,0.15)}
+.danger-btn{
+ width:100%;padding:12px 14px;background:rgba(239,68,68,0.15);color:#ef4444;
+ border:1px solid rgba(239,68,68,0.3);border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;
+}
+.danger-btn:active{background:rgba(239,68,68,0.25)}
 .status{font-size:13px;color:#60a5fa;margin:10px 0;overflow-wrap:anywhere;text-align:center}
 .muted{color:#71717a;font-size:13px}
 .postimage{width:100%;aspect-ratio:1/1;object-fit:cover;background:#121214}
@@ -502,13 +510,13 @@ textarea{height:110px;resize:none}
 .ig-grid-item{aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-size:11px;color:#a1a1aa;border:0.5px solid rgba(255,255,255,0.08);cursor:pointer}
 .ig-grid-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
-/* PÁGINA DEL MENÚ DE LAS TRES RAYITAS (NUEVA SECCIÓN A PANTALLA COMPLETA) */
-#menuSectionPage{
+/* PANTALLAS INDEPENDIENTES DEL MENÚ */
+.fullscreen-menu-view{
  display:none;flex-direction:column;min-height:100vh;min-height:100dvh;background:#000000;
  position:fixed;inset:0;z-index:250;
  animation:slideInMenu 0.25s cubic-bezier(0.1,0.9,0.2,1);
 }
-#menuSectionPage.active{display:flex !important;}
+.fullscreen-menu-view.active{display:flex !important;}
 
 @keyframes slideInMenu {
  from{transform:translateX(100%);opacity:0.8;}
@@ -523,17 +531,26 @@ textarea{height:110px;resize:none}
  position:sticky;top:0;z-index:10;
 }
 .menu-section-content{
- flex:1;padding:24px 16px;display:flex;flex-direction:column;gap:16px;
- overflow-y:auto;
+ flex:1;padding:12px 16px calc(env(safe-area-inset-bottom) + 24px) 16px;
+ display:flex;flex-direction:column;gap:4px;
+ overflow-y:auto;max-width:470px;width:100%;margin:0 auto;
 }
 
-/* PÁGINA DE CONFIGURACIÓN */
-.settings-header{
- padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);
- display:flex;align-items:center;gap:12px;
- position:sticky;top:56px;background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:10;
+.menu-list-btn{
+ display:flex;align-items:center;justify-content:space-between;
+ width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+ padding:15px 16px;border-radius:14px;color:#fff;font-size:15px;font-weight:500;
+ cursor:pointer;transition:background 0.15s, transform 0.1s;margin-bottom:6px;text-align:left;
 }
-.settings-group{padding:16px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.menu-list-btn:active{background:rgba(255,255,255,0.08);transform:scale(0.99)}
+.menu-list-left{display:flex;align-items:center;gap:14px}
+.menu-list-left svg{width:22px;height:22px;color:#a1a1aa;flex-shrink:0}
+.menu-list-chevron{width:18px;height:18px;color:#71717a}
+.menu-list-btn.danger{color:#ef4444;border-color:rgba(239,68,68,0.18);background:rgba(239,68,68,0.05);margin-top:12px}
+.menu-list-btn.danger svg{color:#ef4444}
+
+/* GRUPOS DENTRO DE SUB-PANTALLAS DEL MENÚ */
+.settings-group{padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.08)}
 .settings-group-title{
  font-size:12px;font-weight:700;text-transform:uppercase;
  letter-spacing:0.6px;color:#71717a;margin:0 0 12px 0;
@@ -562,6 +579,18 @@ textarea{height:110px;resize:none}
 input:checked + .toggle-slider{background:#3b82f6}
 input:checked + .toggle-slider:before{transform:translateX(20px)}
 
+/* MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN */
+#logoutConfirmModal{
+ position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+ z-index:700;display:none;align-items:center;justify-content:center;padding:20px;
+}
+#logoutConfirmModal.active{display:flex}
+.confirm-card{
+ background:#18181b;border:1px solid rgba(255,255,255,0.12);border-radius:22px;
+ padding:24px 20px;width:100%;max-width:340px;text-align:center;
+ box-shadow:0 20px 40px rgba(0,0,0,0.6);animation:fadeIn 0.2s ease;
+}
+
 .public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer}
 .public-user .story-avatar-container{margin:0;width:44px;height:44px;flex-shrink:0}
 .public-user-info{min-width:0;overflow-wrap:anywhere}
@@ -574,6 +603,23 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 .activity-info strong{color:white}
 .activity-date{color:#71717a;font-size:11px;margin-top:3px}
 .activity-empty{text-align:center;padding:40px 20px;color:#71717a;font-size:14px}
+
+.settings-overlay{
+ position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+ z-index:200;display:none;opacity:0;transition:opacity 0.2s ease;
+}
+.settings-overlay.open{display:block;opacity:1}
+.settings-drawer{
+ position:fixed;bottom:0;left:0;right:0;
+ background:rgba(18,18,20,0.88);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);
+ border-top-left-radius:24px;border-top-right-radius:24px;
+ border-top:1px solid rgba(255,255,255,0.15);
+ z-index:201;padding:20px 16px calc(env(safe-area-inset-bottom) + 24px) 16px;
+ transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.1,0.9,0.2,1);
+ max-width:470px;margin:auto;
+}
+.settings-overlay.open .settings-drawer{transform:translateY(0)}
+.settings-handle{width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin:0 auto 20px auto}
 </style>
 </head>
 
@@ -784,7 +830,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- ACTIVIDAD -->
+<!-- ACTIVIDAD (DESDE HEADER) -->
 <div id="notifications" class="section" style="padding: 16px;">
  <h2 style="margin-top:0">Actividad</h2>
  <p class="muted">Novedades e interacciones en tiempo real.</p>
@@ -900,111 +946,352 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- NUEVA SECCIÓN DE MENÚ A PANTALLA COMPLETA (TRES RAYITAS) -->
-<div id="menuSectionPage" class="section">
+<!-- ====================================================================== -->
+<!-- MENÚ PRINCIPAL DE LAS TRES RAYITAS (PANTALLA COMPLETA)                 -->
+<!-- ====================================================================== -->
+<div id="menuSectionPage" class="fullscreen-menu-view">
  <div class="menu-section-header">
-  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="closeMenuSection()">← Volver</button>
-  <strong style="font-size:15px;color:#fff;">Menú</strong>
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="closeMenuSection()">← Perfil</button>
+  <strong style="font-size:16px;color:#fff;">Menú</strong>
  </div>
  <div class="menu-section-content">
-  <div style="text-align:center;padding:60px 20px;color:#71717a;">
-   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;margin-bottom:12px;color:#a1a1aa"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-   <p style="font-size:14px;margin:0;">Sección preparada. Pronto añadiremos las opciones del menú aquí.</p>
+  
+  <!-- 1. Configuración -->
+  <button class="menu-list-btn" onclick="openMenuSubPage('menuConfigPage')">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Configuración</span>
+   </span>
+   <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <!-- 2. Privacidad -->
+  <button class="menu-list-btn" onclick="openMenuSubPage('menuPrivacyPage')">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Privacidad</span>
+   </span>
+   <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <!-- 3. Notificaciones -->
+  <button class="menu-list-btn" onclick="openMenuSubPage('menuNotifPage')">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span>Notificaciones</span>
+   </span>
+   <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <!-- 4. Tu actividad -->
+  <button class="menu-list-btn" onclick="openMenuSubPage('menuActivityPage')">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Tu actividad</span>
+   </span>
+   <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <!-- 5. Guardados -->
+  <button class="menu-list-btn" onclick="openMenuSubPage('menuSavedPage')">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+    <span>Guardados</span>
+   </span>
+   <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <!-- 6. Ayuda -->
+  <button class="menu-list-btn" onclick="openMenuSubPage('menuHelpPage')">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span>Ayuda</span>
+   </span>
+   <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <!-- 7. Centro de cuentas -->
+  <button class="menu-list-btn" onclick="openMenuSubPage('menuAccountsPage')">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>Centro de cuentas</span>
+   </span>
+   <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <!-- 8. Cerrar sesión -->
+  <button class="menu-list-btn danger" onclick="promptLogoutConfirmation()">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    <span>Cerrar sesión</span>
+   </span>
+  </button>
+
+ </div>
+</div>
+
+<!-- SUB-PANTALLA 1: CONFIGURACIÓN -->
+<div id="menuConfigPage" class="fullscreen-menu-view">
+ <div class="menu-section-header">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="backToMainMenu('menuConfigPage')">← Menú</button>
+  <strong style="font-size:16px;color:#fff;">Configuración</strong>
+ </div>
+ <div class="menu-section-content">
+  <div class="settings-group">
+   <h4 class="settings-group-title">Preferencias de la aplicación</h4>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Ahorro de datos móviles</p>
+     <p class="settings-row-desc">Reduce la resolución de previsualizaciones cuando usás red celular.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="cfgDataSaverToggle" onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
+   </div>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Reproducción automática de contenido</p>
+     <p class="settings-row-desc">Cargar historias y fotos de forma anticipada en el feed.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="cfgAutoplayToggle" checked onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
+   </div>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Idioma de la interfaz</p>
+     <p class="settings-row-desc">Español (Argentina / Latinoamérica)</p>
+    </div>
+   </div>
+  </div>
+
+  <div class="settings-group" style="border-bottom:none">
+   <h4 class="settings-group-title">Información técnica</h4>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Versión de Ög</p>
+     <p class="settings-row-desc">2.6.0 (Navegación Modular Completa)</p>
+    </div>
+   </div>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Motor de base de datos</p>
+     <p class="settings-row-desc">Supabase Realtime Engine</p>
+    </div>
+   </div>
   </div>
  </div>
 </div>
 
-<!-- CONFIGURACIÓN Y PRIVACIDAD -->
-<div id="settingsPage" class="section" style="padding: 16px;">
- <div class="settings-header" style="top:0;margin:-16px -16px 16px -16px;">
-  <button class="secondary" style="padding:6px 12px" onclick="showTab('profile')">← Volver</button>
-  <strong style="font-size:15px">Configuración y privacidad</strong>
+<!-- SUB-PANTALLA 2: PRIVACIDAD -->
+<div id="menuPrivacyPage" class="fullscreen-menu-view">
+ <div class="menu-section-header">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="backToMainMenu('menuPrivacyPage')">← Menú</button>
+  <strong style="font-size:16px;color:#fff;">Privacidad</strong>
  </div>
+ <div class="menu-section-content">
+  <div class="settings-group">
+   <h4 class="settings-group-title">Visibilidad de la cuenta</h4>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Cuenta privada</p>
+     <p class="settings-row-desc">Solo tus seguidores aprobados podrán ver tus fotos e historias.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="privateAccountToggle" onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
+   </div>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Mostrar estado de actividad</p>
+     <p class="settings-row-desc">Permite que otros vean el punto verde cuando estás en línea.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="activityStatusToggle" checked onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
+   </div>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Mostrar lista de seguidores y seguidos</p>
+     <p class="settings-row-desc">Permite que otros usuarios vean tu red de contactos.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="showFollowersListToggle" checked onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
+   </div>
+  </div>
 
- <div class="settings-group">
-  <h4 class="settings-group-title">Seguridad y contraseña</h4>
-  <div class="settings-row">
-   <div class="settings-row-info">
-    <p class="settings-row-title">Correo asociado</p>
-    <p class="settings-row-desc" id="settingsEmailText">No disponible</p>
+  <div class="settings-group" style="border-bottom:none">
+   <h4 class="settings-group-title">Interacciones</h4>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Permitir mensajes directos</p>
+     <p class="settings-row-desc">Cualquier usuario de Ög puede enviarte mensajes.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="allowDmToggle" checked onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
    </div>
-  </div>
-  <input class="field" id="newPasswordInput" type="password" placeholder="Nueva contraseña (mín. 8 caracteres)">
-  <button class="primary" style="margin-top:10px" onclick="updateUserPassword()">Actualizar contraseña</button>
-  <p id="passwordStatus" class="status"></p>
- </div>
-
- <div class="settings-group">
-  <h4 class="settings-group-title">Privacidad de la cuenta</h4>
-  <div class="settings-row">
-   <div class="settings-row-info">
-    <p class="settings-row-title">Cuenta privada</p>
-    <p class="settings-row-desc">Solo tus seguidores podrán ver tus historias y fotos.</p>
-   </div>
-   <label class="toggle-switch">
-    <input type="checkbox" id="privateAccountToggle" onchange="saveLocalSettings()">
-    <span class="toggle-slider"></span>
-   </label>
-  </div>
-  <div class="settings-row">
-   <div class="settings-row-info">
-    <p class="settings-row-title">Mostrar estado de actividad</p>
-    <p class="settings-row-desc">Permite que otros vean cuándo estás en línea.</p>
-   </div>
-   <label class="toggle-switch">
-    <input type="checkbox" id="activityStatusToggle" checked onchange="saveLocalSettings()">
-    <span class="toggle-slider"></span>
-   </label>
-  </div>
-  <div class="settings-row">
-   <div class="settings-row-info">
-    <p class="settings-row-title">Mostrar lista de seguidores y seguidos</p>
-    <p class="settings-row-desc">Permite que otros usuarios vean quiénes te siguen y a quiénes sigues.</p>
-   </div>
-   <label class="toggle-switch">
-    <input type="checkbox" id="showFollowersListToggle" checked onchange="saveLocalSettings()">
-    <span class="toggle-slider"></span>
-   </label>
-  </div>
- </div>
-
- <div class="settings-group">
-  <h4 class="settings-group-title">Notificaciones</h4>
-  <div class="settings-row">
-   <div class="settings-row-info">
-    <p class="settings-row-title">Me gusta y comentarios</p>
-    <p class="settings-row-desc">Alertas cuando interactúan contigo.</p>
-   </div>
-   <label class="toggle-switch">
-    <input type="checkbox" id="notifLikesToggle" checked onchange="saveLocalSettings()">
-    <span class="toggle-slider"></span>
-   </label>
-  </div>
-  <div class="settings-row">
-   <div class="settings-row-info">
-    <p class="settings-row-title">Nuevos seguidores</p>
-    <p class="settings-row-desc">Avisar cuando alguien empieza a seguirte.</p>
-   </div>
-   <label class="toggle-switch">
-    <input type="checkbox" id="notifFollowsToggle" checked onchange="saveLocalSettings()">
-    <span class="toggle-slider"></span>
-   </label>
   </div>
  </div>
+</div>
 
- <div class="settings-group" style="border-bottom:none">
-  <h4 class="settings-group-title">Información de la aplicación</h4>
-  <div class="settings-row">
-   <div class="settings-row-info">
-    <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">2.5.0 (Menú Independiente)</p>
+<!-- SUB-PANTALLA 3: NOTIFICACIONES -->
+<div id="menuNotifPage" class="fullscreen-menu-view">
+ <div class="menu-section-header">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="backToMainMenu('menuNotifPage')">← Menú</button>
+  <strong style="font-size:16px;color:#fff;">Notificaciones</strong>
+ </div>
+ <div class="menu-section-content">
+  <div class="settings-group" style="border-bottom:none">
+   <h4 class="settings-group-title">Alertas en tiempo real</h4>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Me gusta en publicaciones</p>
+     <p class="settings-row-desc">Avisar cuando a alguien le gusta una foto tuya.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="notifLikesToggle" checked onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
+   </div>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Comentarios</p>
+     <p class="settings-row-desc">Notificar cuando comentan tus publicaciones.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="notifCommentsToggle" checked onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
+   </div>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Nuevos seguidores</p>
+     <p class="settings-row-desc">Avisar cuando alguien comienza a seguirte.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="notifFollowsToggle" checked onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
+   </div>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">Mensajes directos</p>
+     <p class="settings-row-desc">Mostrar indicador rojo en la pestaña Chat al recibir mensajes.</p>
+    </div>
+    <label class="toggle-switch">
+     <input type="checkbox" id="notifDmToggle" checked onchange="saveMenuPreferences()">
+     <span class="toggle-slider"></span>
+    </label>
    </div>
   </div>
-  <div class="settings-row">
-   <div class="settings-row-info">
-    <p class="settings-row-title">ID de usuario</p>
-    <p class="settings-row-desc" id="settingsUserIdText" style="font-family:monospace;font-size:11px">—</p>
+ </div>
+</div>
+
+<!-- SUB-PANTALLA 4: TU ACTIVIDAD -->
+<div id="menuActivityPage" class="fullscreen-menu-view">
+ <div class="menu-section-header">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="backToMainMenu('menuActivityPage')">← Menú</button>
+  <strong style="font-size:16px;color:#fff;">Tu actividad</strong>
+ </div>
+ <div class="menu-section-content">
+  <p class="muted" style="margin:4px 0 12px 0;">Historial de tus interacciones realizadas en Ög (Me gusta dados, comentarios enviados y cuentas seguidas).</p>
+  <div id="userOwnActivityContainer">
+   <div class="activity-empty">Cargando tu historial de actividad...</div>
+  </div>
+ </div>
+</div>
+
+<!-- SUB-PANTALLA 5: GUARDADOS -->
+<div id="menuSavedPage" class="fullscreen-menu-view">
+ <div class="menu-section-header">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="backToMainMenu('menuSavedPage')">← Menú</button>
+  <strong style="font-size:16px;color:#fff;">Guardados</strong>
+ </div>
+ <div class="menu-section-content" style="padding:0;">
+  <p class="muted" style="padding:12px 16px 6px 16px;margin:0;">Solo vos podés ver las publicaciones que guardaste.</p>
+  <div class="ig-posts-grid" id="savedPostsGrid"></div>
+ </div>
+</div>
+
+<!-- SUB-PANTALLA 6: AYUDA -->
+<div id="menuHelpPage" class="fullscreen-menu-view">
+ <div class="menu-section-header">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="backToMainMenu('menuHelpPage')">← Menú</button>
+  <strong style="font-size:16px;color:#fff;">Ayuda</strong>
+ </div>
+ <div class="menu-section-content">
+  <div class="settings-group">
+   <h4 class="settings-group-title">Preguntas frecuentes</h4>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">¿Cómo edito mi perfil?</p>
+     <p class="settings-row-desc">Tocá el botón “Editar” directamente en tu perfil para cambiar foto, portada, nombre, pronombres, sexo y bio.</p>
+    </div>
    </div>
+   <div class="settings-row">
+    <div class="settings-row-info">
+     <p class="settings-row-title">¿Cómo subo una historia?</p>
+     <p class="settings-row-desc">Deslizá hacia la derecha desde el Inicio o tocá el ícono de cámara superior.</p>
+    </div>
+   </div>
+  </div>
+
+  <div class="settings-group" style="border-bottom:none">
+   <h4 class="settings-group-title">Reportar un problema</h4>
+   <p class="muted" style="margin-top:0">¿Encontraste un fallo o querés sugerir una mejora? Escribinos abajo:</p>
+   <textarea id="helpReportInput" placeholder="Describí el problema o consulta..." style="height:100px;"></textarea>
+   <button class="primary" style="margin-top:12px;" onclick="submitHelpReport()">Enviar mensaje a soporte</button>
+   <p id="helpReportStatus" class="status"></p>
+  </div>
+ </div>
+</div>
+
+<!-- SUB-PANTALLA 7: CENTRO DE CUENTAS -->
+<div id="menuAccountsPage" class="fullscreen-menu-view">
+ <div class="menu-section-header">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="backToMainMenu('menuAccountsPage')">← Menú</button>
+  <strong style="font-size:16px;color:#fff;">Centro de cuentas</strong>
+ </div>
+ <div class="menu-section-content">
+  <div class="settings-group">
+   <h4 class="settings-group-title">Cuenta activa en Ög</h4>
+   <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);">
+    <div id="accCenterAvatar" style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:#27272a;display:grid;place-items:center;font-size:20px;">👤</div>
+    <div style="flex:1;min-width:0;">
+     <strong id="accCenterName" style="display:block;font-size:15px;color:#fff;">Usuario</strong>
+     <small id="accCenterEmail" style="color:#a1a1aa;font-size:12px;display:block;overflow:hidden;text-overflow:ellipsis;">correo@ejemplo.com</small>
+    </div>
+    <span style="font-size:11px;background:rgba(34,197,94,0.15);color:#22c55e;padding:4px 8px;border-radius:8px;font-weight:600;">Activa</span>
+   </div>
+   <p class="muted" style="font-size:11px;margin-top:8px;font-family:monospace;">ID: <span id="accCenterId">—</span></p>
+  </div>
+
+  <div class="settings-group" style="border-bottom:none">
+   <h4 class="settings-group-title">Contraseña y seguridad</h4>
+   <p class="settings-row-desc" style="margin-bottom:8px;">Cambiá la contraseña de acceso a tu cuenta de Supabase.</p>
+   <input class="field" id="newPasswordInput" type="password" placeholder="Nueva contraseña (mín. 8 caracteres)">
+   <button class="primary" style="margin-top:12px" onclick="updateUserPassword()">Actualizar contraseña</button>
+   <p id="passwordStatus" class="status"></p>
+  </div>
+ </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN CERRAR SESIÓN -->
+<div id="logoutConfirmModal" onclick="closeLogoutConfirmation()">
+ <div class="confirm-card" onclick="event.stopPropagation()">
+  <h3 style="margin:0 0 8px 0;font-size:18px;color:#fff;">¿Cerrar sesión en Ög?</h3>
+  <p class="muted" style="margin:0 0 20px 0;line-height:1.4;">Tendrás que volver a ingresar tu correo y contraseña para acceder a tu cuenta.</p>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+   <button class="danger-btn" onclick="executeConfirmedSignOut()">Sí, cerrar sesión</button>
+   <button class="secondary" onclick="closeLogoutConfirmation()">Cancelar</button>
   </div>
  </div>
 </div>
@@ -1321,7 +1608,6 @@ function showTab(id,btn){
  const headerLogoSlot = document.getElementById('headerLogoSlot');
  const bottomNavBar = document.getElementById('bottomNavBar');
 
- // Asegurar que la barra inferior sea visible en las pestañas principales
  if(bottomNavBar) bottomNavBar.style.display = 'flex';
 
  if(id === 'feed'){
@@ -1332,11 +1618,6 @@ function showTab(id,btn){
  } else if(id === 'profile'){
   if(headerLogoSlot) headerLogoSlot.style.display = 'none';
   if(headerPlusBtn) headerPlusBtn.style.display = 'inline-flex';
-  if(defaultIcons) defaultIcons.style.display = 'none';
-  if(profileIcons) profileIcons.style.display = 'flex';
- } else if(id === 'settingsPage'){
-  if(headerLogoSlot) headerLogoSlot.style.display = 'none';
-  if(headerPlusBtn) headerPlusBtn.style.display = 'none';
   if(defaultIcons) defaultIcons.style.display = 'none';
   if(profileIcons) profileIcons.style.display = 'flex';
  } else {
@@ -1353,6 +1634,10 @@ function showTab(id,btn){
  window.scrollTo(0,0);
 }
 
+/* ========================================================================= */
+/* NAVEGACIÓN DE LA SECCIÓN DE MENÚ Y SUS 8 OPCIONES INDEPENDIENTES          */
+/* ========================================================================= */
+
 function openMenuSection(){
  if(!currentUser){
   showAuthOverlay();
@@ -1361,11 +1646,9 @@ function openMenuSection(){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
  document.getElementById('menuSectionPage').classList.add('active');
 
- // Ocultar la barra de navegación inferior en esta sección
  const bottomNavBar = document.getElementById('bottomNavBar');
  if(bottomNavBar) bottomNavBar.style.display = 'none';
 
- // Ajustar header superior para el menú
  document.getElementById('headerLogoSlot').style.display = 'none';
  document.getElementById('headerPlusBtn').style.display = 'none';
  document.getElementById('header-default-icons').style.display = 'none';
@@ -1377,17 +1660,206 @@ function closeMenuSection(){
  showTab('profile');
 }
 
-function openSettingsPage(){
- if(!currentUser){
-  showAuthOverlay();
+function openMenuSubPage(pageId){
+ document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
+ document.getElementById(pageId).classList.add('active');
+ loadMenuPreferences();
+
+ if(pageId === 'menuActivityPage') loadUserOwnActivity();
+ if(pageId === 'menuSavedPage') loadSavedPostsGrid();
+ if(pageId === 'menuAccountsPage') populateAccountCenter();
+}
+
+function backToMainMenu(currentPageId){
+ document.getElementById(currentPageId).classList.remove('active');
+ document.getElementById('menuSectionPage').classList.add('active');
+}
+
+function saveMenuPreferences(){
+ const prefs = {
+  dataSaver: document.getElementById('cfgDataSaverToggle')?.checked || false,
+  autoplay: document.getElementById('cfgAutoplayToggle')?.checked !== false,
+  privateAccount: document.getElementById('privateAccountToggle')?.checked || false,
+  activityStatus: document.getElementById('activityStatusToggle')?.checked !== false,
+  showFollowersList: document.getElementById('showFollowersListToggle')?.checked !== false,
+  allowDm: document.getElementById('allowDmToggle')?.checked !== false,
+  notifLikes: document.getElementById('notifLikesToggle')?.checked !== false,
+  notifComments: document.getElementById('notifCommentsToggle')?.checked !== false,
+  notifFollows: document.getElementById('notifFollowsToggle')?.checked !== false,
+  notifDm: document.getElementById('notifDmToggle')?.checked !== false
+ };
+ localStorage.setItem('og_user_settings_' + (currentUser?.id || 'guest'), JSON.stringify(prefs));
+ setupPresenceChannel();
+}
+
+function loadMenuPreferences(){
+ try{
+  const raw = localStorage.getItem('og_user_settings_' + (currentUser?.id || 'guest'));
+  if(!raw) return;
+  const prefs = JSON.parse(raw);
+  if(document.getElementById('cfgDataSaverToggle')) document.getElementById('cfgDataSaverToggle').checked = !!prefs.dataSaver;
+  if(document.getElementById('cfgAutoplayToggle')) document.getElementById('cfgAutoplayToggle').checked = prefs.autoplay !== false;
+  if(document.getElementById('privateAccountToggle')) document.getElementById('privateAccountToggle').checked = !!prefs.privateAccount;
+  if(document.getElementById('activityStatusToggle')) document.getElementById('activityStatusToggle').checked = prefs.activityStatus !== false;
+  if(document.getElementById('showFollowersListToggle')) document.getElementById('showFollowersListToggle').checked = prefs.showFollowersList !== false;
+  if(document.getElementById('allowDmToggle')) document.getElementById('allowDmToggle').checked = prefs.allowDm !== false;
+  if(document.getElementById('notifLikesToggle')) document.getElementById('notifLikesToggle').checked = prefs.notifLikes !== false;
+  if(document.getElementById('notifCommentsToggle')) document.getElementById('notifCommentsToggle').checked = prefs.notifComments !== false;
+  if(document.getElementById('notifFollowsToggle')) document.getElementById('notifFollowsToggle').checked = prefs.notifFollows !== false;
+  if(document.getElementById('notifDmToggle')) document.getElementById('notifDmToggle').checked = prefs.notifDm !== false;
+ }catch(e){}
+}
+
+/* 4. TU ACTIVIDAD (HISTORIAL PROPIO DEL USUARIO) */
+async function loadUserOwnActivity(){
+ const container = document.getElementById('userOwnActivityContainer');
+ if(!currentUser) return;
+ container.innerHTML = '<div class="activity-empty">Cargando tu historial...</div>';
+
+ try{
+  const [myLikes, myComments, myFollows] = await Promise.all([
+   db.from('likes').select('post_id, created_at').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(25),
+   db.from('comments').select('post_id, content, created_at').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(25),
+   db.from('follows').select('following_id, created_at').eq('follower_id', currentUser.id).order('created_at', {ascending:false}).limit(25)
+  ]);
+
+  const events = [];
+  (myLikes.data || []).forEach(l => events.push({ type: 'liked_post', post_id: l.post_id, created_at: l.created_at }));
+  (myComments.data || []).forEach(c => events.push({ type: 'commented_post', post_id: c.post_id, content: c.content, created_at: c.created_at }));
+  (myFollows.data || []).forEach(f => events.push({ type: 'followed_user', user_id: f.following_id, created_at: f.created_at }));
+
+  events.sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+  if(!events.length){
+   container.innerHTML = '<div class="activity-empty">Aún no realizaste interacciones en Ög.</div>';
+   return;
+  }
+
+  const missingUserIds = [...new Set(events.map(e => e.user_id).filter(Boolean))].filter(id => !profilesCache[id]);
+  if(missingUserIds.length > 0){
+   const {data: profs} = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missingUserIds);
+   (profs || []).forEach(p => profilesCache[p.id] = p);
+  }
+
+  const fragment = document.createDocumentFragment();
+  events.forEach(ev => {
+   const row = document.createElement('div');
+   row.className = 'activity-item';
+
+   const info = document.createElement('div');
+   info.className = 'activity-info';
+
+   const text = document.createElement('div');
+   const date = document.createElement('div');
+   date.className = 'activity-date';
+   date.textContent = formatDate(ev.created_at);
+
+   if(ev.type === 'liked_post'){
+    text.innerHTML = '❤️ Le diste <strong>Me gusta</strong> a una publicación.';
+   } else if(ev.type === 'commented_post'){
+    text.innerHTML = `💬 Comentaste: <span style="color:#a1a1aa">“${ev.content}”</span>`;
+   } else if(ev.type === 'followed_user'){
+    const p = profilesCache[ev.user_id];
+    text.innerHTML = `👤 Empezaste a seguir a <strong>@${p?.username || 'usuario'}</strong>.`;
+   }
+
+   info.append(text, date);
+   row.append(info);
+   fragment.append(row);
+  });
+
+  container.replaceChildren(fragment);
+ }catch(e){
+  container.innerHTML = '<div class="activity-empty">No se pudo cargar el historial.</div>';
+ }
+}
+
+/* 5. GUARDADOS (PUBLICACIONES GUARDADAS POR EL USUARIO) */
+function getSavedPostIds(){
+ if(!currentUser) return [];
+ try{
+  return JSON.parse(localStorage.getItem('og_saved_posts_' + currentUser.id) || '[]');
+ }catch(e){ return []; }
+}
+
+function toggleSavePost(postId, btn){
+ if(!currentUser){ showAuthOverlay(); return; }
+ let saved = getSavedPostIds();
+ if(saved.includes(postId)){
+  saved = saved.filter(id => id !== postId);
+  btn.classList.remove('saved');
+ } else {
+  saved.unshift(postId);
+  btn.classList.add('saved');
+ }
+ localStorage.setItem('og_saved_posts_' + currentUser.id, JSON.stringify(saved));
+}
+
+async function loadSavedPostsGrid(){
+ const grid = document.getElementById('savedPostsGrid');
+ const savedIds = getSavedPostIds();
+ grid.replaceChildren();
+
+ if(!savedIds.length){
+  grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #71717a; padding: 50px 20px; font-size: 14px;">Todavía no guardaste ninguna publicación.<br><small>Tocá el ícono de marcador en cualquier publicación del inicio para guardarla acá.</small></div>';
   return;
  }
- document.getElementById('settingsEmailText').textContent = currentUser.email || 'No disponible';
- document.getElementById('settingsUserIdText').textContent = currentUser.id;
+
+ const { data: posts } = await db.from('posts').select('*').in('id', savedIds);
+ if(!posts || !posts.length){
+  grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #71717a; padding: 40px;">No se encontraron publicaciones guardadas.</div>';
+  return;
+ }
+
+ const fragment = document.createDocumentFragment();
+ posts.forEach(post => {
+  const item = document.createElement('div');
+  item.className = 'ig-grid-item';
+  item.onclick = () => openPostDetail(post);
+
+  if(post.image_url){
+   const img = document.createElement('img');
+   img.src = post.image_url;
+   img.loading = 'lazy';
+   item.append(img);
+  } else {
+   item.textContent = (post.content || '').slice(0, 55);
+  }
+  fragment.append(item);
+ });
+ grid.replaceChildren(fragment);
+}
+
+/* 6. AYUDA */
+function submitHelpReport(){
+ const val = document.getElementById('helpReportInput').value.trim();
+ if(!val) return status('helpReportStatus', 'Escribí tu mensaje antes de enviar.');
+ document.getElementById('helpReportInput').value = '';
+ status('helpReportStatus', '¡Gracias! Tu mensaje fue enviado al equipo de soporte de Ög.');
+ setTimeout(() => status('helpReportStatus', ''), 3500);
+}
+
+/* 7. CENTRO DE CUENTAS */
+function populateAccountCenter(){
+ if(!currentUser) return;
+ document.getElementById('accCenterName').textContent = myProfile?.display_name || myProfile?.username || 'Usuario';
+ document.getElementById('accCenterEmail').textContent = currentUser.email || 'Sin correo';
+ document.getElementById('accCenterId').textContent = currentUser.id;
  document.getElementById('passwordStatus').textContent = '';
  document.getElementById('newPasswordInput').value = '';
- loadLocalSettings();
- showTab('settingsPage');
+
+ const avBox = document.getElementById('accCenterAvatar');
+ avBox.replaceChildren();
+ if(myProfile?.avatar_url){
+  const img = document.createElement('img');
+  img.src = myProfile.avatar_url;
+  img.style.width = '100%';
+  img.style.height = '100%';
+  img.style.objectFit = 'cover';
+  avBox.append(img);
+ } else {
+  avBox.textContent = '👤';
+ }
 }
 
 async function updateUserPassword(){
@@ -1407,29 +1879,35 @@ async function updateUserPassword(){
  status('passwordStatus', '¡Contraseña actualizada correctamente!');
 }
 
-function saveLocalSettings(){
- const prefs = {
-  privateAccount: document.getElementById('privateAccountToggle').checked,
-  activityStatus: document.getElementById('activityStatusToggle').checked,
-  showFollowersList: document.getElementById('showFollowersListToggle').checked,
-  notifLikes: document.getElementById('notifLikesToggle').checked,
-  notifFollows: document.getElementById('notifFollowsToggle').checked
- };
- localStorage.setItem('og_user_settings_' + (currentUser?.id || 'guest'), JSON.stringify(prefs));
- setupPresenceChannel();
+/* 8. CERRAR SESIÓN CON CONFIRMACIÓN */
+function promptLogoutConfirmation(){
+ document.getElementById('logoutConfirmModal').classList.add('active');
 }
 
-function loadLocalSettings(){
- try{
-  const raw = localStorage.getItem('og_user_settings_' + (currentUser?.id || 'guest'));
-  if(!raw) return;
-  const prefs = JSON.parse(raw);
-  document.getElementById('privateAccountToggle').checked = !!prefs.privateAccount;
-  document.getElementById('activityStatusToggle').checked = prefs.activityStatus !== false;
-  document.getElementById('showFollowersListToggle').checked = prefs.showFollowersList !== false;
-  document.getElementById('notifLikesToggle').checked = prefs.notifLikes !== false;
-  document.getElementById('notifFollowsToggle').checked = prefs.notifFollows !== false;
- }catch(e){}
+function closeLogoutConfirmation(){
+ document.getElementById('logoutConfirmModal').classList.remove('active');
+}
+
+async function executeConfirmedSignOut(){
+ closeLogoutConfirmation();
+ const {error}=await db.auth.signOut();
+ if(error)return alert(error.message);
+
+ if(realtimeChannel) db.removeChannel(realtimeChannel);
+ if(dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
+ if(postsRealtimeChannel) db.removeChannel(postsRealtimeChannel);
+ if(presenceChannel) db.removeChannel(presenceChannel);
+
+ currentUser=null;
+ myProfile=null;
+ viewedProfile=null;
+ myActiveStory=null;
+ updateStoryUI();
+ updateNavAvatarUI();
+ updateProfileUI();
+ await loadInitialPosts();
+ showAuthOverlay();
+ showTab('feed');
 }
 
 function status(id,message){
@@ -1495,27 +1973,6 @@ function updateNavAvatarUI(){
   navContainer.append(svg);
  }
  if(dot) navContainer.append(dot);
-}
-
-async function signOut(){
- const {error}=await db.auth.signOut();
- if(error)return alert(error.message);
-
- if(realtimeChannel) db.removeChannel(realtimeChannel);
- if(dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
- if(postsRealtimeChannel) db.removeChannel(postsRealtimeChannel);
- if(presenceChannel) db.removeChannel(presenceChannel);
-
- currentUser=null;
- myProfile=null;
- viewedProfile=null;
- myActiveStory=null;
- updateStoryUI();
- updateNavAvatarUI();
- updateProfileUI();
- await loadInitialPosts();
- showAuthOverlay();
- showTab('feed');
 }
 
 async function loadAccount(user){
@@ -2842,7 +3299,15 @@ async function openPostDetail(post){
  likeBtn.className = 'post-action-btn';
  likeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
  likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
- actions.append(likeBtn);
+
+ const saveBtn = document.createElement('button');
+ saveBtn.className = 'post-action-btn';
+ saveBtn.style.marginLeft = 'auto';
+ if(getSavedPostIds().includes(post.id)) saveBtn.classList.add('saved');
+ saveBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
+ saveBtn.onclick = () => toggleSavePost(post.id, saveBtn);
+
+ actions.append(likeBtn, saveBtn);
  article.append(actions);
 
  const likesCountDiv = document.createElement('div');
@@ -3158,7 +3623,14 @@ function buildPostDOMElement(post){
   }
  };
 
- actions.append(likeBtn, commentIconBtn);
+ const saveBtn = document.createElement('button');
+ saveBtn.className = 'post-action-btn';
+ saveBtn.style.marginLeft = 'auto';
+ if(getSavedPostIds().includes(post.id)) saveBtn.classList.add('saved');
+ saveBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
+ saveBtn.onclick = () => toggleSavePost(post.id, saveBtn);
+
+ actions.append(likeBtn, commentIconBtn, saveBtn);
  article.append(actions);
 
  const likesCountDiv = document.createElement('div');
