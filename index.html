@@ -1714,17 +1714,16 @@ let touchStartX = 0;
 let touchEndX = 0;
 
 /* ========================================================================= */
-/* IMPLEMENTACIÓN DE DESLIZAMIENTO CON ANIMACIÓN POR LA BARRA DE NAVEGACIÓN  */
+/* IMPLEMENTACIÓN DE DESLIZAMIENTO CON ANIMACIÓN (INICIO ➔ CHAT ➔ EXPLORE)    */
 /* ========================================================================= */
-const tabOrderList = ['feed', 'messagesPage', 'explore', 'profile'];
+const swipeNavigationFlow = ['feed', 'messagesPage', 'explore'];
 
 function animateTabTransition(direction) {
   const activeMain = document.querySelector('main > div.active');
   if (!activeMain) return;
   
-  // Animación suave de salida/entrada con transform y opacidad
   activeMain.style.transition = 'transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s ease';
-  activeMain.style.transform = direction === 'left' ? 'translateX(-30px)' : 'translateX(30px)';
+  activeMain.style.transform = direction === 'left' ? 'translateX(-35px)' : 'translateX(35px)';
   activeMain.style.opacity = '0';
 
   setTimeout(() => {
@@ -1736,31 +1735,32 @@ function animateTabTransition(direction) {
 
 function handleSwipeGesture(){
  const swipeDistance = touchEndX - touchStartX;
- // Si se desliza fuertemente a la derecha (>70px) y estamos en 'feed', abre la cámara
+ 
+ // Si desliza hacia la derecha y está en el inicio ('feed'), abre la cámara
  if(swipeDistance > 70 && document.getElementById('feed').classList.contains('active')){
   openCameraModal();
   return;
  }
 
- // Deslizamiento horizontal general entre pestañas de la barra de navegación
  if(Math.abs(swipeDistance) > 60) {
   const currentActiveTab = document.querySelector('main > div.active');
   if(!currentActiveTab) return;
   const currentId = currentActiveTab.id;
-  const currentIndex = tabOrderList.indexOf(currentId);
+  const currentIndex = swipeNavigationFlow.indexOf(currentId);
 
+  // Solo se desliza si se encuentra dentro del flujo permitido (Inicio ➔ Chat ➔ Explore)
   if(currentIndex !== -1) {
    let nextIndex = currentIndex;
-   if(swipeDistance < -60 && currentIndex < tabOrderList.length - 1) {
-    nextIndex = currentIndex + 1; // Deslizar izquierda -> Siguiente pestaña
+   if(swipeDistance < -60 && currentIndex < swipeNavigationFlow.length - 1) {
+    nextIndex = currentIndex + 1; // Deslizar izquierda -> Avanzar a la siguiente pantalla
     animateTabTransition('left');
    } else if(swipeDistance > 60 && currentIndex > 0) {
-    nextIndex = currentIndex - 1; // Deslizar derecha -> Pestaña anterior
+    nextIndex = currentIndex - 1; // Deslizar derecha -> Retroceder a la pantalla anterior
     animateTabTransition('right');
    }
 
    if(nextIndex !== currentIndex) {
-    const targetTabId = tabOrderList[nextIndex];
+    const targetTabId = swipeNavigationFlow[nextIndex];
     const navButtons = document.querySelectorAll('nav button');
     const targetButton = navButtons[nextIndex];
     showTab(targetTabId, targetButton);
@@ -1779,7 +1779,6 @@ feedElement.addEventListener('touchend', e => {
  handleSwipeGesture();
 }, {passive: true});
 
-// También permitimos deslizamiento táctil general en el elemento main
 const mainContainerElement = document.querySelector('main');
 mainContainerElement.addEventListener('touchstart', e => {
  touchStartX = e.changedTouches[0].screenX;
