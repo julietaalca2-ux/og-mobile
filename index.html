@@ -6,6 +6,13 @@
 <meta name="theme-color" content="#000000">
 <title>Ög — Social</title>
 
+<!-- CONFIGURACIÓN PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ög">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
@@ -1663,7 +1670,6 @@ async function sendChatMessage(){
 
  input.value = '';
 
- // Creamos objeto temporal para pintar inmediatamente en pantalla (¡Adiós lentitud!)
  const tempMsg = {
   conversation_id: activeConversationId,
   sender_id: currentUser.id,
@@ -2966,6 +2972,21 @@ async function init(){
 }
 
 init();
+</script>
+
+<!-- SCRIPT DE REGISTRO SERVICE WORKER PWA -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then((reg) => {
+          console.log('Service Worker registrado con éxito:', reg.scope);
+        })
+        .catch((err) => {
+          console.log('Error al registrar el Service Worker:', err);
+        });
+    });
+  }
 </script>
 
 </body>
