@@ -96,15 +96,17 @@ main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active, #settingsPage.active, #messagesPage.active {padding: 0 !important;}
 #explore.active {padding: 0 !important;}
 
-/* SALA DE CHAT PRIVADO ESTILO INSTAGRAM DIRECT (CORREGIDA Y FIJA) */
+/* SALA DE CHAT PRIVADO ADAPTADA PARA iOS Y ANDROID (Uso de 100dvh) */
 #chatRoomPage{
  display:none;
  flex-direction:column;
- height: 100vh;
+ height: 100dvh; /* Altura dinámica adaptada a barras de iOS y Android */
+ height: 100vh; /* Fallback */
  position:fixed;
  inset:0;
  background:#000;
  z-index: 250;
+ padding-top: env(safe-area-inset-top);
 }
 #chatRoomPage.active{
  display:flex !important;
@@ -160,6 +162,7 @@ main > div.active {display: block !important;}
  flex-direction: column;
  gap: 12px;
  background: #000;
+ -webkit-overflow-scrolling: touch;
 }
 .chat-bubble{
  max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;overflow-wrap:anywhere;position:relative;
@@ -172,7 +175,7 @@ main > div.active {display: block !important;}
 }
 .chat-bubble-time{font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;text-align:right}
 
-/* BARRA INFERIOR EXACTA A INSTAGRAM DIRECT (FIJA ABAJO) */
+/* BARRA INFERIOR EXACTA A INSTAGRAM DIRECT (RESPETANDO iOS HOME INDICATOR) */
 .chat-input-footer{
  padding: 10px 12px calc(env(safe-area-inset-bottom) + 12px) 12px;
  background: rgba(0,0,0,0.95);
@@ -730,7 +733,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- SALA DE CHAT PRIVADO CON BARRA INFERIOR INTEGRADA -->
+<!-- SALA DE CHAT PRIVADO CON SOPORTE 100dvh (iOS / Android) -->
 <div id="chatRoomPage" class="section">
  <div class="chat-room-header">
   <button class="secondary" style="padding:6px 12px; font-size:13px;" onclick="showTab('messagesPage')">← Volver</button>
@@ -1026,7 +1029,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.8.3 (Supabase Direct + RLS Messaging)</p>
+    <p class="settings-row-desc">1.8.4 (Supabase Direct + RLS Messaging)</p>
    </div>
   </div>
   <div class="settings-row">
