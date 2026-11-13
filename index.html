@@ -37,7 +37,6 @@ body{
  -webkit-font-smoothing:antialiased;
  overflow-x:hidden;
  scrollbar-width: none !important;
- /* IMPORTANTE: Desactivar gestos por defecto del navegador para control táctil fluido */
  overscroll-behavior-x: none;
  touch-action: pan-y pinch-zoom;
 }
@@ -75,7 +74,6 @@ main {
   margin: auto;
   position: relative;
   overflow: hidden;
-  /* Contenedor de deslizamiento horizontal */
   display: flex;
   width: 100vw;
   will-change: transform;
@@ -125,18 +123,20 @@ main > div {
   flex-direction: column;
 }
 
-/* Transiciones de pantallas y modales */
+/* Transiciones de pantallas y modales con profundidad */
 #postDetailModal, #editProfileModal, #storyViewer, #cameraModal, #logoutConfirmModal, #followListModal {
-  transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+  transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transform: scale(0.96);
 }
 
 #postDetailModal.active, #editProfileModal.active, #storyViewer.active, #cameraModal.active, #logoutConfirmModal.active, #followListModal.open {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  transform: scale(1);
 }
 
 #postDetailModal.active .post-modal-card,
@@ -1779,7 +1779,6 @@ let touchCurrentX = 0;
 let isSwiping = false;
 const mainContainer = document.getElementById('mainSectionsContainer');
 
-// Inicializar posición horizontal de las secciones
 function updateMainContainerPosition(instant = false, offsetX = 0) {
   if (!mainContainer) return;
   if (instant) {
@@ -1795,7 +1794,6 @@ window.addEventListener('resize', () => {
   updateMainContainerPosition(true);
 });
 
-// Detectar si el usuario está interactuando con inputs, chat o textareas para evitar conflictos de gestos
 function isInteractingWithInput(target) {
   if (!target) return false;
   const tag = target.tagName.toLowerCase();
@@ -1819,14 +1817,12 @@ mainContainer.addEventListener('touchmove', e => {
   const diffX = touchCurrentX - touchStartX;
   const diffY = e.touches[0].clientY - touchStartY;
 
-  // Si el scroll vertical es mayor que el horizontal, cancelar swipe horizontal
   if (Math.abs(diffY) > Math.abs(diffX) + 10) {
     isSwiping = false;
     updateMainContainerPosition(false);
     return;
   }
 
-  // Desplazamiento en tiempo real con el dedo (Efecto nativo suave)
   const baseTranslate = -currentSectionIndex * window.innerWidth;
   mainContainer.style.transform = `translateX(${baseTranslate + diffX}px)`;
 }, {passive: true});
@@ -1838,17 +1834,14 @@ mainContainer.addEventListener('touchend', e => {
   const threshold = window.innerWidth * 0.25;
 
   if (diffX < -threshold && currentSectionIndex < sectionsOrder.length - 1) {
-    // Siguiente sección (Slide hacia la izquierda)
     currentSectionIndex++;
   } else if (diffX > threshold && currentSectionIndex > 0) {
-    // Sección anterior (Slide hacia la derecha)
     currentSectionIndex--;
   }
 
   showTab(sectionsOrder[currentSectionIndex], null, true);
 }, {passive: true});
 
-// Soporte de gestos en el documento general (Abrir cámara con swipe derecho si estamos en Inicio)
 document.addEventListener('touchstart', e => {
   if (isInteractingWithInput(e.target)) return;
   touchStartX = e.changedTouches ? e.changedTouches[0].screenX : e.touches[0].clientX;
@@ -1938,11 +1931,15 @@ async function executeSignIn(){
  hideAuthOverlay();
 }
 
+let isNavigatingTransition = false;
 function showTab(id, btn, isGesture = false){
  if(!currentUser && id !== 'profile'){
   showAuthOverlay();
   return;
  }
+ if(isNavigatingTransition && !isGesture) return;
+ isNavigatingTransition = true;
+ setTimeout(() => { isNavigatingTransition = false; }, 250);
 
  const targetIndex = sectionsOrder.indexOf(id);
  if (targetIndex >= 0) {
@@ -1990,7 +1987,7 @@ function showTab(id, btn, isGesture = false){
  if(id==='notifications') loadActivity();
  if(id==='explore') loadExploreGrid();
  if(id==='messagesPage') loadConversations();
- if(id==='profile' && currentUser) loadMyPostsGrid();
+ if(id==='profile' && currentUser) loadMyProfileAndPosts();
  window.scrollTo(0,0);
 }
 
@@ -3706,7 +3703,7 @@ function openChatSubSettings(sectionType){
    <div class="settings-group">
     <h4 class="settings-group-title">Seguridad del chat</h4>
     <div class="settings-row">
-     <div class="settings-row-info"><p class="settings-row-title">Encriptación de extremo a extremo</p><p class="settings-row-desc">Tus mensajes están protegidos en este chat.</p></div>
+     <div class="settings-row-info"><p class="settings-row-title">Encriptación de extremo à extremo</p><p class="settings-row-desc">Tus mensajes están protegidos en este chat.</p></div>
     </div>
     <div class="settings-row">
      <div class="settings-row-info"><p class="settings-row-title">Bloquear capturas de pantalla</p><p class="settings-row-desc">Aviso de seguridad al tomar capturas.</p></div>
@@ -4344,6 +4341,56 @@ async function uploadCapturedStory(){
  alert('¡Historia publicada con éxito!');
 }
 
+/* ========================================================================= */
+/* CORRECCIÓN DE LA SECCIÓN PERFIL (ROBUSTA Y CONCURRENTE)                  */
+/* ========================================================================= */
+async function loadMyProfileAndPosts() {
+ if (!currentUser) return;
+ 
+ try {
+  const [profileRes, postsRes] = await Promise.all([
+   db.from('profiles').select('*').eq('id', currentUser.id).maybeSingle(),
+   db.from('posts').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false })
+  ]);
+
+  if (profileRes.data) {
+   myProfile = profileRes.data;
+   profilesCache[currentUser.id] = myProfile;
+  }
+
+  updateProfileUI();
+  
+  const posts = postsRes.data || [];
+  document.getElementById('mypostscount').textContent = posts.length;
+  
+  const grid = document.getElementById('mypostsgrid');
+  grid.replaceChildren();
+
+  if (posts.length > 0) {
+   const fragment = document.createDocumentFragment();
+   posts.forEach(post => {
+    const item = document.createElement('div');
+    item.className = 'ig-grid-item';
+    item.onclick = () => openPostDetail(post);
+
+    if (post.image_url) {
+     const img = document.createElement('img');
+     img.src = post.image_url;
+     img.loading = 'lazy';
+     item.append(img);
+    } else {
+     item.textContent = (post.content || '').slice(0, 55);
+    }
+    fragment.append(item);
+   });
+   grid.replaceChildren(fragment);
+  }
+  loadFollowCounts();
+ } catch(err) {
+  console.error("Error cargando perfil:", err);
+ }
+}
+
 function updateProfileUI(){
  const logged=!!currentUser;
 
@@ -4395,8 +4442,6 @@ function updateProfileUI(){
   cover.append(img);
  }
 
- loadFollowCounts();
- loadMyPostsGrid();
  updateNavAvatarUI();
 }
 
@@ -4537,35 +4582,6 @@ async function saveFullProfile(){
  setTimeout(() => {
   closeEditProfileModal();
  }, 800);
-}
-
-async function loadMyPostsGrid(){
- if(!currentUser)return;
- const grid=document.getElementById('mypostsgrid');
- const {data:posts}=await db.from('posts').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
- 
- document.getElementById('mypostscount').textContent=posts?posts.length:0;
- grid.replaceChildren();
- 
- if(!posts||!posts.length)return;
- 
- const fragment=document.createDocumentFragment();
- posts.forEach(post=>{
-  const item=document.createElement('div');
-  item.className='ig-grid-item';
-  item.onclick = () => openPostDetail(post);
-
-  if(post.image_url){
-   const img=document.createElement('img');
-   img.src=post.image_url;
-   img.loading='lazy';
-   item.append(img);
-  }else{
-   item.textContent=(post.content||'').slice(0,55);
-  }
-  fragment.append(item);
- });
- grid.replaceChildren(fragment);
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
