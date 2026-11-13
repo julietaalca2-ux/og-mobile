@@ -1,32 +1,32 @@
 
 name: Crear APK de Og Social
 
-on:
-  workflow_dispatch:
-  push:
-    paths:
-      - ".github/workflows/build-apk.yml"
+on: [push, workflow_dispatch]
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  android:
+    name: Compilar aplicación Android
     runs-on: ubuntu-latest
 
     steps:
       - name: Descargar proyecto
         uses: actions/checkout@v4
 
-      - name: Preparar Java
+      - name: Instalar Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Preparar Gradle
+      - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
-      - name: Crear proyecto Android
+      - name: Crear estructura Android
         shell: bash
         run: |
           mkdir -p android/app/src/main/java/com/ogsocial/app
@@ -81,8 +81,7 @@ jobs:
               <uses-permission android:name="android.permission.INTERNET"/>
               <application
                   android:label="Ög Social"
-                  android:theme="@android:style/Theme.Material.Light.NoActionBar"
-                  android:usesCleartextTraffic="false">
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar">
                   <activity
                       android:name=".MainActivity"
                       android:exported="true">
@@ -116,7 +115,6 @@ jobs:
                   WebSettings settings = webView.getSettings();
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
-                  settings.setDatabaseEnabled(true);
 
                   webView.setWebViewClient(new WebViewClient());
                   webView.setWebChromeClient(new WebChromeClient());
@@ -141,7 +139,7 @@ jobs:
           cd android
           gradle assembleDebug
 
-      - name: Guardar APK
+      - name: Descargar APK
         uses: actions/upload-artifact@v4
         with:
           name: Og-Social-APK
