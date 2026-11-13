@@ -66,6 +66,27 @@ body{
   to { transform: translateY(100%); opacity: 0; }
 }
 
+/* Animaciones de deslizamiento entre pestañas principales */
+@keyframes slideTabFromRight {
+  from { opacity: 0.35; transform: translateX(48px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideTabFromLeft {
+  from { opacity: 0.35; transform: translateX(-48px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+main > div.swipe-enter-right {
+  animation: slideTabFromRight 0.26s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+main > div.swipe-enter-left {
+  animation: slideTabFromLeft 0.26s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
 /* Transiciones de pantallas y modales */
 #postDetailModal, #editProfileModal, #storyViewer, #cameraModal, #logoutConfirmModal, #followListModal {
   transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
@@ -211,7 +232,7 @@ header{
  z-index:2;
 }
 
-main{max-width:470px;margin:auto}
+main{max-width:470px;margin:auto;min-height:calc(100vh - 120px)}
 main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active, #messagesPage.active, #chatRoomPage.active, #chatDetailsPage.active, #chatSubSettingsPage.active, #menuSectionPage.active,
@@ -1717,90 +1738,103 @@ let touchEndY = 0;
 let isSwipeLocked = false;
 
 /* ========================================================================= */
-/* IMPLEMENTACIÓN DE DESLIZAMIENTO CON ANIMACIÓN (INICIO ➔ CHAT ➔ EXPLORE)    */
+/* DESLIZAMIENTO FLUIDO: INICIO ➔ CHAT ➔ EXPLORE ➔ PERFIL                    */
 /* ========================================================================= */
-const swipeNavigationFlow = ['feed', 'messagesPage', 'explore'];
+const swipeNavigationFlow = ['feed', 'messagesPage', 'explore', 'profile'];
 
-function animateTabTransition(direction) {
-  const activeMain = document.querySelector('main > div.active');
-  if (!activeMain) return;
-  
-  activeMain.style.transition = 'transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s ease';
-  activeMain.style.transform = direction === 'left' ? 'translateX(-35px)' : 'translateX(35px)';
-  activeMain.style.opacity = '0';
+function isAnyModalOrSubViewOpen() {
+  const modalIds = ['postDetailModal', 'editProfileModal', 'storyViewer', 'cameraModal', 'logoutConfirmModal'];
+  for (const id of modalIds) {
+    const el = document.getElementById(id);
+    if (el && el.classList.contains('active')) return true;
+  }
+  const followModal = document.getElementById('followListModal');
+  if (followModal && followModal.classList.contains('open')) return true;
+
+  const authOverlay = document.getElementById('authWelcomeOverlay');
+  if (authOverlay && authOverlay.classList.contains('visible')) return true;
+
+  return false;
+}
+
+function applySwipeEntranceAnimation(targetTabId, direction) {
+  const targetEl = document.getElementById(targetTabId);
+  if (!targetEl) return;
+
+  targetEl.classList.remove('swipe-enter-right', 'swipe-enter-left');
+  void targetEl.offsetWidth; // Reinicia la animación CSS
+  targetEl.classList.add(direction === 'left' ? 'swipe-enter-right' : 'swipe-enter-left');
 
   setTimeout(() => {
-    activeMain.style.transform = '';
-    activeMain.style.opacity = '';
-    activeMain.style.transition = '';
-  }, 250);
+    targetEl.classList.remove('swipe-enter-right', 'swipe-enter-left');
+  }, 280);
 }
 
 function handleSwipeGesture() {
-  if (isSwipeLocked) return;
+  if (isSwipeLocked || isAnyModalOrSubViewOpen()) return;
 
   const swipeDistanceX = touchEndX - touchStartX;
   const swipeDistanceY = Math.abs(touchEndY - touchStartY);
 
-  // Ignorar si fue un scroll vertical
-  if (swipeDistanceY > Math.abs(swipeDistanceX)) return;
+  // Ignorar si el desplazamiento fue principalmente vertical o demasiado corto
+  if (swipeDistanceY > Math.abs(swipeDistanceX) * 0.85) return;
+  if (Math.abs(swipeDistanceX) < 55) return;
+
+  const currentActiveTab = document.querySelector('main > div.active');
+  if (!currentActiveTab) return;
+
+  const currentId = currentActiveTab.id;
+  const currentIndex = swipeNavigationFlow.indexOf(currentId);
+
+  // Solo actuar sobre las 4 pestañas principales (no en salas de chat o submenús)
+  if (currentIndex === -1) return;
 
   // Bloqueo breve para evitar saltos dobles
   isSwipeLocked = true;
-  setTimeout(() => { isSwipeLocked = false; }, 320);
+  setTimeout(() => { isSwipeLocked = false; }, 300);
 
-  // Si desliza hacia la derecha en Inicio ('feed'), abre la cámara
-  if (swipeDistanceX > 70 && document.getElementById('feed').classList.contains('active')) {
+  // Deslizar hacia la derecha desde Inicio (índice 0) abre la cámara de historias
+  if (swipeDistanceX > 70 && currentIndex === 0) {
     openCameraModal();
     return;
   }
 
-  if (Math.abs(swipeDistanceX) > 60) {
-    const currentActiveTab = document.querySelector('main > div.active');
-    if (!currentActiveTab) return;
-    
-    const currentId = currentActiveTab.id;
-    const currentIndex = swipeNavigationFlow.indexOf(currentId);
+  let nextIndex = currentIndex;
+  let direction = null;
 
-    // Solo permite deslizar entre Inicio (0) ➔ Chat (1) ➔ Explore (2)
-    if (currentIndex !== -1) {
-      let nextIndex = currentIndex;
-      
-      if (swipeDistanceX < -60 && currentIndex < swipeNavigationFlow.length - 1) {
-        nextIndex = currentIndex + 1; // Izquierda: avanza un paso (Inicio -> Chat, Chat -> Explore)
-        animateTabTransition('left');
-      } else if (swipeDistanceX > 60 && currentIndex > 0) {
-        nextIndex = currentIndex - 1; // Derecha: retrocede un paso (Explore -> Chat, Chat -> Inicio)
-        animateTabTransition('right');
-      }
+  if (swipeDistanceX < -55 && currentIndex < swipeNavigationFlow.length - 1) {
+    nextIndex = currentIndex + 1; // Izquierda: avanza (Inicio -> Chat -> Explore -> Perfil)
+    direction = 'left';
+  } else if (swipeDistanceX > 55 && currentIndex > 0) {
+    nextIndex = currentIndex - 1; // Derecha: retrocede (Perfil -> Explore -> Chat -> Inicio)
+    direction = 'right';
+  }
 
-      if (nextIndex !== currentIndex) {
-        const targetTabId = swipeNavigationFlow[nextIndex];
-        const navButtons = document.querySelectorAll('nav button');
-        const targetButton = navButtons[nextIndex];
-        showTab(targetTabId, targetButton);
-      }
-    }
+  if (nextIndex !== currentIndex) {
+    const targetTabId = swipeNavigationFlow[nextIndex];
+    const navButtons = document.querySelectorAll('#bottomNavBar button');
+    const targetButton = navButtons[nextIndex];
+    showTab(targetTabId, targetButton);
+    applySwipeEntranceAnimation(targetTabId, direction);
   }
 }
 
-// Único listener centralizado en <main> (elimina la doble ejecución)
 const mainContainerElement = document.querySelector('main');
 
 mainContainerElement.addEventListener('touchstart', e => {
-  // Evita cambiar de pestaña si el usuario está deslizando las historias horizontalmente
-  if (e.target.closest('.stories')) {
+  // Evita cambiar de pestaña si el usuario interactúa con historias, inputs o carruseles
+  if (e.target.closest('.stories, input, textarea, select, [data-no-swipe]')) {
     touchStartX = 0;
     return;
   }
-  touchStartX = e.changedTouches[0].screenX;
-  touchStartY = e.changedTouches[0].screenY;
+  touchStartX = e.changedTouches[0].clientX;
+  touchStartY = e.changedTouches[0].clientY;
 }, { passive: true });
 
 mainContainerElement.addEventListener('touchend', e => {
   if (touchStartX === 0) return;
-  touchEndX = e.changedTouches[0].screenX;
-  touchEndY = e.changedTouches[0].screenY;
+  touchEndX = e.changedTouches[0].clientX;
+  touchEndY = e.changedTouches[0].clientY;
   handleSwipeGesture();
   touchStartX = 0;
 }, { passive: true });
