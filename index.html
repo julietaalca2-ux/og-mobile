@@ -707,7 +707,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 
  <div class="story-content-area" id="storyContentAreaContainer">
-  <img id="storyImage" src="" alt="Historia">
+  <img id="storyImage" src="" alt="Historia" loading="lazy">
  </div>
 
  <div class="story-bottom-bar">
@@ -746,7 +746,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   </div>
 
   <div id="postImagePreviewContainer" style="display:none;margin-bottom:14px;position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1/1;background:#121214">
-   <img id="postImagePreviewImg" style="width:100%;height:100%;object-fit:cover" alt="Previsualización">
+   <img id="postImagePreviewImg" style="width:100%;height:100%;object-fit:cover" alt="Previsualización" loading="lazy">
    <button class="secondary" style="position:absolute;top:10px;right:10px;padding:6px 12px;font-size:12px;background:rgba(0,0,0,0.8)" onclick="removePostImage()">Cambiar foto</button>
   </div>
   <input type="file" id="postImageFileInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handlePostImageSelect(this)">
@@ -1362,6 +1362,7 @@ function updateNavAvatarUI(){
   const img = document.createElement('img');
   img.src = myProfile.avatar_url;
   img.alt = 'Perfil';
+  img.loading = 'lazy';
   navContainer.append(img);
  } else {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1733,6 +1734,7 @@ async function openChatRoom(conversationId, recipientProfile){
    img = document.createElement('img');
    img.src = recipientProfile.avatar_url;
    img.alt = 'Avatar';
+   img.loading = 'lazy';
    headerAvatarContainer.append(img);
   } else {
    const ph = document.createElement('div');
@@ -2013,6 +2015,7 @@ async function loadStoriesData(){
   const img = document.createElement('img');
   img.src = myProfile.avatar_url;
   img.alt = 'Mi perfil';
+  img.loading = 'lazy';
   myInner.append(img);
  }else{
   const ph = document.createElement('div');
@@ -2123,6 +2126,7 @@ async function openUserStory(profile, story){
   const img = document.createElement('img');
   img.src = profile.avatar_url;
   img.alt = profile.username;
+  img.loading = 'lazy';
   inner.append(img);
  } else {
   inner.textContent = '👤';
@@ -2248,7 +2252,7 @@ async function switchCamera(){
 async function updateGalleryThumbIcon(){
  const iconDiv = document.getElementById('galleryThumbIcon');
  if(myProfile?.avatar_url){
-  iconDiv.innerHTML = `<img src="${myProfile.avatar_url}" alt="Galería">`;
+  iconDiv.innerHTML = `<img src="${myProfile.avatar_url}" alt="Galería" loading="lazy">`;
  }else{
   iconDiv.innerHTML = '📁';
  }
@@ -2390,6 +2394,7 @@ function updateProfileUI(){
   const img = document.createElement('img');
   img.src = myProfile.avatar_url;
   img.alt = 'Avatar';
+  img.loading = 'lazy';
   myAvatarBox.append(img);
  }else{
   const ph = document.createElement('div');
@@ -2527,6 +2532,7 @@ async function openPostDetail(post){
   const img = document.createElement('img');
   img.className = 'postimage';
   img.src = post.image_url;
+  img.loading = 'lazy';
   article.append(img);
  }
 
@@ -2566,7 +2572,7 @@ async function openPostDetail(post){
 
  const likeBtn = document.createElement('button');
  likeBtn.className = 'post-action-btn';
- likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+ likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78 z"/></svg>`;
  likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
  actions.append(likeBtn);
  article.append(actions);
@@ -2900,7 +2906,7 @@ async function loadPosts(){
 
   const likeBtn=document.createElement('button');
   likeBtn.className='post-action-btn';
-  likeBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+  likeBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78 z"/></svg>`;
   likeBtn.onclick=()=>toggleLike(post.id, likeBtn, likesCountDiv);
 
   const commentIconBtn=document.createElement('button');
