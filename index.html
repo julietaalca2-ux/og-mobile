@@ -1094,7 +1094,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <div class="settings-row">
     <div class="settings-row-info">
      <p class="settings-row-title">Versión de Ög</p>
-     <p class="settings-row-desc">2.7.0 (Publicaciones Ultra Optimizadas)</p>
+     <p class="settings-row-desc">2.7.1 (Autenticación Optimizada)</p>
     </div>
    </div>
    <div class="settings-row">
@@ -1409,7 +1409,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <div id="logoutConfirmModal" onclick="closeLogoutConfirmation()">
  <div class="confirm-card" onclick="event.stopPropagation()">
   <h3 style="margin:0 0 8px 0;font-size:18px;color:#fff;">¿Cerrar sesión en Ög?</h3>
-  <p class="muted" style="margin:0 0 20px 0;line-height:1.4;">Tendrás que volver a ingresar tu correo y contraseña para acceder à tu cuenta.</p>
+  <p class="muted" style="margin:0 0 20px 0;line-height:1.4;">Tendrás que volver a ingresar tu correo y contraseña para acceder a tu cuenta.</p>
   <div style="display:flex;flex-direction:column;gap:10px;">
    <button class="danger-btn" onclick="executeConfirmedSignOut()">Sí, cerrar sesión</button>
    <button class="secondary" onclick="closeLogoutConfirmation()">Cancelar</button>
@@ -1670,6 +1670,29 @@ function hideSplashScreen(){
  }
 }
 
+/* ========================================================================= */
+/* RECUPERACIÓN CRÍTICA DE AUTENTICACIÓN Y SESIÓN                            */
+/* ========================================================================= */
+
+async function loadAccount(user){
+ if(!user) return;
+ currentUser = user;
+
+ const { data: profile } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
+ if(profile){
+  myProfile = profile;
+  profilesCache[user.id] = profile;
+ }
+
+ updateProfileUI();
+ setupPresenceChannel();
+ setupRealtimeNotifications();
+ checkGlobalUnreadMessages();
+ loadStoriesData();
+ await loadInitialPosts();
+ hideAuthOverlay();
+}
+
 async function executeSignUp(){
  const email = document.getElementById('regEmail').value.trim();
  const password = document.getElementById('regPassword').value;
@@ -1687,12 +1710,17 @@ async function executeSignUp(){
 
  if(error) return status('authOverlayStatus', error.message);
 
- if(data.session){
-  await loadAccount(data.user);
-  hideAuthOverlay();
- } else {
-  status('authOverlayStatus','¡Cuenta creada! Ya podés iniciar sesión.');
-  setTimeout(() => switchAuthSubView('signin'), 1500);
+ if(data.session?.user){
+  await loadAccount(data.session.user);
+ } else if(data.user){
+  // Si requiere confirmación o inicia directo
+  const { data: signInData, error: signInErr } = await db.auth.signInWithPassword({email, password});
+  if(!signInErr && signInData?.session?.user){
+   await loadAccount(signInData.session.user);
+  } else {
+   status('authOverlayStatus','¡Cuenta creada! Ya podés iniciar sesión.');
+   setTimeout(() => switchAuthSubView('signin'), 1500);
+  }
  }
 }
 
@@ -1707,8 +1735,25 @@ async function executeSignIn(){
  const {data, error} = await db.auth.signInWithPassword({email, password});
  if(error) return status('authOverlayStatus', error.message);
 
- await loadAccount(data.user);
- hideAuthOverlay();
+ if(data?.user){
+  await loadAccount(data.user);
+ }
+}
+
+async function executeConfirmedSignOut(){
+ await db.auth.signOut();
+ currentUser = null;
+ myProfile = null;
+ closeLogoutConfirmation();
+ showAuthOverlay();
+}
+
+function promptLogoutConfirmation(){
+ document.getElementById('logoutConfirmModal').classList.add('active');
+}
+
+function closeLogoutConfirmation(){
+ document.getElementById('logoutConfirmModal').classList.remove('active');
 }
 
 function showTab(id,btn){
@@ -2162,7 +2207,6 @@ async function loadChatMessages(conversationId){
  const container = document.getElementById('chatMessagesContainer');
  container.innerHTML = '<div class="activity-empty">Cargando mensajes...</div>';
 
- // Optimización: carga paginada progresiva (últimos 50 mensajes en orden cronológico eficiente)
  const { data: messages, error } = await db.from('messages')
   .select('*')
   .eq('conversation_id', conversationId)
@@ -2466,7 +2510,7 @@ async function fetchAndAppendPosts(isInitial){
 
   if(error){
    if(isInitial && (!cachedFeedPosts || !cachedFeedPosts.length)){
-    document.getElementById('posts').innerHTML = '<div class="activity-empty">Error al cargar publicaciones.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Volver à intentar</button></div>';
+    document.getElementById('posts').innerHTML = '<div class="activity-empty">Error al cargar publicaciones.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Volver a intentar</button></div>';
    }
    return;
   }
@@ -3273,7 +3317,7 @@ function renderActivityDOM(events, container){
     message.append(name);
 
     if(event.type==='follow') message.append(document.createTextNode(' comenzó a seguirte.'));
-    else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta à tu publicación.'));
+    else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
     else if(event.type==='comment') message.append(document.createTextNode(' comentó tu publicación.'));
 
     info.append(message);
@@ -3488,7 +3532,7 @@ function sendStoryReply(){
  const input = document.getElementById('storyReplyInput');
  const msg = input.value.trim();
  if(!msg) return;
- alert('Mensaje enviado à la historia.');
+ alert('Mensaje enviado a la historia.');
  input.value = '';
 }
 
@@ -3547,8 +3591,8 @@ async function startCameraStream(){
   videoElem.srcObject = mediaStream;
   await videoElem.play();
  }catch(err){
-  console.error('Error al acceder à la cámara:', err);
-  alert('No se pudo acceder à la cámara. Asegúrate de dar permisos.');
+  console.error('Error al acceder a la cámara:', err);
+  alert('No se pudo acceder a la cámara. Asegúrate de dar permisos.');
  }
 }
 
@@ -3685,7 +3729,7 @@ function updateProfileUI(){
   document.getElementById('myname').textContent='Mi perfil';
   document.getElementById('mypronouns').textContent='';
   document.getElementById('myusername').textContent='@invitado';
-  document.getElementById('mybio').textContent='Bienvenido à Ög.';
+  document.getElementById('mybio').textContent='Bienvenido a Ög.';
   document.getElementById('mypostscount').textContent='0';
   document.getElementById('myfollowerscount').textContent='0';
   document.getElementById('myfollowingcount').textContent='0';
@@ -3731,19 +3775,205 @@ function updateProfileUI(){
  updateNavAvatarUI();
 }
 
-function openEditProfileModal(){
+function updateNavAvatarUI(){
+ const container = document.getElementById('navAvatarContainer');
+ if(!container) return;
+ container.replaceChildren();
+ if(myProfile?.avatar_url){
+  const img = document.createElement('img');
+  img.src = myProfile.avatar_url;
+  img.alt = 'Avatar';
+  container.append(img);
+ } else {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 24 24');
+  svg.setAttribute('fill','none');
+  svg.setAttribute('stroke','currentColor');
+  svg.setAttribute('stroke-width','2');
+  svg.setAttribute('stroke-linecap','round');
+  svg.setAttribute('stroke-linejoin','round');
+  svg.style.width='16px';
+  svg.style.height='16px';
+  svg.innerHTML='<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>';
+  container.append(svg);
+ }
+ const dot = document.createElement('span');
+ dot.className = 'online-dot active';
+ dot.id = 'navOnlineDot';
+ container.append(dot);
+}
+
+function createAvatarNode(profile, hasStory=false){
+ const wrapper=document.createElement('div');
+ wrapper.className=hasStory?'story has-story':'story';
+ wrapper.onclick=()=>openPublicProfile(profile.id);
+
+ const avContainer=document.createElement('div');
+ avContainer.className='story-avatar-container';
+
+ const inner=document.createElement('div');
+ inner.className='story-avatar-inner';
+
+ if(profile.avatar_url){
+  const img=document.createElement('img');
+  img.src=profile.avatar_url;
+  img.alt=profile.username;
+  img.loading='lazy';
+  inner.append(img);
+ }else{
+  inner.textContent='👤';
+ }
+ avContainer.append(inner);
+
+ const dot=document.createElement('span');
+ dot.className='online-dot';
+ dot.id=`online-dot-${profile.id}`;
+ if(onlineUsersMap[profile.id]) dot.classList.add('active');
+ avContainer.append(dot);
+
+ wrapper.append(avContainer);
+ return wrapper;
+}
+
+function getSavedPostIds(){
+ try{
+  const raw=localStorage.getItem('og_saved_posts_'+(currentUser?.id||'guest'));
+  return raw?JSON.parse(raw):[];
+ }catch(e){return [];}
+}
+
+function toggleSavePost(postId, btn){
+ if(!currentUser){ showAuthOverlay(); return; }
+ const key = 'og_saved_posts_' + currentUser.id;
+ let saved = getSavedPostIds();
+ if(saved.includes(postId)){
+  saved = saved.filter(id => id !== postId);
+  btn.classList.remove('saved');
+  alert('Publicación removida de guardados.');
+ } else {
+  saved.push(postId);
+  btn.classList.add('saved');
+  alert('¡Publicación guardada!');
+ }
+ localStorage.setItem(key, JSON.stringify(saved));
+}
+
+async function loadSavedPostsGrid(){
  if(!currentUser) return;
- stagedAvatarBlob = null;
- stagedCoverBlob = null;
+ const grid = document.getElementById('savedPostsGrid');
+ const savedIds = getSavedPostIds();
 
- document.getElementById('editname').value = myProfile?.display_name || '';
- document.getElementById('editusername').value = myProfile?.username || '';
- document.getElementById('editpronouns').value = myProfile?.pronouns || '';
- document.getElementById('editgender').value = myProfile?.gender || '';
- document.getElementById('editbio').value = myProfile?.bio || '';
- document.getElementById('profilestatus').textContent = '';
+ if(!savedIds.length){
+  grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #71717a; padding: 40px;">No tenés publicaciones guardadas.</div>';
+  return;
+ }
 
- const avBox = document.getElementById('modalAvatarPreviewBox');
+ const { data: posts } = await db.from('posts').select('*').in('id', savedIds);
+ grid.replaceChildren();
+
+ if(!posts || !posts.length){
+  grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #71717a; padding: 40px;">No tenés publicaciones guardadas.</div>';
+  return;
+ }
+
+ const fragment = document.createDocumentFragment();
+ posts.forEach(post => {
+  const item = document.createElement('div');
+  item.className = 'ig-grid-item';
+  item.onclick = () => openPostDetail(post);
+  if(post.image_url){
+   const img = document.createElement('img');
+   img.src = post.image_url;
+   img.loading = 'lazy';
+   item.append(img);
+  } else {
+   item.textContent = (post.content || '').slice(0, 55);
+  }
+  fragment.append(item);
+ });
+ grid.replaceChildren(fragment);
+}
+
+function loadMenuPreferences(){
+ try{
+  const raw = localStorage.getItem('og_global_preferences_' + (currentUser?.id || 'guest'));
+  const prefs = raw ? JSON.parse(raw) : { dataSaver: false, autoplay: true, privateAccount: false, activityStatus: true, showFollowersList: true, allowDm: true, notifLikes: true, notifComments: true, notifFollows: true, notifDm: true };
+  
+  document.getElementById('cfgDataSaverToggle').checked = !!prefs.dataSaver;
+  document.getElementById('cfgAutoplayToggle').checked = prefs.autoplay !== false;
+  document.getElementById('privateAccountToggle').checked = !!prefs.privateAccount;
+  document.getElementById('activityStatusToggle').checked = prefs.activityStatus !== false;
+  document.getElementById('showFollowersListToggle').checked = prefs.showFollowersList !== false;
+  document.getElementById('allowDmToggle').checked = prefs.allowDm !== false;
+  document.getElementById('notifLikesToggle').checked = prefs.notifLikes !== false;
+  document.getElementById('notifCommentsToggle').checked = prefs.notifComments !== false;
+  document.getElementById('notifFollowsToggle').checked = prefs.notifFollows !== false;
+  document.getElementById('notifDmToggle').checked = prefs.notifDm !== false;
+ }catch(e){}
+}
+
+function saveMenuPreferences(){
+ try{
+  const prefs = {
+   dataSaver: document.getElementById('cfgDataSaverToggle').checked,
+   autoplay: document.getElementById('cfgAutoplayToggle').checked,
+   privateAccount: document.getElementById('privateAccountToggle').checked,
+   activityStatus: document.getElementById('activityStatusToggle').checked,
+   showFollowersList: document.getElementById('showFollowersListToggle').checked,
+   allowDm: document.getElementById('allowDmToggle').checked,
+   notifLikes: document.getElementById('notifLikesToggle').checked,
+   notifComments: document.getElementById('notifCommentsToggle').checked,
+   notifFollows: document.getElementById('notifFollowsToggle').checked,
+   notifDm: document.getElementById('notifDmToggle').checked
+  };
+  localStorage.setItem('og_global_preferences_' + (currentUser?.id || 'guest'), JSON.stringify(prefs));
+ }catch(e){}
+}
+
+async function loadUserOwnActivity(){
+ const container = document.getElementById('userOwnActivityContainer');
+ if(!currentUser) return;
+ container.innerHTML = '<div class="activity-empty">Cargando tu historial...</div>';
+
+ try{
+  const [likesRes, commentsRes, followsRes] = await Promise.all([
+   db.from('likes').select('post_id, created_at').eq('user_id', currentUser.id).order('created_at', {ascending: false}).limit(20),
+   db.from('comments').select('post_id, content, created_at').eq('user_id', currentUser.id).order('created_at', {ascending: false}).limit(20),
+   db.from('follows').select('following_id, created_at').eq('follower_id', currentUser.id).order('created_at', {ascending: false}).limit(20)
+  ]);
+
+  const items = [];
+  (likesRes.data || []).forEach(l => items.push({type: 'like', text: 'Le diste Me gusta a una publicación', time: l.created_at}));
+  (commentsRes.data || []).forEach(c => items.push({type: 'comment', text: `Comentaste: "${c.content}"`, time: c.created_at}));
+  (followsRes.data || []).forEach(f => items.push({type: 'follow', text: 'Comenzaste a seguir a un usuario', time: f.created_at}));
+
+  items.sort((a,b) => new Date(b.time) - new Date(a.time));
+
+  if(!items.length){
+   container.innerHTML = '<div class="activity-empty">No tenés registros en tu historial todavía.</div>';
+   return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  items.forEach(item => {
+   const div = document.createElement('div');
+   div.className = 'activity-item';
+   div.innerHTML = `<div style="font-size:20px;padding:4px">⚡</div><div class="activity-info"><strong>${item.text}</strong><div class="activity-date">${formatDate(item.time)}</div></div>`;
+   fragment.append(div);
+  });
+  container.replaceChildren(fragment);
+ }catch(e){
+  container.innerHTML = '<div class="activity-empty">No se pudo cargar el historial.</div>';
+ }
+}
+
+async function populateAccountCenter(){
+ if(!currentUser) return;
+ document.getElementById('accCenterName').textContent = myProfile?.display_name || myProfile?.username || 'Usuario';
+ document.getElementById('accCenterEmail').textContent = currentUser.email || '—';
+ document.getElementById('accCenterId').textContent = currentUser.id;
+
+ const avBox = document.getElementById('accCenterAvatar');
  avBox.replaceChildren();
  if(myProfile?.avatar_url){
   const img = document.createElement('img');
@@ -3751,157 +3981,111 @@ function openEditProfileModal(){
   img.alt = 'Avatar';
   avBox.append(img);
  } else {
-  avBox.innerHTML = '<span style="font-size:24px">👤</span>';
+  avBox.textContent = '👤';
  }
-
- const coverBox = document.getElementById('modalCoverPreviewBox');
- coverBox.replaceChildren();
- if(myProfile?.cover_url){
-  const img = document.createElement('img');
-  img.src = myProfile.cover_url;
-  img.alt = 'Portada';
-  coverBox.append(img);
- } else {
-  coverBox.innerHTML = '<span style="font-size:12px;color:#a1a1aa">Portada</span>';
- }
-
- document.getElementById('editProfileModal').classList.add('active');
 }
 
-function closeEditProfileModal(){
- document.getElementById('editProfileModal').classList.remove('active');
-}
-
-function stageImage(type, input){
- const file = input.files?.[0];
- if(!file) return;
-
- const allowed = ['image/jpeg','image/png','image/webp'];
- if(!allowed.includes(file.type)){
-  alert('Formato de imagen no permitido.');
-  input.value = '';
-  return;
+async function updateUserPassword(){
+ const newPass = document.getElementById('newPasswordInput').value;
+ if(!newPass || newPass.length < 8){
+  return status('passwordStatus', 'La contraseña debe tener al menos 8 caracteres.');
  }
- if(file.size > 5*1024*1024){
-  alert('La imagen no debe superar los 5 MB.');
-  input.value = '';
-  return;
- }
-
- const localUrl = URL.createObjectURL(file);
- if(type === 'avatar'){
-  stagedAvatarBlob = file;
-  const avBox = document.getElementById('modalAvatarPreviewBox');
-  avBox.replaceChildren();
-  const img = document.createElement('img');
-  img.src = localUrl;
-  avBox.append(img);
- } else {
-  stagedCoverBlob = file;
-  const coverBox = document.getElementById('modalCoverPreviewBox');
-  coverBox.replaceChildren();
-  const img = document.createElement('img');
-  img.src = localUrl;
-  coverBox.append(img);
- }
- input.value = '';
-}
-
-async function saveFullProfile(){
- if(!currentUser) return;
-
- const display_name = document.getElementById('editname').value.trim();
- const username = document.getElementById('editusername').value.trim().toLowerCase();
- const pronouns = document.getElementById('editpronouns').value.trim();
- const gender = document.getElementById('editgender').value;
- const bio = document.getElementById('editbio').value;
-
- if(!username || !/^[a-z0-9_]{3,20}$/.test(username)){
-  return status('profilestatus', 'Usuario: 3 a 20 caracteres alfanuméricos.');
- }
-
- status('profilestatus', 'Guardando cambios...');
-
- let avatarUrl = myProfile?.avatar_url;
- let coverUrl = myProfile?.cover_url;
-
- if(stagedAvatarBlob){
-  const path = currentUser.id + '/avatar-' + Date.now() + '.jpg';
-  const { error: upErr } = await db.storage.from('og-media').upload(path, stagedAvatarBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
-  if(!upErr){
-   const { data: uData } = db.storage.from('og-media').getPublicUrl(path);
-   avatarUrl = uData.publicUrl;
-  }
- }
-
- if(stagedCoverBlob){
-  const path = currentUser.id + '/cover-' + Date.now() + '.jpg';
-  const { error: upErr } = await db.storage.from('og-media').upload(path, stagedCoverBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
-  if(!upErr){
-   const { data: uData } = db.storage.from('og-media').getPublicUrl(path);
-   coverUrl = uData.publicUrl;
-  }
- }
-
- const { data, error } = await db.from('profiles')
-  .update({
-   display_name,
-   username,
-   pronouns,
-   gender,
-   bio,
-   avatar_url: avatarUrl,
-   cover_url: coverUrl
-  })
-  .eq('id', currentUser.id)
-  .select().single();
-
+ status('passwordStatus', 'Actualizando contraseña...');
+ const { error } = await db.auth.updateUser({ password: newPass });
  if(error){
-  return status('profilestatus', 'Error: ' + error.message);
+  return status('passwordStatus', 'Error: ' + error.message);
  }
-
- myProfile = data;
- profilesCache[currentUser.id] = data;
- updateProfileUI();
- updateNavAvatarUI();
- status('profilestatus', '¡Perfil actualizado con éxito!');
- setTimeout(() => {
-  closeEditProfileModal();
- }, 800);
+ document.getElementById('newPasswordInput').value = '';
+ status('passwordStatus', '¡Contraseña actualizada con éxito!');
+ setTimeout(() => status('passwordStatus', ''), 2500);
 }
 
-async function loadMyPostsGrid(){
- if(!currentUser)return;
- const grid=document.getElementById('mypostsgrid');
- const {data:posts}=await db.from('posts').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
- 
- document.getElementById('mypostscount').textContent=posts?posts.length:0;
- grid.replaceChildren();
- 
- if(!posts||!posts.length)return;
- 
- const fragment=document.createDocumentFragment();
- posts.forEach(post=>{
-  const item=document.createElement('div');
-  item.className='ig-grid-item';
-  item.onclick = () => openPostDetail(post);
+function submitHelpReport(){
+ const text = document.getElementById('helpReportInput').value.trim();
+ if(!text) return status('helpReportStatus', 'Escribí tu consulta o reporte.');
+ document.getElementById('helpReportInput').value = '';
+ status('helpReportStatus', '¡Mensaje enviado a soporte con éxito!');
+ setTimeout(() => status('helpReportStatus', ''), 2500);
+}
 
-  if(post.image_url){
-   const img=document.createElement('img');
-   img.src=post.image_url;
-   img.loading='lazy';
-   item.append(img);
-  }else{
-   item.textContent=(post.content||'').slice(0,55);
-  }
+async function openFollowersModal(userId){
+ if(!userId) return;
+ document.getElementById('followModalTitle').textContent = 'Seguidores';
+ const container = document.getElementById('followListContainer');
+ container.innerHTML = '<div class="activity-empty">Cargando seguidores...</div>';
+ document.getElementById('followListModal').classList.add('open');
+
+ const { data } = await db.from('follows').select('follower_id').eq('following_id', userId);
+ if(!data || !data.length){
+  container.innerHTML = '<div class="activity-empty">No hay seguidores aún.</div>';
+  return;
+ }
+ const ids = data.map(f => f.follower_id);
+ const { data: profiles } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', ids);
+ renderFollowListDOM(profiles, container);
+}
+
+async function openFollowingModal(userId){
+ if(!userId) return;
+ document.getElementById('followModalTitle').textContent = 'Siguiendo';
+ const container = document.getElementById('followListContainer');
+ container.innerHTML = '<div class="activity-empty">Cargando seguidos...</div>';
+ document.getElementById('followListModal').classList.add('open');
+
+ const { data } = await db.from('follows').select('following_id').eq('follower_id', userId);
+ if(!data || !data.length){
+  container.innerHTML = '<div class="activity-empty">No sigue a nadie todavía.</div>';
+  return;
+ }
+ const ids = data.map(f => f.following_id);
+ const { data: profiles } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', ids);
+ renderFollowListDOM(profiles, container);
+}
+
+function renderFollowListDOM(profiles, container){
+ if(!profiles || !profiles.length){
+  container.innerHTML = '<div class="activity-empty">Lista vacía.</div>';
+  return;
+ }
+ const fragment = document.createDocumentFragment();
+ profiles.forEach(profile => {
+  profilesCache[profile.id] = profile;
+  const item = document.createElement('div');
+  item.className = 'public-user';
+  item.style.padding = '8px 16px';
+  const av = createAvatarNode(profile, false);
+  const info = document.createElement('div');
+  info.className = 'public-user-info';
+  const name = document.createElement('strong');
+  name.textContent = profile.display_name || profile.username;
+  const username = document.createElement('small');
+  username.textContent = '@' + profile.username;
+  info.append(name, username);
+  item.append(av, info);
+  item.onclick = () => {
+   closeFollowListModal();
+   openPublicProfile(profile.id);
+  };
   fragment.append(item);
  });
- grid.replaceChildren(fragment);
+ container.replaceChildren(fragment);
 }
+
+function closeFollowListModal(){
+ document.getElementById('followListModal').classList.remove('open');
+}
+
+function status(id, msg){
+ document.getElementById(id).textContent = msg;
+}
+
+/* ========================================================================= */
+/* INICIALIZACIÓN GLOBAL CONCURRENTE                                         */
+/* ========================================================================= */
 
 window.addEventListener('DOMContentLoaded', async () => {
  try {
-  const {data:{session}} = await db.auth.getSession();
+  const { data: { session } } = await db.auth.getSession();
   if(session?.user){
    await loadAccount(session.user);
   } else {
