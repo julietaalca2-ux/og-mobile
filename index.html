@@ -29,8 +29,9 @@ body{
  display:flex;flex-direction:column;justify-content:space-between;align-items:center;
  padding:40px 24px calc(env(safe-area-inset-bottom) + 30px) 24px;text-align:center;
  transition:opacity 0.3s ease, visibility 0.3s ease;
+ opacity:0;visibility:hidden;pointer-events:none;
 }
-#authWelcomeOverlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+#authWelcomeOverlay.visible{opacity:1;visibility:visible;pointer-events:auto}
 
 .auth-brand-container{
  display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%;max-width:380px;
@@ -1040,7 +1041,14 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 <script>
 const SUPABASE_URL="https://axxafvggyetnnaumqefi.supabase.co";
 const SUPABASE_KEY="sb_publishable_O4wRZft0LCo3DYiCWT4iqg_E5_c8B2A";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+ auth:{
+  persistSession:true,
+  autoRefreshToken:true,
+  detectSessionInUrl:true,
+  storage:window.localStorage
+ }
+});
 
 let currentUser=null;
 let myProfile=null;
@@ -1105,12 +1113,12 @@ function switchAuthSubView(viewName){
 }
 
 function showAuthOverlay(){
- document.getElementById('authWelcomeOverlay').classList.remove('hidden');
+ document.getElementById('authWelcomeOverlay').classList.add('visible');
  switchAuthSubView('welcome');
 }
 
 function hideAuthOverlay(){
- document.getElementById('authWelcomeOverlay').classList.add('hidden');
+ document.getElementById('authWelcomeOverlay').classList.remove('visible');
 }
 
 async function executeSignUp(){
