@@ -633,15 +633,32 @@ textarea{height:110px;resize:none}
 input:checked + .toggle-slider{background:#3b82f6}
 input:checked + .toggle-slider:before{transform:translateX(20px)}
 
-/* MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN */
+/* MODAL DE CONFIRMACIÓN DE CIERRE DE SESIÓN (CORREGIDO Y OPTIMIZADO) */
 #logoutConfirmModal{
  position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
  z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;
+ pointer-events: none;
+ opacity: 0;
+ visibility: hidden;
+ transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+#logoutConfirmModal.active{
+ pointer-events: auto;
+ opacity: 1;
+ visibility: visible;
 }
 .confirm-card{
  background:#18181b;border:1px solid rgba(255,255,255,0.12);border-radius:22px;
  padding:24px 20px;width:100%;max-width:340px;text-align:center;
  box-shadow:0 20px 40px rgba(0,0,0,0.6);
+ position: relative;
+ z-index: 701;
+ pointer-events: auto;
+}
+.confirm-card button {
+ pointer-events: auto;
+ cursor: pointer;
+ -webkit-tap-highlight-color: transparent;
 }
 
 .public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer}
@@ -1333,7 +1350,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- MODAL CONFIRMACIÓN CERRAR SESIÓN -->
+<!-- MODAL CONFIRMACIÓN CERRAR SESIÓN (CORREGIDO) -->
 <div id="logoutConfirmModal" onclick="closeLogoutConfirmation()">
  <div class="confirm-card" onclick="event.stopPropagation()">
   <h3 style="margin:0 0 8px 0;font-size:18px;color:#fff;">¿Cerrar sesión en Ög?</h3>
@@ -1856,10 +1873,10 @@ function loadMenuPreferences(){
   if(document.getElementById('activityStatusToggle')) document.getElementById('activityStatusToggle').checked = prefs.activityStatus !== false;
   if(document.getElementById('showFollowersListToggle')) document.getElementById('showFollowersListToggle').checked = prefs.showFollowersList !== false;
   if(document.getElementById('allowDmToggle')) document.getElementById('allowDmToggle').checked = prefs.allowDm !== false;
-  if(document.getElementById('notifLikesToggle')) document.getElementById('notifLikesToggle').checked = prefs.notifLikes !== false;
-  if(document.getElementById('notifCommentsToggle')) document.getElementById('notifCommentsToggle').checked = prefs.notifComments !== false;
-  if(document.getElementById('notifFollowsToggle')) document.getElementById('notifFollowsToggle').checked = prefs.notifFollows !== false;
-  if(document.getElementById('notifDmToggle')) document.getElementById('notifDmToggle').checked = prefs.notifDm !== false;
+  if(document.getElementById('notifLikesToggle')) document.getElementById('notifLikesToggle').checked = !!prefs.notifLikes;
+  if(document.getElementById('notifCommentsToggle')) document.getElementById('notifCommentsToggle').checked = !!prefs.notifComments;
+  if(document.getElementById('notifFollowsToggle')) document.getElementById('notifFollowsToggle').checked = !!prefs.notifFollows;
+  if(document.getElementById('notifDmToggle')) document.getElementById('notifDmToggle').checked = !!prefs.notifDm;
  }catch(e){}
 }
 
@@ -2029,11 +2046,17 @@ async function updateUserPassword(){
 }
 
 function promptLogoutConfirmation(){
- document.getElementById('logoutConfirmModal').classList.add('active');
+ const modal = document.getElementById('logoutConfirmModal');
+ if(modal) {
+  modal.classList.add('active');
+ }
 }
 
 function closeLogoutConfirmation(){
- document.getElementById('logoutConfirmModal').classList.remove('active');
+ const modal = document.getElementById('logoutConfirmModal');
+ if(modal) {
+  modal.classList.remove('active');
+ }
 }
 
 async function executeConfirmedSignOut(){
