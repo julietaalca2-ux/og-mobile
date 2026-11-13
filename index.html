@@ -1071,7 +1071,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <div class="settings-row">
     <div class="settings-row-info">
      <p class="settings-row-title">Versión de Ög</p>
-     <p class="settings-row-desc">2.6.1 (Optimizado y Seguro)</p>
+     <p class="settings-row-desc">2.6.2 (Chat & Actividad Optimizado)</p>
     </div>
    </div>
    <div class="settings-row">
@@ -1479,6 +1479,12 @@ let activeRecipientProfile = null;
 let replyingToMessageId = null;
 let replyingToSnippet = null;
 let isPublishing = false;
+
+/* ========================================================================= */
+/* VARIABLES DE CACHÉ LOCAL PARA CHAT Y ACTIVIDAD (OPTIMIZACIÓN DE VELOCIDAD)  */
+/* ========================================================================= */
+let cachedConversationsList = null;
+let cachedActivityEvents = null;
 
 let visitorId = localStorage.getItem('og_visitor_uuid');
 if (!visitorId) {
@@ -1901,6 +1907,8 @@ async function executeConfirmedSignOut(){
  myProfile=null;
  viewedProfile=null;
  myActiveStory=null;
+ cachedConversationsList = null;
+ cachedActivityEvents = null;
  updateStoryUI();
  updateNavAvatarUI();
  updateProfileUI();
@@ -2063,18 +2071,21 @@ function setupRealtimeNotifications(){
 
  realtimeChannel=db.channel('public-notifications')
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows'},payload=>{
-   if(payload.new.following_id===currentUser?.id){ loadActivity(); loadStoriesData(); }
+   if(payload.new.following_id===currentUser?.id){ cachedActivityEvents = null; loadActivity(); loadStoriesData(); }
   })
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'likes'},payload=>{
+   cachedActivityEvents = null;
    loadActivity();
   })
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'comments'},payload=>{
+   cachedActivityEvents = null;
    loadActivity();
   })
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'stories'},payload=>{
    loadStoriesData();
   })
   .on('postgres_changes',{event:'INSERT',schema:'public',table:'story_likes'},payload=>{
+   cachedActivityEvents = null;
    loadActivity();
   })
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'posts'},payload=>{
@@ -2089,6 +2100,7 @@ function setupRealtimeNotifications(){
    const newMsg = payload.new;
    if(newMsg.sender_id !== currentUser?.id){
     document.getElementById('navUnreadDot').classList.add('active');
+    cachedConversationsList = null; // Invalidar caché de chat al entrar mensaje nuevo
     if(document.getElementById('messagesPage').classList.contains('active')){
      loadConversations();
     }
@@ -2132,65 +2144,87 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('navUnreadDot').classList.remove('active');
 }
 
+/* ========================================================================= */
+/* SECCIÓN CHAT OPTIMIZADA CON CACHÉ LOCAL Y CARGA PARALELA (SUPABASE)       */
+/* ========================================================================= */
 async function loadConversations(){
  const container = document.getElementById('dmConversationsList');
  if(!currentUser) return;
 
- container.innerHTML = '<div class="activity-empty">Cargando conversaciones...</div>';
-
- const { data: myParts, error: partErr } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
- if(partErr || !myParts || !myParts.length){
-  container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá a alguien arriba para iniciar un chat.</div>';
-  document.getElementById('navUnreadDot').classList.remove('active');
-  return;
+ // 1. Renderizado instantáneo si hay datos en caché previa
+ if(cachedConversationsList && cachedConversationsList.length > 0){
+  renderConversationsDOM(cachedConversationsList, container);
+ } else {
+  container.innerHTML = '<div class="activity-empty">Cargando conversaciones...</div>';
  }
 
- const convIds = myParts.map(p => p.conversation_id);
- const { data: allParts } = await db.from('conversation_participants').select('conversation_id, user_id').in('conversation_id', convIds);
- 
- const convMap = {};
- convIds.forEach(id => { convMap[id] = { otherUserId: null, last_read_at: myParts.find(p=>p.conversation_id===id)?.last_read_at }; });
-
- (allParts || []).forEach(p => {
-  if(p.user_id !== currentUser.id && convMap[p.conversation_id]){
-   convMap[p.conversation_id].otherUserId = p.user_id;
+ try {
+  const { data: myParts, error: partErr } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
+  if(partErr || !myParts || !myParts.length){
+   cachedConversationsList = [];
+   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá a alguien arriba para iniciar un chat.</div>';
+   document.getElementById('navUnreadDot').classList.remove('active');
+   return;
   }
- });
 
- const otherUserIds = [...new Set(Object.values(convMap).map(c => c.otherUserId).filter(Boolean))];
- const missing = otherUserIds.filter(id => !profilesCache[id]);
- if(missing.length > 0){
-  const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
-  (profs || []).forEach(p => profilesCache[p.id] = p);
- }
+  const convIds = myParts.map(p => p.conversation_id);
+  const { data: allParts } = await db.from('conversation_participants').select('conversation_id, user_id').in('conversation_id', convIds);
+  
+  const convMap = {};
+  convIds.forEach(id => { convMap[id] = { otherUserId: null, last_read_at: myParts.find(p=>p.conversation_id===id)?.last_read_at }; });
 
- const conversationsList = [];
- for(const convId of convIds){
-  const otherId = convMap[convId].otherUserId;
-  const profile = profilesCache[otherId];
-  if(!profile) continue;
-
-  const { data: lastMsg } = await db.from('messages')
-   .select('content, created_at, sender_id')
-   .eq('conversation_id', convId)
-   .order('created_at', {ascending: false})
-   .limit(1)
-   .maybeSingle();
-
-  const isUnread = lastMsg && lastMsg.sender_id !== currentUser.id && (!convMap[convId].last_read_at || new Date(lastMsg.created_at) > new Date(convMap[convId].last_read_at));
-
-  conversationsList.push({
-   conversationId: convId,
-   profile,
-   lastMessage: lastMsg ? lastMsg.content : 'Conversación iniciada',
-   time: lastMsg ? formatDate(lastMsg.created_at) : '',
-   timestamp: lastMsg ? new Date(lastMsg.created_at).getTime() : 0,
-   isUnread
+  (allParts || []).forEach(p => {
+   if(p.user_id !== currentUser.id && convMap[p.conversation_id]){
+    convMap[p.conversation_id].otherUserId = p.user_id;
+   }
   });
+
+  const otherUserIds = [...new Set(Object.values(convMap).map(c => c.otherUserId).filter(Boolean))];
+  const missing = otherUserIds.filter(id => !profilesCache[id]);
+  if(missing.length > 0){
+   const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
+   (profs || []).forEach(p => profilesCache[p.id] = p);
+  }
+
+  // Carga paralela de últimos mensajes para máxima velocidad
+  const conversationsList = await Promise.all(convIds.map(async convId => {
+   const otherId = convMap[convId].otherUserId;
+   const profile = profilesCache[otherId];
+   if(!profile) return null;
+
+   const { data: lastMsg } = await db.from('messages')
+    .select('content, created_at, sender_id')
+    .eq('conversation_id', convId)
+    .order('created_at', {ascending: false})
+    .limit(1)
+    .maybeSingle();
+
+   const isUnread = lastMsg && lastMsg.sender_id !== currentUser.id && (!convMap[convId].last_read_at || new Date(lastMsg.created_at) > new Date(convMap[convId].last_read_at));
+
+   return {
+    conversationId: convId,
+    profile,
+    lastMessage: lastMsg ? lastMsg.content : 'Conversación iniciada',
+    time: lastMsg ? formatDate(lastMsg.created_at) : '',
+    timestamp: lastMsg ? new Date(lastMsg.created_at).getTime() : 0,
+    isUnread
+   };
+  }));
+
+  const validConversations = conversationsList.filter(Boolean);
+  validConversations.sort((a,b) => b.timestamp - a.timestamp);
+
+  cachedConversationsList = validConversations;
+  renderConversationsDOM(validConversations, container);
+
+ }catch(e){
+  if(!cachedConversationsList){
+   container.innerHTML = '<div class="activity-empty">No se pudieron cargar las conversaciones.</div>';
+  }
  }
+}
 
- conversationsList.sort((a,b) => b.timestamp - a.timestamp);
-
+function renderConversationsDOM(conversationsList, container){
  if(!conversationsList.length){
   container.innerHTML = '<div class="activity-empty">No hay conversaciones recientes.</div>';
   return;
@@ -2301,6 +2335,7 @@ async function openDirectChatWithUser(recipientId){
 
  document.getElementById('dmSearchInput').value = '';
  document.getElementById('dmSearchResults').replaceChildren();
+ cachedConversationsList = null; // Invalidar caché para reflejar nuevo chat
  openChatRoom(convId, profile);
 }
 
@@ -2439,6 +2474,8 @@ async function sendChatMessage(){
  appendChatMessageNode(tempMsg);
  scrollToBottomChat();
 
+ cachedConversationsList = null; // Invalidar caché al enviar mensaje para actualizar la vista previa
+
  const insertPayload = {
   conversation_id: activeConversationId,
   sender_id: currentUser.id,
@@ -2462,6 +2499,7 @@ async function markConversationAsRead(conversationId){
   .eq('conversation_id', conversationId)
   .eq('user_id', currentUser.id);
 
+ cachedConversationsList = null;
  checkGlobalUnreadMessages();
 }
 
@@ -2761,7 +2799,7 @@ function sendStoryReply(){
  const input = document.getElementById('storyReplyInput');
  const msg = input.value.trim();
  if(!msg) return;
- alert('Mensaje enviado a la historia.');
+ alert('Mensaje enviado à la historia.');
  input.value = '';
 }
 
@@ -2820,7 +2858,7 @@ async function startCameraStream(){
   videoElem.srcObject = mediaStream;
   await videoElem.play();
  }catch(err){
-  console.error('Error al acceder a la cámara:', err);
+  console.error('Error al acceder à la cámara:', err);
   alert('No se pudo acceder à la cámara. Asegúrate de dar permisos.');
  }
 }
@@ -3344,6 +3382,9 @@ function formatDate(date){
  return new Date(date).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'});
 }
 
+/* ========================================================================= */
+/* SECCIÓN ACTIVIDAD OPTIMIZADA CON CACHÉ LOCAL Y CARGA PARALELA            */
+/* ========================================================================= */
 async function loadActivity(){
  const container=document.getElementById('activitylist');
 
@@ -3352,7 +3393,12 @@ async function loadActivity(){
   return;
  }
 
- container.textContent='Cargando actividad...';
+ // 1. Renderizado instantáneo de la actividad previa almacenada en caché
+ if(cachedActivityEvents && cachedActivityEvents.length > 0){
+  renderActivityDOM(cachedActivityEvents, container);
+ } else {
+  container.textContent='Cargando actividad...';
+ }
 
  try{
   const {data:ownPosts,error:postsError}=await db.from('posts').select('id').eq('user_id',currentUser.id);
@@ -3363,6 +3409,7 @@ async function loadActivity(){
   const {data:ownStories,error:storiesError}=await db.from('stories').select('id').eq('user_id',currentUser.id);
   const storyIds=(ownStories||[]).map(s=>s.id);
 
+  // Consulta paralela simultánea
   const [followsResult,likesResult,commentsResult,storyLikesResult]=await Promise.all([
    db.from('follows').select('follower_id,created_at').eq('following_id',currentUser.id).order('created_at',{ascending:false}).limit(30),
    postIds.length?db.from('likes').select('user_id,post_id,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]}),
@@ -3389,11 +3436,24 @@ async function loadActivity(){
 
   events.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
 
-  if(!events.length){
-   container.innerHTML='<div class="activity-empty">Todavía no tenés actividad reciente.</div>';
-   return;
-  }
+  cachedActivityEvents = events;
+  renderActivityDOM(events, container);
 
+ }catch(error){
+  console.error('Error al cargar actividad:',error);
+  if(!cachedActivityEvents){
+   container.textContent='No se pudo cargar la actividad.';
+  }
+ }
+}
+
+function renderActivityDOM(events, container){
+ if(!events.length){
+  container.innerHTML='<div class="activity-empty">Todavía no tenés actividad reciente.</div>';
+  return;
+ }
+
+ (async () => {
   const missingUserIds=[...new Set(events.map(e=>e.user_id).filter(Boolean))].filter(id=>!profilesCache[id]);
   if(missingUserIds.length>0){
    const {data:newProfiles}=await db.from('profiles').select('id,username,display_name,avatar_url').in('id',missingUserIds);
@@ -3455,11 +3515,7 @@ async function loadActivity(){
   });
 
   container.replaceChildren(fragment);
-
- }catch(error){
-  console.error('Error al cargar actividad:',error);
-  container.textContent='No se pudo cargar la actividad.';
- }
+ })();
 }
 
 async function loadInitialPosts(){
@@ -3761,6 +3817,7 @@ async function quickComment(postId, input){
   return;
  }
 
+ cachedActivityEvents = null; // Invalidar caché de actividad
  const commentSec = document.getElementById(`comments-${postId}`) || document.getElementById(`modal-comments-${postId}`);
  if(commentSec){
   loadPostComments(postId, commentSec);
@@ -3948,6 +4005,7 @@ async function toggleFollow(){
   btn.className = 'secondary';
  }
  btn.disabled = false;
+ cachedActivityEvents = null;
  loadPublicCounts(viewedProfile.id);
 }
 
