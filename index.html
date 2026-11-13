@@ -145,7 +145,7 @@ main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active, #messagesPage.active, #chatRoomPage.active, #menuSectionPage.active,
 #menuConfigPage.active, #menuPrivacyPage.active, #menuNotifPage.active, #menuActivityPage.active,
-#menuSavedPage.active, #menuHelpPage.active, #menuAccountsPage.active {padding: 0 !important;}
+#menuSavedPage.active, #menuHelpPage.active, #menuAccountsPage.active, #chatDetailsPage.active {padding: 0 !important;}
 #explore.active {padding: 0 !important;}
 
 /* CÁMARA */
@@ -273,6 +273,7 @@ main > div.active {display: block !important;}
  background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
  z-index:40;flex-shrink:0;
  min-height: 64px;
+ cursor: pointer;
 }
 
 #chatRoomHeaderAvatar{
@@ -621,6 +622,29 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 }
 .settings-overlay.open .settings-drawer{transform:translateY(0)}
 .settings-handle{width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin:0 auto 20px auto}
+
+/* ESTILOS ESPECÍFICOS: DETALLES DEL CHAT (PASO 1) */
+.chat-details-user-header{
+ display:flex;flex-direction:column;align-items:center;padding:24px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.chat-details-avatar{width:86px;height:86px;border-radius:50%;overflow:hidden;background:#27272a;margin-bottom:12px;position:relative;border:2px solid rgba(255,255,255,0.15);}
+.chat-details-avatar img{width:100%;height:100%;object-fit:cover}
+.chat-details-name{font-size:18px;font-weight:700;color:#fff;margin:0 0 2px 0}
+.chat-details-username{font-size:13px;color:#71717a;margin:0 0 6px 0}
+.chat-details-status{font-size:12px;color:#22c55e;font-weight:500;}
+
+.chat-details-actions-row{
+ display:flex;gap:12px;padding:16px;border-bottom:1px solid rgba(255,255,255,0.08);justify-content:center;
+}
+.chat-details-action-btn{
+ flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+ background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+ padding:12px 8px;border-radius:14px;color:#fff;font-size:12px;font-weight:500;cursor:pointer;
+ transition:background 0.1s;
+}
+.chat-details-action-btn:active{background:rgba(255,255,255,0.1)}
+.chat-details-action-btn svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
+
 </style>
 </head>
 
@@ -1283,6 +1307,105 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
+<!-- NUEVA PANTALLA: DETALLES DEL CHAT (PASO 1) -->
+<div id="chatDetailsPage" class="fullscreen-menu-view">
+ <div class="menu-section-header">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="closeChatDetailsPage()">← Volver</button>
+  <strong style="font-size:16px;color:#fff;">Detalles del chat</strong>
+  <button class="icon" onclick="openChatDetailsMenu()" aria-label="Más opciones">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+  </button>
+ </div>
+ <div class="menu-section-content" style="padding:0;">
+  <!-- Sección del usuario -->
+  <div class="chat-details-user-header">
+   <div class="chat-details-avatar" id="chatDetailsAvatarBox">👤</div>
+   <h3 class="chat-details-name" id="chatDetailsName">Nombre</h3>
+   <p class="chat-details-username" id="chatDetailsUsername">@usuario</p>
+   <span class="chat-details-status" id="chatDetailsStatus">En línea</span>
+  </div>
+
+  <!-- Tres botones horizontales -->
+  <div class="chat-details-actions-row">
+   <button class="chat-details-action-btn" onclick="chatDetailsOpenProfile()">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Perfil
+   </button>
+   <button class="chat-details-action-btn" onclick="chatDetailsOpenSearch()">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    Buscar
+   </button>
+   <button class="chat-details-action-btn" onclick="openMuteOptionsModal()">
+    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span id="chatDetailsMuteBtnText">Silenciar</span>
+   </button>
+  </div>
+
+  <!-- Cuatro opciones independientes -->
+  <div style="padding: 12px 16px; display: flex; flex-direction: column; gap: 4px;">
+   <button class="menu-list-btn" onclick="alert('Próximamente: Privacidad y seguridad')">
+    <span class="menu-list-left">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+     <span>Privacidad y seguridad</span>
+    </span>
+    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+   </button>
+
+   <button class="menu-list-btn" onclick="alert('Próximamente: Mensajes temporales')">
+    <span class="menu-list-left">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+     <span>Mensajes temporales</span>
+    </span>
+    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+   </button>
+
+   <button class="menu-list-btn" onclick="alert('Próximamente: Apodos')">
+    <span class="menu-list-left">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+     <span>Apodos</span>
+    </span>
+    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+   </button>
+
+   <button class="menu-list-btn" onclick="alert('Próximamente: Personalizar estilo y fuente')">
+    <span class="menu-list-left">
+     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+     <span>Personalizar estilo y fuente</span>
+    </span>
+    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+   </button>
+  </div>
+ </div>
+</div>
+
+<!-- MODAL: MENÚ DE TRES PUNTOS DEL CHAT -->
+<div id="chatThreeDotsModal" class="settings-overlay" onclick="closeChatThreeDotsModal()">
+ <div class="settings-drawer" onclick="event.stopPropagation()">
+  <div class="settings-handle"></div>
+  <div style="display:flex; flex-direction:column; gap:8px;">
+   <button class="menu-list-btn danger" onclick="chatActionBlock()">Bloquear</button>
+   <button class="menu-list-btn" onclick="chatActionReport()">Reportar</button>
+   <button class="menu-list-btn" onclick="chatActionRestrict()">Restringir</button>
+   <button class="secondary" style="margin-top:8px;" onclick="closeChatThreeDotsModal()">Cancelar</button>
+  </div>
+ </div>
+</div>
+
+<!-- MODAL: OPCIONES DE SILENCIAR -->
+<div id="muteOptionsModal" class="settings-overlay" onclick="closeMuteOptionsModal()">
+ <div class="settings-drawer" onclick="event.stopPropagation()">
+  <div class="settings-handle"></div>
+  <h3 style="margin:0 0 12px 0; font-size:16px; color:#fff; text-align:center;">Silenciar notificaciones</h3>
+  <div style="display:flex; flex-direction:column; gap:8px;">
+   <button class="menu-list-btn" onclick="applyMuteOption('24h')">24 horas</button>
+   <button class="menu-list-btn" onclick="applyMuteOption('7d')">7 días</button>
+   <button class="menu-list-btn" onclick="applyMuteOption('always')">Siempre</button>
+   <button class="menu-list-btn danger" onclick="applyMuteOption('off')">Cancelar silencio</button>
+   <button class="secondary" style="margin-top:8px;" onclick="closeMuteOptionsModal()">Cancelar</button>
+  </div>
+ </div>
+</div>
+
 <!-- MODAL CONFIRMACIÓN CERRAR SESIÓN -->
 <div id="logoutConfirmModal" onclick="closeLogoutConfirmation()">
  <div class="confirm-card" onclick="event.stopPropagation()">
@@ -1350,8 +1473,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 <!-- SALA DE CHAT -->
 <div id="chatRoomPage" class="section">
- <div class="chat-room-header">
-  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('messagesPage')">← Volver</button>
+ <div class="chat-room-header" onclick="openChatDetailsPageFromRoom()">
+  <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="event.stopPropagation(); showTab('messagesPage')">← Volver</button>
   <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
    <div id="chatRoomHeaderAvatar">
     <span id="chatRoomOnlineDot" class="online-dot"></span>
@@ -1361,6 +1484,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <small id="chatRoomStatusSub" style="color:#71717a;font-size:11px;display:block;">Desconectado</small>
    </div>
   </div>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:#71717a;"><polyline points="9 18 15 12 9 6"/></svg>
  </div>
 
  <div class="chat-messages-container" id="chatMessagesContainer"></div>
@@ -1468,15 +1592,12 @@ let currentActiveStoryId = null;
 let stagedAvatarBlob = null;
 let stagedCoverBlob = null;
 
-/* ========================================================================= */
-/* VARIABLES DE OPTIMIZACIÓN Y CACHÉ DEL SISTEMA DE PUBLICACIONES           */
-/* ========================================================================= */
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedLoading = false;
 let feedHasMore = true;
 let loadedPostIds = new Set();
-let cachedFeedPosts = null; // Caché persistente en memoria para carga instantánea
+let cachedFeedPosts = null;
 
 let activeConversationId = null;
 let activeRecipientProfile = null;
@@ -1680,6 +1801,129 @@ function backToMainMenu(currentPageId){
  document.getElementById(currentPageId).classList.remove('active');
  document.getElementById('menuSectionPage').classList.add('active');
 }
+
+/* ========================================================================= */
+/* FUNCIONES DE DETALLES DEL CHAT (PASO 1)                                   */
+/* ========================================================================= */
+
+function openChatDetailsPageFromRoom(){
+ if(!activeRecipientProfile) return;
+ 
+ document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
+ document.getElementById('chatDetailsPage').classList.add('active');
+ const bottomNavBar = document.getElementById('bottomNavBar');
+ if(bottomNavBar) bottomNavBar.style.display = 'none';
+
+ // Ocultar header principal
+ document.getElementById('headerLogoSlot').style.display = 'none';
+ document.getElementById('headerPlusBtn').style.display = 'none';
+ document.getElementById('header-default-icons').style.display = 'none';
+ document.getElementById('header-profile-icons').style.display = 'none';
+
+ // Poblar datos del usuario en la pantalla
+ document.getElementById('chatDetailsName').textContent = activeRecipientProfile.display_name || activeRecipientProfile.username;
+ document.getElementById('chatDetailsUsername').textContent = '@' + activeRecipientProfile.username;
+ 
+ const avBox = document.getElementById('chatDetailsAvatarBox');
+ avBox.replaceChildren();
+ if(activeRecipientProfile.avatar_url){
+  const img = document.createElement('img');
+  img.src = activeRecipientProfile.avatar_url;
+  img.alt = 'Avatar';
+  avBox.append(img);
+ } else {
+  avBox.textContent = '👤';
+ }
+
+ // Respetar privacidad de estado de actividad
+ const targetPrefs = JSON.parse(localStorage.getItem('og_user_settings_' + activeRecipientProfile.id) || '{"activityStatus": true}');
+ const statusElem = document.getElementById('chatDetailsStatus');
+ if(targetPrefs.activityStatus === false){
+  statusElem.textContent = 'Estado de actividad oculto';
+  statusElem.style.color = '#71717a';
+ } else if(onlineUsersMap[activeRecipientProfile.id]){
+  statusElem.textContent = 'En línea';
+  statusElem.style.color = '#22c55e';
+ } else {
+  statusElem.textContent = 'Desconectado';
+  statusElem.style.color = '#71717a';
+ }
+
+ updateMuteButtonStateText();
+}
+
+function closeChatDetailsPage(){
+ document.getElementById('chatDetailsPage').classList.remove('active');
+ if(activeConversationId && activeRecipientProfile){
+  openChatRoom(activeConversationId, activeRecipientProfile);
+ } else {
+  showTab('messagesPage');
+ }
+}
+
+function chatDetailsOpenProfile(){
+ if(activeRecipientProfile){
+  document.getElementById('chatDetailsPage').classList.remove('active');
+  openPublicProfile(activeRecipientProfile.id);
+ }
+}
+
+function chatDetailsOpenSearch(){
+ alert('Próximamente: Búsqueda dentro del chat');
+}
+
+function openMuteOptionsModal(){
+ document.getElementById('muteOptionsModal').classList.add('open');
+}
+
+function closeMuteOptionsModal(){
+ document.getElementById('muteOptionsModal').classList.remove('open');
+}
+
+function applyMuteOption(option){
+ if(!activeConversationId) return;
+ localStorage.setItem('og_chat_mute_' + activeConversationId, option);
+ closeMuteOptionsModal();
+ updateMuteButtonStateText();
+ alert(option === 'off' ? 'Silencio cancelado.' : 'Chat silenciado correctamente.');
+}
+
+function updateMuteButtonStateText(){
+ if(!activeConversationId) return;
+ const muteState = localStorage.getItem('og_chat_mute_' + activeConversationId);
+ const btnText = document.getElementById('chatDetailsMuteBtnText');
+ if(muteState && muteState !== 'off'){
+  btnText.textContent = 'Silenciado';
+ } else {
+  btnText.textContent = 'Silenciar';
+ }
+}
+
+function openChatDetailsMenu(){
+ document.getElementById('chatThreeDotsModal').classList.add('open');
+}
+
+function closeChatThreeDotsModal(){
+ document.getElementById('chatThreeDotsModal').classList.remove('open');
+}
+
+function chatActionBlock(){
+ closeChatThreeDotsModal();
+ alert('Usuario bloqueado.');
+ showTab('messagesPage');
+}
+
+function chatActionReport(){
+ closeChatThreeDotsModal();
+ alert('Reporte enviado correctamente.');
+}
+
+function chatActionRestrict(){
+ closeChatThreeDotsModal();
+ alert('Usuario restringido.');
+}
+
+/* ========================================================================= */
 
 function saveMenuPreferences(){
  const prefs = {
@@ -2145,17 +2389,12 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('navUnreadDot').classList.remove('active');
 }
 
-/* ========================================================================= */
-/* SISTEMA DE PUBLICACIONES OPTIMIZADO (VELOCIDAD, CACHÉ Y CERO BUGS)        */
-/* ========================================================================= */
-
 async function loadInitialPosts(){
  feedPage = 0;
  feedHasMore = true;
  loadedPostIds.clear();
  const container = document.getElementById('posts');
 
- // 1. Renderizado instantáneo desde la caché local si está disponible (Cero espera)
  if(cachedFeedPosts && cachedFeedPosts.length > 0){
   renderPostsToDOM(cachedFeedPosts, container, true);
  } else {
@@ -2551,14 +2790,10 @@ async function publish(){
  removePostImage();
  status('publishStatus', '¡Publicado con éxito!');
  setTimeout(() => status('publishStatus', ''), 2000);
- cachedFeedPosts = null; // Invalidar caché del feed para incluir el nuevo post
+ cachedFeedPosts = null;
  showTab('feed');
  await loadInitialPosts();
 }
-
-/* ========================================================================= */
-/* OTRAS SECCIONES (EXPLORAR, PERFIL, CHAT, ACTIVIDAD, HISTORIAS)            */
-/* ========================================================================= */
 
 function searchUsers(){
  clearTimeout(searchTimer);
