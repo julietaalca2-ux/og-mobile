@@ -41,8 +41,9 @@ body{
 #appSplashScreen{
  position:fixed;inset:0;background:#000000;z-index:9999;
  display:flex;flex-direction:column;align-items:center;justify-content:center;
- transition:opacity 0.4s ease, visibility 0.4s ease;
+ transition:opacity 0.3s ease, visibility 0.3s ease;
  opacity:1;visibility:visible;
+ will-change: opacity;
 }
 #appSplashScreen.fade-out{
  opacity:0;visibility:hidden;pointer-events:none;
@@ -64,7 +65,7 @@ body{
  position:fixed;inset:0;background:#000000;z-index:1000;
  display:flex;flex-direction:column;justify-content:space-between;align-items:center;
  padding:40px 24px calc(env(safe-area-inset-bottom) + 30px) 24px;text-align:center;
- transition:opacity 0.3s ease, visibility 0.3s ease;
+ transition:opacity 0.25s ease, visibility 0.25s ease;
  opacity:0;visibility:hidden;pointer-events:none;
 }
 #authWelcomeOverlay.visible{opacity:1;visibility:visible;pointer-events:auto}
@@ -76,10 +77,10 @@ body{
 .auth-tagline{font-size:15px;color:#a1a1aa;margin-bottom:40px;line-height:1.4}
 
 .auth-forms-container{width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
-.auth-panel{display:none;width:100%;flex-direction:column;gap:12px;animation:fadeIn 0.25s ease}
+.auth-panel{display:none;width:100%;flex-direction:column;gap:12px;animation:fadeIn 0.2s ease}
 .auth-panel.active{display:flex}
 
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
 /* HEADER ESTILO INSTAGRAM */
 header{
@@ -87,8 +88,8 @@ header{
  align-items:center;justify-content:space-between;
  border-bottom:1px solid rgba(255,255,255,0.08);
  position:sticky;top:0;
- background:rgba(0,0,0,0.75);
- backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+ background:rgba(0,0,0,0.8);
+ backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
  z-index:50;
  padding-top:env(safe-area-inset-top);
 }
@@ -165,7 +166,7 @@ main > div.active {display: block !important;}
 .camera-video-fullscreen{
  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#000;
  transform-origin: center center;
- transition: transform 0.05s ease-out;
+ will-change: transform;
 }
 #capturedImagePreview{z-index:2}
 
@@ -246,7 +247,7 @@ main > div.active {display: block !important;}
 
 /* MENSAJERÍA */
 .dm-conv-item{
- display:flex;align-items:center;gap:14px;padding:12px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s;
+ display:flex;align-items:center;gap:14px;padding:12px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.1s;
 }
 .dm-conv-item:active{background:rgba(255,255,255,0.06)}
 .dm-conv-avatar{width:54px;height:54px;min-width:54px;margin:0}
@@ -514,7 +515,7 @@ textarea{height:110px;resize:none}
 .fullscreen-menu-view{
  display:none;flex-direction:column;min-height:100vh;min-height:100dvh;background:#000000;
  position:fixed;inset:0;z-index:250;
- animation:slideInMenu 0.25s cubic-bezier(0.1,0.9,0.2,1);
+ animation:slideInMenu 0.2s cubic-bezier(0.1,0.9,0.2,1);
 }
 .fullscreen-menu-view.active{display:flex !important;}
 
@@ -540,7 +541,7 @@ textarea{height:110px;resize:none}
  display:flex;align-items:center;justify-content:space-between;
  width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
  padding:15px 16px;border-radius:14px;color:#fff;font-size:15px;font-weight:500;
- cursor:pointer;transition:background 0.15s, transform 0.1s;margin-bottom:6px;text-align:left;
+ cursor:pointer;transition:background 0.1s, transform 0.1s;margin-bottom:6px;text-align:left;
 }
 .menu-list-btn:active{background:rgba(255,255,255,0.08);transform:scale(0.99)}
 .menu-list-left{display:flex;align-items:center;gap:14px}
@@ -569,12 +570,12 @@ textarea{height:110px;resize:none}
 .toggle-switch input{opacity:0;width:0;height:0}
 .toggle-slider{
  position:absolute;cursor:pointer;inset:0;background:#27272a;
- border-radius:24px;transition:0.25s;
+ border-radius:24px;transition:0.2s;
  border:1px solid rgba(255,255,255,0.1);
 }
 .toggle-slider:before{
  position:absolute;content:"";height:18px;width:18px;
- left:2px;bottom:2px;background:#fff;border-radius:50%;transition:0.25s;
+ left:2px;bottom:2px;background:#fff;border-radius:50%;transition:0.2s;
 }
 input:checked + .toggle-slider{background:#3b82f6}
 input:checked + .toggle-slider:before{transform:translateX(20px)}
@@ -588,7 +589,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 .confirm-card{
  background:#18181b;border:1px solid rgba(255,255,255,0.12);border-radius:22px;
  padding:24px 20px;width:100%;max-width:340px;text-align:center;
- box-shadow:0 20px 40px rgba(0,0,0,0.6);animation:fadeIn 0.2s ease;
+ box-shadow:0 20px 40px rgba(0,0,0,0.6);animation:fadeIn 0.15s ease;
 }
 
 .public-user{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer}
@@ -606,7 +607,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 .settings-overlay{
  position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
- z-index:200;display:none;opacity:0;transition:opacity 0.2s ease;
+ z-index:200;display:none;opacity:0;transition:opacity 0.15s ease;
 }
 .settings-overlay.open{display:block;opacity:1}
 .settings-drawer{
@@ -615,7 +616,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  border-top-left-radius:24px;border-top-right-radius:24px;
  border-top:1px solid rgba(255,255,255,0.15);
  z-index:201;padding:20px 16px calc(env(safe-area-inset-bottom) + 24px) 16px;
- transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.1,0.9,0.2,1);
+ transform:translateY(100%);transition:transform 0.25s cubic-bezier(0.1,0.9,0.2,1);
  max-width:470px;margin:auto;
 }
 .settings-overlay.open .settings-drawer{transform:translateY(0)}
@@ -946,9 +947,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- ====================================================================== -->
-<!-- MENÚ PRINCIPAL DE LAS TRES RAYITAS (PANTALLA COMPLETA)                 -->
-<!-- ====================================================================== -->
+<!-- MENÚ PRINCIPAL DE LAS TRES RAYITAS (PANTALLA COMPLETA) -->
 <div id="menuSectionPage" class="fullscreen-menu-view">
  <div class="menu-section-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="closeMenuSection()">← Perfil</button>
@@ -1072,7 +1071,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <div class="settings-row">
     <div class="settings-row-info">
      <p class="settings-row-title">Versión de Ög</p>
-     <p class="settings-row-desc">2.6.0 (Navegación Modular Completa)</p>
+     <p class="settings-row-desc">2.6.1 (Optimizado y Seguro)</p>
     </div>
    </div>
    <div class="settings-row">
@@ -1540,7 +1539,7 @@ function hideSplashScreen(){
  const splash = document.getElementById('appSplashScreen');
  if(splash){
   splash.classList.add('fade-out');
-  setTimeout(() => splash.remove(), 400);
+  setTimeout(() => splash.remove(), 300);
  }
 }
 
@@ -2281,7 +2280,7 @@ async function searchUsersForChat(){
    fragment.append(item);
   });
   resultBox.replaceChildren(fragment);
- }, 300);
+ }, 200);
 }
 
 async function openDirectChatWithUser(recipientId){
@@ -2822,7 +2821,7 @@ async function startCameraStream(){
   await videoElem.play();
  }catch(err){
   console.error('Error al acceder a la cámara:', err);
-  alert('No se pudo acceder a la cámara. Asegúrate de dar permisos de cámara en tu navegador.');
+  alert('No se pudo acceder à la cámara. Asegúrate de dar permisos.');
  }
 }
 
@@ -2875,7 +2874,7 @@ function takePhoto(){
   video.style.display = 'none';
   document.getElementById('captureBtn').style.display = 'none';
   document.getElementById('publishStoryBtn').style.display = 'block';
- }, 'image/jpeg', 0.9);
+ }, 'image/jpeg', 0.85);
 }
 
 async function handleGallerySelect(input){
@@ -2959,7 +2958,7 @@ function updateProfileUI(){
   document.getElementById('myname').textContent='Mi perfil';
   document.getElementById('mypronouns').textContent='';
   document.getElementById('myusername').textContent='@invitado';
-  document.getElementById('mybio').textContent='Bienvenido a Ög.';
+  document.getElementById('mybio').textContent='Bienvenido à Ög.';
   document.getElementById('mypostscount').textContent='0';
   document.getElementById('myfollowerscount').textContent='0';
   document.getElementById('myfollowingcount').textContent='0';
@@ -3435,7 +3434,7 @@ async function loadActivity(){
     message.append(name);
 
     if(event.type==='follow') message.append(document.createTextNode(' comenzó a seguirte.'));
-    else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
+    else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta à tu publicación.'));
     else if(event.type==='comment') message.append(document.createTextNode(' comentó tu publicación.'));
 
     info.append(message);
@@ -3854,7 +3853,7 @@ function searchUsers(){
    fragment.append(item);
   });
   resultBox.replaceChildren(fragment);
- }, 300);
+ }, 200);
 }
 
 async function openPublicProfile(userId){
@@ -3991,7 +3990,7 @@ window.addEventListener('DOMContentLoaded', async () => {
  } finally {
   setTimeout(() => {
    hideSplashScreen();
-  }, 350);
+  }, 200);
  }
 });
 </script>
