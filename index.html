@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>Ög — Social</title>
+<title>Ög — Social (Etapa 3)</title>
 
 <!-- CONFIGURACIÓN PWA -->
 <link rel="manifest" href="manifest.json">
@@ -598,7 +598,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <p id="authOverlayStatus" class="status" style="margin-top:8px"></p>
   </div>
  </div>
- <div style="font-size:12px;color:#71717a">Ög — Secure Liquid Engine</div>
+ <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine (Etapa 3)</div>
 </div>
 
 <header>
@@ -638,6 +638,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   </div>
  </div>
  <div id="posts"></div>
+ <div id="feedLoader" style="text-align:center;padding:20px;color:#71717a;font-size:13px;display:none;">Cargando más publicaciones...</div>
 </div>
 
 <!-- BANDEJA DE MENSAJES (DIRECTS) -->
@@ -918,7 +919,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <div class="settings-row">
    <div class="settings-row-info">
     <p class="settings-row-title">Versión de Ög</p>
-    <p class="settings-row-desc">1.8.8 (Full Features + Privacy Lists)</p>
+    <p class="settings-row-desc">1.9.0 (Supabase Performance Optimization - Stage 3)</p>
    </div>
   </div>
   <div class="settings-row">
@@ -1121,6 +1122,12 @@ let currentFacingMode = 'user';
 let currentZoom = 1;
 let currentActiveStoryId = null;
 
+// Paginación eficiente del Feed (Etapa 3)
+let feedPage = 0;
+const FEED_PAGE_SIZE = 10;
+let feedLoading = false;
+let feedHasMore = true;
+
 // Variables de Chat Activo y Respuestas
 let activeConversationId = null;
 let activeRecipientProfile = null;
@@ -1147,6 +1154,14 @@ feedElement.addEventListener('touchstart', e => {
 feedElement.addEventListener('touchend', e => {
  touchEndX = e.changedTouches[0].screenX;
  handleSwipeGesture();
+}, {passive: true});
+
+// Scroll infinito optimizado para Supabase
+window.addEventListener('scroll', () => {
+ if(!document.getElementById('feed').classList.contains('active')) return;
+ if((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
+  loadMorePosts();
+ }
 }, {passive: true});
 
 function handleSwipeGesture(){
@@ -1396,7 +1411,7 @@ async function signOut(){
  updateNavAvatarUI();
  document.getElementById('accountbox').classList.remove('open');
  updateProfileUI();
- await loadPosts();
+ await loadInitialPosts();
  showAuthOverlay();
  showTab('feed');
 }
@@ -1431,8 +1446,9 @@ async function loadAccount(user){
  updateProfileUI();
  updateNavAvatarUI();
  
+ // Consultas paralelas optimizadas para reducir latencia inicial
  await Promise.all([
-  loadPosts(),
+  loadInitialPosts(),
   loadStoriesData(),
   checkGlobalUnreadMessages()
  ]);
@@ -2572,7 +2588,7 @@ async function openPostDetail(post){
 
  const likeBtn = document.createElement('button');
  likeBtn.className = 'post-action-btn';
- likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78 z"/></svg>`;
+ likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
  likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
  actions.append(likeBtn);
  article.append(actions);
@@ -2810,112 +2826,139 @@ async function loadActivity(){
  }
 }
 
-async function loadPosts(){
- const container=document.getElementById('posts');
- 
- const {data:posts,error}=await db.from('posts')
-  .select('*').order('created_at',{ascending:false}).limit(20);
+/* CARGA INICIAL Y PAGINACIÓN INFINITA OPTIMIZADA DE SUPABASE (ETAPA 3) */
+async function loadInitialPosts(){
+ feedPage = 0;
+ feedHasMore = true;
+ const container = document.getElementById('posts');
+ container.replaceChildren();
+ await fetchAndAppendPosts(true);
+}
+
+async function loadMorePosts(){
+ if(feedLoading || !feedHasMore) return;
+ feedPage++;
+ await fetchAndAppendPosts(false);
+}
+
+async function fetchAndAppendPosts(isInitial){
+ feedLoading = true;
+ const loader = document.getElementById('feedLoader');
+ loader.style.display = 'block';
+
+ const from = feedPage * FEED_PAGE_SIZE;
+ const to = from + FEED_PAGE_SIZE - 1;
+
+ const {data:posts, error} = await db.from('posts')
+  .select('*')
+  .order('created_at', {ascending: false})
+  .range(from, to);
+
+ loader.style.display = 'none';
+ feedLoading = false;
 
  if(error){
-  container.textContent='No se pudieron cargar las publicaciones.';
+  if(isInitial) document.getElementById('posts').textContent = 'No se pudieron cargar las publicaciones.';
   return;
  }
 
- if(!posts||!posts.length){
-  container.replaceChildren();
-  return;
+ if(!posts || posts.length < FEED_PAGE_SIZE){
+  feedHasMore = false;
  }
 
- const missingUserIds=[...new Set(posts.map(p=>p.user_id))].filter(id=>!profilesCache[id]);
- if(missingUserIds.length>0){
-  const {data:newProfiles}=await db.from('profiles').select('id,username,display_name,avatar_url').in('id',missingUserIds);
-  (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
+ if(!posts || !posts.length) return;
+
+ const missingUserIds = [...new Set(posts.map(p => p.user_id))].filter(id => !profilesCache[id]);
+ if(missingUserIds.length > 0){
+  const {data:newProfiles} = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missingUserIds);
+  (newProfiles || []).forEach(p => profilesCache[p.id] = p);
  }
 
- const fragment=document.createDocumentFragment();
+ const container = document.getElementById('posts');
+ const fragment = document.createDocumentFragment();
 
  for(const post of posts){
-  const profile=profilesCache[post.user_id]||{username:'usuario'};
+  const profile = profilesCache[post.user_id] || {username: 'usuario'};
 
-  const article=document.createElement('article');
-  article.className='post';
+  const article = document.createElement('article');
+  article.className = 'post';
 
-  const head=document.createElement('div');
-  head.className='posthead';
+  const head = document.createElement('div');
+  head.className = 'posthead';
 
-  const av=createAvatarNode(profile, false);
-  av.style.cursor='pointer';
-  av.onclick=()=>openPublicProfile(post.user_id);
+  const av = createAvatarNode(profile, false);
+  av.style.cursor = 'pointer';
+  av.onclick = () => openPublicProfile(post.user_id);
 
-  const info=document.createElement('div');
-  info.style.cursor='pointer';
-  info.onclick=()=>openPublicProfile(post.user_id);
+  const info = document.createElement('div');
+  info.style.cursor = 'pointer';
+  info.onclick = () => openPublicProfile(post.user_id);
 
-  const name=document.createElement('div');
-  name.className='username';
-  name.textContent=profile.display_name||profile.username||'Usuario';
+  const name = document.createElement('div');
+  name.className = 'username';
+  name.textContent = profile.display_name || profile.username || 'Usuario';
 
-  const time=document.createElement('div');
-  time.className='time';
-  time.textContent=formatDate(post.created_at);
+  const time = document.createElement('div');
+  time.className = 'time';
+  time.textContent = formatDate(post.created_at);
 
-  info.append(name,time);
-  head.append(av,info);
+  info.append(name, time);
+  head.append(av, info);
   article.append(head);
 
   if(post.image_url){
-   const img=document.createElement('img');
-   img.className='postimage';
-   img.src=post.image_url;
-   img.alt='Imagen';
-   img.loading='lazy';
+   const img = document.createElement('img');
+   img.className = 'postimage';
+   img.src = post.image_url;
+   img.alt = 'Imagen';
+   img.loading = 'lazy';
    article.append(img);
   }
 
   if(post.content){
-   const content=document.createElement('p');
-   content.className='posttext';
-   content.style.marginTop=post.image_url?'12px':'0';
-   content.textContent=post.content;
+   const content = document.createElement('p');
+   content.className = 'posttext';
+   content.style.marginTop = post.image_url ? '12px' : '0';
+   content.textContent = post.content;
    article.append(content);
   }
 
-  const commentsSec=document.createElement('div');
-  commentsSec.className='post-comments-section';
-  commentsSec.id=`comments-${post.id}`;
+  const commentsSec = document.createElement('div');
+  commentsSec.className = 'post-comments-section';
+  commentsSec.id = `comments-${post.id}`;
   article.append(commentsSec);
 
-  const commentInputBox=document.createElement('div');
-  commentInputBox.className='comment-input-box';
-  commentInputBox.id=`commentbox-${post.id}`;
+  const commentInputBox = document.createElement('div');
+  commentInputBox.className = 'comment-input-box';
+  commentInputBox.id = `commentbox-${post.id}`;
   
-  const commentInput=document.createElement('input');
-  commentInput.className='comment-input';
-  commentInput.placeholder='Agrega un comentario...';
+  const commentInput = document.createElement('input');
+  commentInput.className = 'comment-input';
+  commentInput.placeholder = 'Agrega un comentario...';
   
-  const commentSend=document.createElement('button');
-  commentSend.className='comment-send-btn';
-  commentSend.textContent='Publicar';
-  commentSend.onclick=()=>quickComment(post.id, commentInput);
+  const commentSend = document.createElement('button');
+  commentSend.className = 'comment-send-btn';
+  commentSend.textContent = 'Publicar';
+  commentSend.onclick = () => quickComment(post.id, commentInput);
 
   commentInputBox.append(commentInput, commentSend);
   article.append(commentInputBox);
 
-  const actions=document.createElement('div');
-  actions.className='post-actions';
+  const actions = document.createElement('div');
+  actions.className = 'post-actions';
 
-  const likeBtn=document.createElement('button');
-  likeBtn.className='post-action-btn';
-  likeBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78 z"/></svg>`;
-  likeBtn.onclick=()=>toggleLike(post.id, likeBtn, likesCountDiv);
+  const likeBtn = document.createElement('button');
+  likeBtn.className = 'post-action-btn';
+  likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+  likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
 
-  const commentIconBtn=document.createElement('button');
-  commentIconBtn.className='post-action-btn';
-  commentIconBtn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
+  const commentIconBtn = document.createElement('button');
+  commentIconBtn.className = 'post-action-btn';
+  commentIconBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
   
-  commentIconBtn.onclick=()=>{
+  commentIconBtn.onclick = () => {
    if(!currentUser){ showAuthOverlay(); return; }
-   const box=document.getElementById(`commentbox-${post.id}`);
+   const box = document.getElementById(`commentbox-${post.id}`);
    box.classList.toggle('open');
    if(box.classList.contains('open')){
     box.querySelector('input').focus();
@@ -2925,9 +2968,9 @@ async function loadPosts(){
   actions.append(likeBtn, commentIconBtn);
   article.append(actions);
 
-  const likesCountDiv=document.createElement('div');
-  likesCountDiv.className='likes-count';
-  likesCountDiv.textContent='0 Me gusta';
+  const likesCountDiv = document.createElement('div');
+  likesCountDiv.className = 'likes-count';
+  likesCountDiv.textContent = '0 Me gusta';
   article.append(likesCountDiv);
 
   fragment.append(article);
@@ -2936,7 +2979,7 @@ async function loadPosts(){
   loadPostComments(post.id, commentsSec);
  }
 
- container.replaceChildren(fragment);
+ container.append(fragment);
 }
 
 async function loadPostLikes(postId, btn, countDiv){
@@ -3073,7 +3116,7 @@ async function publish(){
  removePostImage();
  status('publishStatus','¡Publicado con éxito!');
  
- await loadPosts();
+ await loadInitialPosts();
  await loadMyPostsGrid();
  setTimeout(()=>showTab('feed'), 500);
 }
@@ -3251,7 +3294,7 @@ db.auth.onAuthStateChange((event,session)=>{
   if(session?.user) await loadAccount(session.user);
   else{
    currentUser=null; myProfile=null; viewedProfile=null; myActiveStory=null;
-   updateStoryUI(); updateNavAvatarUI(); updateProfileUI(); await loadPosts();
+   updateStoryUI(); updateNavAvatarUI(); updateProfileUI(); await loadInitialPosts();
    showAuthOverlay();
   }
  },0);
@@ -3264,7 +3307,7 @@ async function init(){
  }else{
   updateProfileUI();
   updateNavAvatarUI();
-  await loadPosts();
+  await loadInitialPosts();
   showAuthOverlay();
  }
  loadExploreGrid();
