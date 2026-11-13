@@ -1,59 +1,50 @@
-
-const CACHE_NAME = 'og-pwa-v2';
-
-const ASSETS = [
-  './index.html',
-  './manifest.json'
+const CACHE_NAME = 'og-cache-v4';
+const assetsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/actividad.html',
+  '/crear.html',
+  '/explorar.html',
+  '/perfil.html',
+  '/usuario.html'
 ];
 
+// Instalación del Service Worker y caché de todas las páginas
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(assetsToCache);
+    })
   );
-
   self.skipWaiting();
 });
 
+// Activación y limpieza de cachés antiguas
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key.startsWith('og-pwa-') && key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  const request = event.request;
-  const url = new URL(request.url);
-
-  // No interceptar Supabase ni APIs externas.
-  if (url.origin !== self.location.origin) return;
-
-  // No almacenar solicitudes dinámicas ni datos privados.
-  if (request.method !== 'GET') return;
-
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).catch(() => caches.match('./index.html'))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached;
-
-      return fetch(request).then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        }
-        return response;
-      });
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
+      );
     })
   );
+  self.clients.claim();
+});
+
+// Intercepción de peticiones
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(event.request).then((response) => {
+          return response || caches.match('/index.html');
+        });
+      })
+    );
+  }
 });
