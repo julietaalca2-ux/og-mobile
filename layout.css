@@ -1,0 +1,11 @@
+main { max-width: 470px; margin: 0 auto; min-height: 100vh; position: relative; background: #000; padding-bottom: 60px; }
+#authWelcomeOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+.auth-brand-container { text-align: center; margin-bottom: 30px; }
+.auth-logo { font-size: 42px; font-weight: bold; letter-spacing: -1px; color: #fff; }
+.auth-tagline { font-size: 14px; color: #a1a1aa; margin-top: 5px; }
+.auth-forms-container { width: 100%; max-width: 350px; }
+.auth-panel { display: none; width: 100%; }
+.auth-panel.active { display: block; }
+#appSplashScreen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s ease; }
+.splash-logo-container { text-align: center; }
+.splash-logo { font-size: 48px; font-weight: bold; color: #fff; animation: splashPulse 1.5s infinite ease-in-out; }

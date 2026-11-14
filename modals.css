@@ -1,0 +1,5 @@
+#editProfileModal, #postDetailModal, #followListModal, #storyLikesModal, #logoutConfirmModal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10020; display: none; align-items: center; justify-content: center; }
+.edit-modal-card { width: 90%; max-width: 400px; background: #18181b; border-radius: 12px; padding: 20px; color: #fff; }
+#menuSectionPage { position: fixed; inset: 0; background: #000; z-index: 10030; display: none; flex-direction: column; }
+.menu-list-btn { padding: 15px; display: flex; align-items: center; gap: 15px; font-size: 15px; color: #fff; cursor: pointer; border-bottom: 1px solid #18181b; }
+.menu-list-btn:hover { background: #121212; }

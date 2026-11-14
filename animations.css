@@ -1,0 +1,7 @@
+@keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes slideTabFromRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes slideTabFromLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes splashPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.05); } }
+@keyframes pulseLoader { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+@keyframes slideInMenu { from { transform: translateX(100%); } to { transform: translateX(0); } }
