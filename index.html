@@ -174,21 +174,24 @@ button:active, .post-action-btn:active, .story:active {
 .auth-panel{display:none;width:100%;flex-direction:column;gap:12px;animation:fadeInScale 0.2s ease}
 .auth-panel.active{display:flex}
 
-/* HEADER ESTILO INSTAGRAM */
+/* HEADER ESTILO INSTAGRAM (CORREGIDO: SÓLIDO, SIMÉTRICO Y ALINEADO) */
 header{
- height:56px;padding:0 16px;display:flex;
- align-items:center;justify-content:space-between;
+ height:56px;
+ padding:env(safe-area-inset-top) 16px 0 16px;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
  border-bottom:1px solid rgba(255,255,255,0.08);
- position:sticky;top:0;
- background:rgba(0,0,0,0.8);
- backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+ position:sticky;
+ top:0;
+ background:#000000;
  z-index:50;
- padding-top:env(safe-area-inset-top);
+ box-sizing: content-box;
 }
-.header-left-slot{display:flex;align-items:center;gap:4px;min-width:40px}
-.header-center-slot{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center}
+.header-left-slot{display:flex;align-items:center;gap:4px;width:44px;flex-shrink:0}
+.header-center-slot{display:flex;align-items:center;justify-content:center;flex:1}
 .logo{font-size:24px;font-weight:900;letter-spacing:-1.5px;color:#fff}
-.header-right-slot{display:flex;align-items:center;gap:4px;min-width:40px;justify-content:flex-end}
+.header-right-slot{display:flex;align-items:center;gap:4px;width:44px;justify-content:flex-end;flex-shrink:0}
 
 .icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative}
 .icon svg{width:24px;height:24px}
