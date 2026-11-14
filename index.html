@@ -39,10 +39,6 @@ body{
  scrollbar-width: none !important;
 }
 
-* {
- scrollbar-width: none !important;
-}
-
 /* ========================================================================= */
 /* MÓDULO DE ANIMACIONES INTEGRADO ÖG                                      */
 /* ========================================================================= */
@@ -51,22 +47,11 @@ body{
   to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes fadeOutScale {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(0.95); }
-}
-
 @keyframes slideUpModal {
   from { transform: translateY(100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
-@keyframes slideDownModal {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(100%); opacity: 0; }
-}
-
-/* Animaciones de deslizamiento entre pestañas principales */
 @keyframes slideTabFromRight {
   from { opacity: 0.35; transform: translateX(48px); }
   to { opacity: 1; transform: translateX(0); }
@@ -87,7 +72,6 @@ main > div.swipe-enter-left {
   will-change: transform, opacity;
 }
 
-/* Transiciones de pantallas y modales */
 #postDetailModal, #editProfileModal, #storyViewer, #cameraModal, #logoutConfirmModal, #followListModal {
   transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
   opacity: 0;
@@ -111,7 +95,6 @@ main > div.swipe-enter-left {
   animation: slideUpModal 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 
-/* Efectos de rebote y pulso en interacciones */
 button, .story, .post-action-btn, .chat-action-pill, .menu-list-btn, .explore-grid-item, .ig-grid-item {
   transition: transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.15s ease, background-color 0.15s ease;
 }
@@ -120,7 +103,6 @@ button:active, .post-action-btn:active, .story:active {
   transform: scale(0.94);
 }
 
-/* Microanimación de carga */
 @keyframes pulseLoader {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
@@ -129,7 +111,6 @@ button:active, .post-action-btn:active, .story:active {
 .activity-empty {
   animation: pulseLoader 1.5s ease-in-out infinite;
 }
-/* ========================================================================= */
 
 /* SPLASH SCREEN */
 #appSplashScreen{
@@ -174,7 +155,7 @@ button:active, .post-action-btn:active, .story:active {
 .auth-panel{display:none;width:100%;flex-direction:column;gap:12px;animation:fadeInScale 0.2s ease}
 .auth-panel.active{display:flex}
 
-/* HEADER ESTILO INSTAGRAM (CORREGIDO: SÓLIDO, SIMÉTRICO Y ALINEADO) */
+/* HEADER OPTIMIZADO (NÍTIDO Y PERFECTAMENTE SIMÉTRICO) */
 header{
  height:56px;
  padding:env(safe-area-inset-top) 16px 0 16px;
@@ -188,10 +169,10 @@ header{
  z-index:50;
  box-sizing: content-box;
 }
-.header-left-slot{display:flex;align-items:center;gap:4px;width:44px;flex-shrink:0}
+.header-left-slot{display:flex;align-items:center;justify-content:flex-start;width:88px;flex-shrink:0}
 .header-center-slot{display:flex;align-items:center;justify-content:center;flex:1}
 .logo{font-size:24px;font-weight:900;letter-spacing:-1.5px;color:#fff}
-.header-right-slot{display:flex;align-items:center;gap:4px;width:44px;justify-content:flex-end;flex-shrink:0}
+.header-right-slot{display:flex;align-items:center;justify-content:flex-end;width:88px;gap:4px;flex-shrink:0}
 
 .icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative}
 .icon svg{width:24px;height:24px}
@@ -808,7 +789,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine</div>
 </div>
 
-<!-- HEADER CON VISIBILIDAD DINÁMICA -->
+<!-- HEADER CON VISIBILIDAD DINÁMICA Y SIMETRÍA EXACTA -->
 <header>
  <div class="header-left-slot">
   <!-- Botón + (ÚNICAMENTE visible en la sección PERFIL) -->
@@ -1779,7 +1760,6 @@ function handleSwipeGesture() {
   const swipeDistanceX = touchEndX - touchStartX;
   const swipeDistanceY = Math.abs(touchEndY - touchStartY);
 
-  // Ignorar si el desplazamiento fue principalmente vertical o demasiado corto
   if (swipeDistanceY > Math.abs(swipeDistanceX) * 0.85) return;
   if (Math.abs(swipeDistanceX) < 55) return;
 
@@ -1789,14 +1769,11 @@ function handleSwipeGesture() {
   const currentId = currentActiveTab.id;
   const currentIndex = swipeNavigationFlow.indexOf(currentId);
 
-  // Solo actuar sobre las 4 pestañas principales (no en salas de chat o submenús)
   if (currentIndex === -1) return;
 
-  // Bloqueo breve para evitar saltos dobles
   isSwipeLocked = true;
   setTimeout(() => { isSwipeLocked = false; }, 300);
 
-  // Deslizar hacia la derecha desde Inicio (índice 0) abre la cámara de historias
   if (swipeDistanceX > 70 && currentIndex === 0) {
     openCameraModal();
     return;
@@ -1806,10 +1783,10 @@ function handleSwipeGesture() {
   let direction = null;
 
   if (swipeDistanceX < -55 && currentIndex < swipeNavigationFlow.length - 1) {
-    nextIndex = currentIndex + 1; // Izquierda: avanza (Inicio -> Chat -> Explore -> Perfil)
+    nextIndex = currentIndex + 1;
     direction = 'left';
   } else if (swipeDistanceX > 55 && currentIndex > 0) {
-    nextIndex = currentIndex - 1; // Derecha: retrocede (Perfil -> Explore -> Chat -> Inicio)
+    nextIndex = currentIndex - 1;
     direction = 'right';
   }
 
@@ -1825,7 +1802,6 @@ function handleSwipeGesture() {
 const mainContainerElement = document.querySelector('main');
 
 mainContainerElement.addEventListener('touchstart', e => {
-  // Evita cambiar de pestaña si el usuario interactúa con historias, inputs o carruseles
   if (e.target.closest('.stories, input, textarea, select, [data-no-swipe]')) {
     touchStartX = 0;
     return;
