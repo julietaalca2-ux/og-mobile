@@ -73,14 +73,14 @@ main > div.swipe-enter-left {
   will-change: transform, opacity;
 }
 
-#postDetailModal, #editProfileModal, #storyViewer, #cameraModal, #logoutConfirmModal, #followListModal, #highlightModal {
+#postDetailModal, #editProfileModal, #storyViewer, #cameraModal, #logoutConfirmModal, #followListModal, #highlightModal, #highlightViewer, #addToHighlightModal {
   transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
 }
 
-#postDetailModal.active, #editProfileModal.active, #storyViewer.active, #cameraModal.active, #logoutConfirmModal.active, #followListModal.open, #highlightModal.active {
+#postDetailModal.active, #editProfileModal.active, #storyViewer.active, #cameraModal.active, #logoutConfirmModal.active, #followListModal.open, #highlightModal.active, #highlightViewer.active, #addToHighlightModal.active {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -89,7 +89,8 @@ main > div.swipe-enter-left {
 #postDetailModal.active .post-modal-card,
 #editProfileModal.active .edit-modal-card,
 #logoutConfirmModal.active .confirm-card,
-#highlightModal.active .highlight-modal-card {
+#highlightModal.active .highlight-modal-card,
+#addToHighlightModal.active .highlight-modal-card {
   animation: fadeInScale 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 
@@ -297,8 +298,8 @@ main > div.active {display: block !important;}
 }
 .camera-gallery-icon img{width:100%;height:100%;object-fit:cover}
 
-/* VISOR DE HISTORIAS */
-#storyViewer{
+/* VISOR DE HISTORIAS / DESTACADAS */
+#storyViewer, #highlightViewer{
  position:fixed;inset:0;background:#000000;z-index:300;
  display:flex;flex-direction:column;justify-content:space-between;
  padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px) 12px;
@@ -762,7 +763,7 @@ textarea{height:110px;resize:none}
 .hidden-file{display:none}
 
 /* MODAL GESTIÓN HISTORIAS DESTACADAS */
-#highlightModal{
+#highlightModal, #addToHighlightModal{
  position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
  z-index:650;display:flex;align-items:center;justify-content:center;padding:20px;
 }
@@ -1031,7 +1032,10 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <span id="storyTimeAgo" class="story-time-text">6 h</span>
    </div>
   </div>
-  <button class="icon" onclick="closeStoryViewer()">✕</button>
+  <div style="display:flex;align-items:center;gap:8px;">
+   <button class="icon" id="storyAddToHighlightTrigger" onclick="openAddToHighlightModal()" style="display:none;color:#fff;" title="Agregar a destacadas">⭐</button>
+   <button class="icon" onclick="closeStoryViewer()" style="color:#fff;">✕</button>
+  </div>
  </div>
 
  <div class="story-content-area" id="storyContentAreaContainer">
@@ -1046,6 +1050,30 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <button class="story-action-icon-btn" onclick="sendStoryReply()" aria-label="Enviar mensaje">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
   </button>
+ </div>
+</div>
+
+<!-- VISOR DE HISTORIAS DESTACADAS -->
+<div id="highlightViewer">
+ <div class="story-top-bar">
+  <div class="story-user-info">
+   <div id="highlightViewerAvatarContainer" class="story-avatar-container">
+    <div class="story-avatar-inner" id="highlightViewerAvatarInner">👤</div>
+   </div>
+   <div>
+    <span id="highlightViewerUsername" class="story-username-text">@usuario</span>
+    <span id="highlightViewerTitleText" class="story-time-text">Destacada</span>
+   </div>
+  </div>
+  <button class="icon" onclick="closeHighlightViewer()" style="color:#fff;">✕</button>
+ </div>
+
+ <div class="story-content-area" id="highlightContentAreaContainer">
+  <img id="highlightViewerImage" src="" alt="Historia Destacada" loading="lazy">
+ </div>
+
+ <div class="story-bottom-bar" style="justify-content:center;color:#fff;font-size:13px;" id="highlightViewerCounter">
+  1 / 1
  </div>
 </div>
 
@@ -1299,6 +1327,18 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <button class="secondary" style="width:100%;margin-top:6px;" onclick="document.getElementById('highlightFile').click()">Seleccionar imagen de portada</button>
   </div>
   <button class="primary" onclick="saveNewHighlight()">Publicar destacada</button>
+ </div>
+</div>
+
+<!-- MODAL: AGREGAR HISTORIA A DESTACADA -->
+<div id="addToHighlightModal">
+ <div class="highlight-modal-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eeeeee;padding-bottom:10px;">
+   <strong style="font-size:16px;">Agregar a destacadas</strong>
+   <button class="secondary" style="padding:4px 8px;font-size:12px;" onclick="closeAddToHighlightModal()">✕</button>
+  </div>
+  <div id="addToHighlightList" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+  <button class="secondary" onclick="createNewHighlightFromViewer()">+ Crear nueva destacada</button>
  </div>
 </div>
 
@@ -1839,7 +1879,7 @@ window.addEventListener('scroll', () => {
 const swipeNavigationFlow = ['feed', 'messagesPage', 'explore', 'profile'];
 
 function isAnyModalOrSubViewOpen() {
-  const modalIds = ['postDetailModal', 'editProfileModal', 'storyViewer', 'cameraModal', 'logoutConfirmModal', 'highlightModal'];
+  const modalIds = ['postDetailModal', 'editProfileModal', 'storyViewer', 'cameraModal', 'logoutConfirmModal', 'highlightModal', 'highlightViewer', 'addToHighlightModal'];
   for (const id of modalIds) {
     const el = document.getElementById(id);
     if (el && el.classList.contains('active')) return true;
@@ -3700,6 +3740,14 @@ async function openUserStory(profile, story){
  document.getElementById('storyUsername').textContent = '@' + profile.username;
  document.getElementById('storyImage').src = story.image_url;
  document.getElementById('storyTimeAgo').textContent = timeAgo(story.created_at);
+ 
+ const addToHighlightTrigger = document.getElementById('storyAddToHighlightTrigger');
+ if(currentUser && profile.id === currentUser.id){
+  addToHighlightTrigger.style.display = 'inline-flex';
+ } else {
+  addToHighlightTrigger.style.display = 'none';
+ }
+
  document.getElementById('storyViewer').classList.add('active');
 }
 
@@ -3853,7 +3901,7 @@ function createNewHighlightModal(){
 }
 
 function closeHighlightModal(){
- document.getElementById('highlightModal').classList.remove('active');
+ document.getElementById('highlightModal'].classList.remove('active');
 }
 
 function stageHighlightCover(input){
@@ -3874,11 +3922,106 @@ async function saveNewHighlight(){
  const {data: urlData} = db.storage.from('og-media').getPublicUrl(path);
 
  const highlights = JSON.parse(localStorage.getItem('og_highlights_' + currentUser.id) || '[]');
- highlights.push({ title, cover_url: urlData.publicUrl, created_at: new Date().toISOString() });
+ highlights.push({ id: 'hl_' + Date.now(), title, cover_url: urlData.publicUrl, items: [], created_at: new Date().toISOString() });
  localStorage.setItem('og_highlights_' + currentUser.id, JSON.stringify(highlights));
 
  closeHighlightModal();
  loadHighlights(currentUser.id, 'highlightsScrollContainer');
+}
+
+function openAddToHighlightModal(){
+ if(!currentActiveStoryId) return;
+ const listContainer = document.getElementById('addToHighlightList');
+ listContainer.replaceChildren();
+
+ const highlights = JSON.parse(localStorage.getItem('og_highlights_' + currentUser.id) || '[]');
+ const storyImageUrl = document.getElementById('storyImage').src;
+
+ if(!highlights.length){
+  listContainer.innerHTML = '<div class="activity-empty">No tienes historias destacadas creadas. Crea una abajo.</div>';
+  document.getElementById('addToHighlightModal').classList.add('active');
+  return;
+ }
+
+ const fragment = document.createDocumentFragment();
+ highlights.forEach(hl => {
+  const btn = document.createElement('button');
+  btn.className = 'secondary';
+  btn.style.width = '100%';
+  btn.style.textAlign = 'left';
+  btn.style.display = 'flex';
+  btn.style.alignItems = 'center';
+  btn.style.gap = '10px';
+  btn.style.padding = '8px 12px';
+
+  const alreadyAdded = hl.items && hl.items.includes(storyImageUrl);
+
+  btn.innerHTML = `<span style="font-weight:600;">📁 ${hl.title}</span> <span style="margin-left:auto;font-size:12px;color:${alreadyAdded ? '#22c55e' : '#3b82f6'}">${alreadyAdded ? 'Agregada ✓' : 'Agregar +'}</span>`;
+  
+  btn.onclick = () => {
+   if(!hl.items) hl.items = [];
+   if(!hl.items.includes(storyImageUrl)){
+    hl.items.push(storyImageUrl);
+    localStorage.setItem('og_highlights_' + currentUser.id, JSON.stringify(highlights));
+    alert(`Agregada a "${hl.title}"`);
+   } else {
+    alert('Esta historia ya está en esta destacada.');
+   }
+   closeAddToHighlightModal();
+  };
+  fragment.append(btn);
+ });
+ listContainer.replaceChildren(fragment);
+ document.getElementById('addToHighlightModal').classList.add('active');
+}
+
+function closeAddToHighlightModal(){
+ document.getElementById('addToHighlightModal').classList.remove('active');
+}
+
+function createNewHighlightFromViewer(){
+ closeAddToHighlightModal();
+ createNewHighlightModal();
+}
+
+let currentHighlightItems = [];
+let currentHighlightIndex = 0;
+
+function openHighlightViewer(highlightObj, profile){
+ currentHighlightItems = highlightObj.items || [];
+ if(!currentHighlightItems.length){
+  alert('Esta historia destacada no tiene elementos guardados.');
+  return;
+ }
+ currentHighlightIndex = 0;
+
+ const viewer = document.getElementById('highlightViewer');
+ document.getElementById('highlightViewerUsername').textContent = '@' + profile.username;
+ document.getElementById('highlightViewerTitleText').textContent = highlightObj.title;
+ 
+ const avBox = document.getElementById('highlightViewerAvatarInner');
+ avBox.replaceChildren();
+ if(profile.avatar_url){
+  const img = document.createElement('img');
+  img.src = profile.avatar_url;
+  avBox.append(img);
+ } else {
+  avBox.textContent = '👤';
+ }
+
+ renderCurrentHighlightItem();
+ viewer.classList.add('active');
+}
+
+function renderCurrentHighlightItem(){
+ const imgEl = document.getElementById('highlightViewerImage');
+ const counterEl = document.getElementById('highlightViewerCounter');
+ imgEl.src = currentHighlightItems[currentHighlightIndex];
+ counterEl.textContent = `${currentHighlightIndex + 1} / ${currentHighlightItems.length}`;
+}
+
+function closeHighlightViewer(){
+ document.getElementById('highlightViewer').classList.remove('active');
 }
 
 async function loadHighlights(userId, containerId){
@@ -3887,6 +4030,7 @@ async function loadHighlights(userId, containerId){
 
  const isOwner = currentUser && userId === currentUser.id;
  const highlights = JSON.parse(localStorage.getItem('og_highlights_' + userId) || '[]');
+ const profile = profilesCache[userId] || myProfile || viewedProfile;
 
  const fragment = document.createDocumentFragment();
 
@@ -3901,7 +4045,7 @@ async function loadHighlights(userId, containerId){
  highlights.forEach((h, index) => {
   const item = document.createElement('div');
   item.className = 'highlight-item';
-  item.onclick = () => alert(`Historia destacada: ${h.title}`);
+  item.onclick = () => openHighlightViewer(h, profile);
   
   if(isOwner){
    item.oncontextmenu = (e) => {
@@ -3917,7 +4061,7 @@ async function loadHighlights(userId, containerId){
   const circle = document.createElement('div');
   circle.className = 'highlight-circle';
   const img = document.createElement('img');
-  img.src = h.cover_url;
+  img.src = h.cover_url || (h.items && h.items[0]) || '';
   circle.append(img);
 
   const title = document.createElement('span');
