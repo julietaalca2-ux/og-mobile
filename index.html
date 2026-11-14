@@ -4003,7 +4003,7 @@ async function openChatRoom(conversationId, recipientProfile){
   document.getElementById('chatRoomOnlineDot').classList.remove('active');
   document.getElementById('chatRoomStatusSub').textContent = 'Desconectado';
  }
-
+ applyChatCustomization(conversationId);
  showTab('chatRoomPage');
  await loadChatMessages(conversationId);
  markConversationAsRead(conversationId);
@@ -4078,12 +4078,128 @@ function handleChatActionMenu(action){
  if(action === 'restrict') alert('Usuario restringido.');
 }
 
+const CHAT_BUBBLE_THEMES = {
+ blue: { name: 'Azul Ög', bg: '#3b82f6', text: '#ffffff' },
+ insta: { name: 'Atardecer', bg: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)', text: '#ffffff' },
+ neon: { name: 'Violeta', bg: 'linear-gradient(135deg, #6366f1, #a855f7)', text: '#ffffff' },
+ emerald: { name: 'Esmeralda', bg: '#10b981', text: '#ffffff' },
+ rose: { name: 'Rosa', bg: 'linear-gradient(135deg, #ec4899, #f43f5e)', text: '#ffffff' },
+ mono: { name: 'Claro', bg: '#f4f4f5', text: '#09090b' }
+};
+
+const CHAT_BG_PRESETS = {
+ black: { name: 'Negro puro', css: '#000000', isCustom: false },
+ midnight: { name: 'Noche azul', css: 'radial-gradient(circle at top, #1e1b4b 0%, #09090b 65%, #000000 100%)', isCustom: true },
+ forest: { name: 'Bosque', css: 'linear-gradient(180deg, #052e16 0%, #09090b 100%)', isCustom: true },
+ velvet: { name: 'Púrpura', css: 'linear-gradient(180deg, #3b0764 0%, #18181b 65%, #000000 100%)', isCustom: true },
+ dots: { name: 'Trama Ög', css: 'radial-gradient(rgba(255,255,255,0.09) 1px, #050507 1px)', isCustom: true }
+};
+
+const CHAT_FONT_OPTIONS = {
+ system: { name: 'Sistema', family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+ rounded: { name: 'Moderna', family: '"Trebuchet MS", "Segoe UI", sans-serif' },
+ mono: { name: 'Código', family: 'ui-monospace, SFMono-Regular, Menlo, monospace' },
+ serif: { name: 'Editorial', family: 'Georgia, "Times New Roman", serif' }
+};
+
+function getChatCustomizationKey(conversationId){
+ return `og_chat_style_${currentUser?.id || 'guest'}_${conversationId}`;
+}
+
+function getChatCustomization(conversationId){
+ const defaults = { theme: 'blue', bgType: 'preset', bgValue: 'black', font: 'system', fontSize: 14 };
+ if(!conversationId) return defaults;
+ try{
+  const raw = localStorage.getItem(getChatCustomizationKey(conversationId));
+  return raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
+ }catch(e){
+  return defaults;
+ }
+}
+
+function saveChatCustomization(conversationId, partial){
+ if(!conversationId) return;
+ const current = getChatCustomization(conversationId);
+ const updated = { ...current, ...partial };
+ localStorage.setItem(getChatCustomizationKey(conversationId), JSON.stringify(updated));
+ applyChatCustomization(conversationId);
+ return updated;
+}
+
+function applyChatCustomization(conversationId){
+ const container = document.getElementById('chatMessagesContainer');
+ if(!container) return;
+ const cfg = getChatCustomization(conversationId);
+ const theme = CHAT_BUBBLE_THEMES[cfg.theme] || CHAT_BUBBLE_THEMES.blue;
+ const font = CHAT_FONT_OPTIONS[cfg.font] || CHAT_FONT_OPTIONS.system;
+
+ if(cfg.bgType === 'image' && cfg.bgValue){
+  container.style.background = `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url("${cfg.bgValue}")`;
+  container.classList.add('has-custom-bg');
+ } else {
+  const preset = CHAT_BG_PRESETS[cfg.bgValue] || CHAT_BG_PRESETS.black;
+  container.style.background = preset.css;
+  if(preset.css.includes('radial-gradient(rgba')){
+   container.style.backgroundSize = '18px 18px';
+  }
+  if(preset.isCustom) container.classList.add('has-custom-bg');
+  else container.classList.remove('has-custom-bg');
+ }
+
+ container.querySelectorAll('.chat-bubble').forEach(b => {
+  b.style.fontFamily = font.family;
+  b.style.fontSize = (cfg.fontSize || 14) + 'px';
+  if(b.classList.contains('sent')){
+   b.style.background = theme.bg;
+   b.style.color = theme.text;
+  }
+ });
+}
+
+async function handleCustomChatBgUpload(input){
+ const file = input.files?.[0];
+ input.value = '';
+ if(!file || !activeConversationId || !currentUser) return;
+
+ const statusEl = document.getElementById('chatBgUploadStatus');
+ if(statusEl) statusEl.textContent = 'Subiendo fondo...';
+
+ try{
+  const compressed = await compressImage(file, 1080, 0.82);
+  const path = `${currentUser.id}/chat-bg-${activeConversationId}-${Date.now()}.jpg`;
+  const { error } = await db.storage.from('og-media').upload(path, compressed, {
+   cacheControl: '3600',
+   upsert: false,
+   contentType: 'image/jpeg'
+  });
+
+  if(error){
+   if(statusEl) statusEl.textContent = 'Error al subir imagen: ' + error.message;
+   return;
+  }
+
+  const { data } = db.storage.from('og-media').getPublicUrl(path);
+  saveChatCustomization(activeConversationId, { bgType: 'image', bgValue: data.publicUrl });
+  if(statusEl) statusEl.textContent = '¡Fondo aplicado!';
+  openChatSubSettings('style');
+ }catch(e){
+  if(statusEl) statusEl.textContent = 'No se pudo procesar la imagen.';
+ }
+}
+
+function resetChatCustomization(){
+ if(!activeConversationId) return;
+ localStorage.removeItem(getChatCustomizationKey(activeConversationId));
+ applyChatCustomization(activeConversationId);
+ openChatSubSettings('style');
+}
+
 function openChatSubSettings(sectionType){
  const titleMap = {
   privacy: 'Privacidad y seguridad',
   timer: 'Mensajes temporales',
   nickname: 'Apodos',
-  style: 'Personalizar estilo y fuente'
+  style: 'Estilo y fondo del chat'
  };
 
  document.getElementById('chatSubSettingsTitle').textContent = titleMap[sectionType] || 'Configuración';
@@ -4119,17 +4235,98 @@ function openChatSubSettings(sectionType){
     <button class="primary" style="margin-top:12px;" onclick="alert('Apodo guardado con éxito')">Guardar apodo</button>
    </div>`;
  } else if(sectionType === 'style'){
+  const cfg = getChatCustomization(activeConversationId);
+  const currentTheme = CHAT_BUBBLE_THEMES[cfg.theme] || CHAT_BUBBLE_THEMES.blue;
+  const currentFont = CHAT_FONT_OPTIONS[cfg.font] || CHAT_FONT_OPTIONS.system;
+  const previewBg = cfg.bgType === 'image' && cfg.bgValue
+   ? `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('${cfg.bgValue}')`
+   : (CHAT_BG_PRESETS[cfg.bgValue]?.css || '#000000');
+
+  const themeCardsHTML = Object.entries(CHAT_BUBBLE_THEMES).map(([key, item]) => `
+   <div class="theme-swatch-card ${cfg.theme === key ? 'active' : ''}" onclick="saveChatCustomization('${activeConversationId}', { theme: '${key}' }); openChatSubSettings('style');">
+    <div class="theme-color-circle" style="background:${item.bg};"></div>
+    <span>${item.name}</span>
+   </div>
+  `).join('');
+
+  const bgCardsHTML = Object.entries(CHAT_BG_PRESETS).map(([key, item]) => `
+   <div class="bg-preset-card ${cfg.bgType === 'preset' && cfg.bgValue === key ? 'active' : ''}"
+        style="background:${item.css};"
+        onclick="saveChatCustomization('${activeConversationId}', { bgType: 'preset', bgValue: '${key}' }); openChatSubSettings('style');">
+    <span>${item.name}</span>
+   </div>
+  `).join('');
+
+  const fontCardsHTML = Object.entries(CHAT_FONT_OPTIONS).map(([key, item]) => `
+   <button class="font-pill-btn ${cfg.font === key ? 'active' : ''}"
+           style="font-family:${item.family};"
+           onclick="saveChatCustomization('${activeConversationId}', { font: '${key}' }); openChatSubSettings('style');">
+    ${item.name}
+   </button>
+  `).join('');
+
+  const sizeButtonsHTML = [
+   { label: 'Chica', val: 13 },
+   { label: 'Normal', val: 14 },
+   { label: 'Grande', val: 16 }
+  ].map(s => `
+   <button class="font-pill-btn ${Number(cfg.fontSize) === s.val ? 'active' : ''}"
+           onclick="saveChatCustomization('${activeConversationId}', { fontSize: ${s.val} }); openChatSubSettings('style');">
+    ${s.label} (${s.val}px)
+   </button>
+  `).join('');
+
   body.innerHTML = `
    <div class="settings-group">
-    <h4 class="settings-group-title">Tema y burbujas</h4>
-    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">Burbujas azules (Por defecto)</p></div></div>
-    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">Modo oscuro clásico</p></div></div>
-   </div>`;
+    <h4 class="settings-group-title">Vista previa en vivo</h4>
+    <div class="chat-style-preview-box" style="background:${previewBg};">
+     <div class="chat-bubble received" style="font-family:${currentFont.family};font-size:${cfg.fontSize}px;background:rgba(24,24,27,0.88);backdrop-filter:blur(10px);">
+      ¡Hola! ¿Cómo va todo? ✨
+     </div>
+     <div class="chat-bubble sent" style="font-family:${currentFont.family};font-size:${cfg.fontSize}px;background:${currentTheme.bg};color:${currentTheme.text};">
+      Probando el nuevo estilo del chat 🔥
+     </div>
+    </div>
+   </div>
+
+   <div class="settings-group">
+    <h4 class="settings-group-title">Color de tus burbujas</h4>
+    <div class="theme-swatches-grid">${themeCardsHTML}</div>
+   </div>
+
+   <div class="settings-group">
+    <h4 class="settings-group-title">Fondo del chat</h4>
+    <div class="theme-swatches-grid" style="margin-bottom:12px;">
+     ${bgCardsHTML}
+     <div class="bg-preset-card ${cfg.bgType === 'image' ? 'active' : ''}"
+          style="background:rgba(59,130,246,0.16);border-style:dashed;border-color:#3b82f6;align-items:center;justify-content:center;text-align:center;"
+          onclick="document.getElementById('customChatBgInput').click()">
+      <span>📷 Galería</span>
+     </div>
+    </div>
+    <input type="file" id="customChatBgInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handleCustomChatBgUpload(this)">
+    <p id="chatBgUploadStatus" class="status" style="margin:4px 0 0 0;"></p>
+   </div>
+
+   <div class="settings-group">
+    <h4 class="settings-group-title">Tipografía</h4>
+    <div class="font-pill-row">${fontCardsHTML}</div>
+   </div>
+
+   <div class="settings-group" style="border-bottom:none;">
+    <h4 class="settings-group-title">Tamaño de letra</h4>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;">
+     ${sizeButtonsHTML}
+    </div>
+    <button class="secondary" style="width:100%;" onclick="resetChatCustomization()">Restablecer estilo por defecto</button>
+   </div>
+  `;
  }
 
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
  document.getElementById('chatSubSettingsPage').classList.add('active');
 }
+
 
 async function loadChatMessages(conversationId){
  const container = document.getElementById('chatMessagesContainer');
@@ -4164,6 +4361,23 @@ function appendChatMessageNode(msg){
 
  const bubble = document.createElement('div');
  bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
+   const bubble = document.createElement('div');
+ bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
+
+ if(activeConversationId){
+  const cfg = getChatCustomization(activeConversationId);
+  const theme = CHAT_BUBBLE_THEMES[cfg.theme] || CHAT_BUBBLE_THEMES.blue;
+  const font = CHAT_FONT_OPTIONS[cfg.font] || CHAT_FONT_OPTIONS.system;
+  bubble.style.fontFamily = font.family;
+  bubble.style.fontSize = (cfg.fontSize || 14) + 'px';
+  if(isMe){
+   bubble.style.background = theme.bg;
+   bubble.style.color = theme.text;
+  }
+ }
+
+ bubble.title = "Toca para responder a este mensaje";
+
  bubble.title = "Toca para responder a este mensaje";
  bubble.onclick = () => startReplyingTo(msg);
 
