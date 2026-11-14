@@ -1,6 +1,0 @@
-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 50px; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; z-index: 1000; border-top: 1px solid #27272a; max-width: 470px; margin: 0 auto; }
-nav button { background: none; border: none; color: #a1a1aa; font-size: 22px; cursor: pointer; position: relative; width: 100% / 5; height: 100%; display: flex; align-items: center; justify-content: center; }
-nav button.active { color: #fff; }
-.nav-msg-badge { position: absolute; top: 10px; right: calc(50% - 12px); width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; }
-.nav-avatar-ring { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; overflow: pointer; }
-nav button.active .nav-avatar-ring { border-color: #fff; }
