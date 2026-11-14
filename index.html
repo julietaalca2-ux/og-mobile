@@ -4359,11 +4359,9 @@ function appendChatMessageNode(msg){
  const container = document.getElementById('chatMessagesContainer');
  const isMe = msg.sender_id === currentUser.id;
 
- const bubble = document.createElement('div');
- bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
    const bubble = document.createElement('div');
- bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
-
+bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
+  
  if(activeConversationId){
   const cfg = getChatCustomization(activeConversationId);
   const theme = CHAT_BUBBLE_THEMES[cfg.theme] || CHAT_BUBBLE_THEMES.blue;
