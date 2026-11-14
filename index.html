@@ -3958,27 +3958,36 @@ async function openDirectChatWithUser(recipientId){
   profilesCache[recipientId] = prof;
  }
 
+ // Asignar explícitamente el perfil activo globalmente
+ activeRecipientProfile = profile;
+ viewedProfile = profile;
+
  document.getElementById('dmSearchInput').value = '';
  document.getElementById('dmSearchResults').replaceChildren();
  cachedConversationsList = null;
  openChatRoom(convId, profile);
 }
 
+
 async function openChatRoom(conversationId, recipientProfile){
  activeConversationId = conversationId;
- activeRecipientProfile = recipientProfile;
+ if(recipientProfile){
+  activeRecipientProfile = recipientProfile;
+  profilesCache[recipientProfile.id] = recipientProfile;
+  viewedProfile = recipientProfile;
+ }
  cancelReply();
 
- document.getElementById('chatRoomTitle').textContent = recipientProfile.display_name || recipientProfile.username;
+ document.getElementById('chatRoomTitle').textContent = activeRecipientProfile.display_name || activeRecipientProfile.username;
  
  const headerAvatarContainer = document.getElementById('chatRoomHeaderAvatar');
  
  let img = headerAvatarContainer.querySelector('img');
  if(!img){
   headerAvatarContainer.replaceChildren();
-  if(recipientProfile.avatar_url){
+  if(activeRecipientProfile.avatar_url){
    img = document.createElement('img');
-   img.src = recipientProfile.avatar_url;
+   img.src = activeRecipientProfile.avatar_url;
    img.alt = 'Avatar';
    img.loading = 'lazy';
    headerAvatarContainer.append(img);
@@ -3992,11 +4001,11 @@ async function openChatRoom(conversationId, recipientProfile){
   dot.className = 'online-dot';
   dot.id = 'chatRoomOnlineDot';
   headerAvatarContainer.append(dot);
- } else if(recipientProfile.avatar_url){
-  img.src = recipientProfile.avatar_url;
+ } else if(activeRecipientProfile.avatar_url){
+  img.src = activeRecipientProfile.avatar_url;
  }
 
- if(onlineUsersMap[recipientProfile.id]){
+ if(onlineUsersMap[activeRecipientProfile.id]){
   document.getElementById('chatRoomOnlineDot').classList.add('active');
   document.getElementById('chatRoomStatusSub').textContent = 'En línea';
  } else {
@@ -4008,6 +4017,7 @@ async function openChatRoom(conversationId, recipientProfile){
  await loadChatMessages(conversationId);
  markConversationAsRead(conversationId);
 }
+
 
 /* ========================================================================= */
 /* LÓGICA DE PANTALLA “DETALLES DEL CHAT”                                     */
@@ -4048,8 +4058,13 @@ function openChatDetailsPage(){
 function openChatRecipientProfile(){
  if(activeRecipientProfile && activeRecipientProfile.id){
   openPublicProfile(activeRecipientProfile.id);
+ } else if(viewedProfile && viewedProfile.id){
+  openPublicProfile(viewedProfile.id);
+ } else {
+  alert('No se pudo cargar el perfil de este usuario.');
  }
 }
+
 
 function triggerChatSearch(){
  showTab('chatRoomPage');
