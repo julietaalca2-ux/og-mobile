@@ -13,10 +13,19 @@
 <meta name="apple-mobile-web-app-title" content="Ög">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-<!-- Sistema Independiente de Optimización ÖG -->
+<!-- Sistema Independiente de Optimización ÖG (Seguro contra bloqueo) -->
 <script type="module">
-  import { ÖGOptimizer } from './optimization/optimizer.js';
-  ÖGOptimizer.init();
+  try {
+    import('./optimization/optimizer.js').then(mod => {
+      if (mod && mod.ÖGOptimizer && typeof mod.ÖGOptimizer.init === 'function') {
+        mod.ÖGOptimizer.init();
+      }
+    }).catch(err => {
+      console.warn('ÖGOptimizer no disponible, continuando carga normal.', err);
+    });
+  } catch (e) {
+    console.warn('Error cargando optimizador:', e);
+  }
 </script>
 
 <style>
@@ -3901,7 +3910,7 @@ function createNewHighlightModal(){
 }
 
 function closeHighlightModal(){
- document.getElementById('highlightModal'].classList.remove('active');
+ document.getElementById('highlightModal').classList.remove('active');
 }
 
 function stageHighlightCover(input){
