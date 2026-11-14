@@ -3367,6 +3367,8 @@ function closeFollowListModal(){
 async function loadStoriesData(){
  if(!currentUser) return;
 
+ const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
  const { data: followingRes } = await db.from('follows')
   .select('following_id')
   .eq('follower_id', currentUser.id);
@@ -3377,6 +3379,7 @@ async function loadStoriesData(){
  const { data: myStoryRes } = await db.from('stories')
   .select('*')
   .eq('user_id', currentUser.id)
+  .gte('created_at', twentyFourHoursAgo)
   .order('created_at', {ascending:false})
   .limit(1)
   .maybeSingle();
@@ -3396,6 +3399,7 @@ async function loadStoriesData(){
   const { data: storiesData } = await db.from('stories')
    .select('id, user_id, image_url, created_at')
    .in('user_id', allowedUserIds)
+   .gte('created_at', twentyFourHoursAgo)
    .order('created_at', {ascending: false});
 
   if(storiesData && storiesData.length > 0){
@@ -3438,6 +3442,16 @@ async function handleStoryClick(){
 }
 
 async function openUserStory(profile, story){
+ const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).getTime();
+ const storyTime = new Date(story.created_at).getTime();
+
+ if(storyTime < twentyFourHoursAgo) {
+  alert("Esta historia ha expirado.");
+  closeStoryViewer();
+  loadStoriesData();
+  return;
+ }
+
  currentActiveStoryId = story.id;
  document.getElementById('storyUsername').textContent = '@' + profile.username;
  document.getElementById('storyImage').src = story.image_url;
