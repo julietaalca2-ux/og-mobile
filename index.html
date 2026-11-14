@@ -3814,8 +3814,18 @@ async function loadConversations(){
 
   const conversationsList = await Promise.all(convIds.map(async convId => {
    const otherId = convMap[convId].otherUserId;
-   const profile = profilesCache[otherId];
+   let profile = profilesCache[otherId];
+   
+   if(!profile && otherId){
+    const { data: singleProf } = await db.from('profiles').select('*').eq('id', otherId).maybeSingle();
+    if(singleProf){
+     profile = singleProf;
+     profilesCache[otherId] = singleProf;
+    }
+   }
+
    if(!profile) return null;
+
 
    const { data: lastMsg } = await db.from('messages')
     .select('content, created_at, sender_id')
