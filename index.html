@@ -583,19 +583,42 @@ textarea{height:110px;resize:none}
  display:block;text-align:center;color:#71717a;padding:60px 20px;font-size:14px;
 }
 
-/* EXPLORAR */
+/* EXPLORAR Y BUSCADOR AVANZADO */
 .explore-top-bar{
- padding:12px 16px;position:sticky;top:56px;background:rgba(0,0,0,0.8);
+ padding:12px 16px;position:sticky;top:56px;background:rgba(0,0,0,0.85);
  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:40;
  border-bottom:1px solid rgba(255,255,255,0.06);
+ display: flex;flex-direction: column;gap: 10px;
 }
 .explore-search-input{
  width:100%;background:rgba(255,255,255,0.08);color:#fff;
  border:1px solid rgba(255,255,255,0.12);border-radius:24px;
  padding:10px 16px 10px 38px;font-size:14px;outline:none;
 }
-.explore-search-wrapper{position:relative;display:flex;align-items:center}
+.explore-search-wrapper{position:relative;display:flex;align-items:center;width: 100%;}
 .explore-search-icon{position:absolute;left:12px;width:18px;height:18px;color:#71717a}
+
+/* PESTAÑAS DE BÚSQUEDA (Para ti / Perfiles / Audios / Hashtags) */
+.search-categories-bar {
+ display: none;
+ gap: 8px;
+ overflow-x: auto;
+ padding-bottom: 2px;
+ scrollbar-width: none;
+}
+.search-categories-bar.active { display: flex; }
+.search-categories-bar::-webkit-scrollbar { display: none; }
+
+.search-cat-tab {
+ background: rgba(255,255,255,0.08); border: none; color: #a1a1aa;
+ padding: 6px 14px; border-radius: 16px; font-size: 13px; font-weight: 600;
+ cursor: pointer; white-space: nowrap; transition: all 0.15s ease;
+}
+.search-cat-tab.active { background: #fff; color: #000; }
+
+.search-results-section { display: none; padding: 12px 16px; }
+.search-results-section.active { display: block; }
+
 .explore-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:2px}
 .explore-grid-item{
  aspect-ratio:1/1;background:#121214;overflow:hidden;position:relative;cursor:pointer;
@@ -931,16 +954,47 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- EXPLORAR -->
+<!-- EXPLORAR CON BUSCADOR Y PESTAÑAS (Para ti / Perfiles / Audios / Hashtags) -->
 <div id="explore" class="section">
  <div class="explore-top-bar">
   <div class="explore-search-wrapper">
    <svg class="explore-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-   <input class="explore-search-input" id="search" placeholder="Buscar..." oninput="searchUsers()">
+   <input class="explore-search-input" id="search" placeholder="Buscar..." oninput="handleExploreSearchInput()" onfocus="handleExploreSearchFocus()">
+  </div>
+  
+  <!-- Pestañas de búsqueda horizontal -->
+  <div class="search-categories-bar" id="searchCategoriesBar">
+   <button class="search-cat-tab active" onclick="switchSearchTab('foryou', this)">Para ti</button>
+   <button class="search-cat-tab" onclick="switchSearchTab('profiles', this)">Perfiles</button>
+   <button class="search-cat-tab" onclick="switchSearchTab('audios', this)">Audios</button>
+   <button class="search-cat-tab" onclick="switchSearchTab('hashtags', this)">Hashtags</button>
   </div>
  </div>
- <div id="searchresult" style="padding: 12px 16px;"></div>
- <div class="explore-grid" id="exploreGrid"></div>
+
+ <!-- Contenedor de la cuadrícula general de Explorar (Por defecto) -->
+ <div id="exploreDefaultView" class="search-results-section active">
+  <div class="explore-grid" id="exploreGrid"></div>
+ </div>
+
+ <!-- Contenedor Sección Resultados de Búsqueda -->
+ <div id="exploreSearchResultsView" class="search-results-section">
+  <!-- Pestaña: Para ti -->
+  <div id="searchTab-foryou" class="search-tab-content active">
+   <div id="searchForYouResults" class="explore-grid"></div>
+  </div>
+  <!-- Pestaña: Perfiles -->
+  <div id="searchTab-profiles" class="search-tab-content" style="display:none;">
+   <div id="searchProfilesResults"></div>
+  </div>
+  <!-- Pestaña: Audios -->
+  <div id="searchTab-audios" class="search-tab-content" style="display:none;">
+   <div id="searchAudiosResults" style="color:#a1a1aa; padding:20px; text-align:center;">No hay audios disponibles para esta búsqueda.</div>
+  </div>
+  <!-- Pestaña: Hashtags -->
+  <div id="searchTab-hashtags" class="search-tab-content" style="display:none;">
+   <div id="searchHashtagsResults" style="color:#a1a1aa; padding:20px; text-align:center;">No hay hashtags disponibles para esta búsqueda.</div>
+  </div>
+ </div>
 </div>
 
 <!-- CREAR PUBLICACIÓN -->
@@ -1804,7 +1858,12 @@ function showTab(id,btn){
  }
 
  if(id==='notifications') loadActivity();
- if(id==='explore') loadExploreGrid();
+ if(id==='explore') {
+  loadExploreGrid();
+  // Limpiar buscador al entrar a explore si está vacío
+  const searchInput = document.getElementById('search');
+  if(!searchInput.value) resetExploreSearch();
+ }
  if(id==='messagesPage') loadConversations();
  if(id==='profile' && currentUser) loadMyPostsGrid();
  window.scrollTo(0,0);
@@ -2589,32 +2648,123 @@ async function publish(){
  await loadInitialPosts();
 }
 
-function searchUsers(){
+/* ========================================================================= */
+/* LÓGICA DE BÚSQUEDA Y SECCIÓN EXPLORE AVANZADA                           */
+/* ========================================================================= */
+
+function handleExploreSearchFocus() {
+ const val = document.getElementById('search').value.trim();
+ if(val.length >= 1) {
+  document.getElementById('searchCategoriesBar').classList.add('active');
+  document.getElementById('exploreDefaultView').classList.remove('active');
+  document.getElementById('exploreSearchResultsView').classList.add('active');
+ }
+}
+
+function handleExploreSearchInput() {
  clearTimeout(searchTimer);
  const val = document.getElementById('search').value.trim();
- const resultBox = document.getElementById('searchresult');
- if(val.length < 2){ resultBox.replaceChildren(); return; }
+ 
+ const catBar = document.getElementById('searchCategoriesBar');
+ const defaultView = document.getElementById('exploreDefaultView');
+ const resultsView = document.getElementById('exploreSearchResultsView');
 
- searchTimer = setTimeout(async () => {
-  const {data} = await db.from('profiles').select('id, username, display_name, avatar_url').ilike('username', '%' + val + '%').limit(10);
-  if(!data || !data.length){ resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>'; return; }
+ if(val.length === 0) {
+  resetExploreSearch();
+  return;
+ }
 
-  const fragment = document.createDocumentFragment();
-  data.forEach(profile => {
+ catBar.classList.add('active');
+ defaultView.classList.remove('active');
+ resultsView.classList.add('active');
+
+ searchTimer = setTimeout(() => {
+  executeAdvancedSearch(val);
+ }, 250);
+}
+
+function resetExploreSearch() {
+ document.getElementById('searchCategoriesBar').classList.remove('active');
+ document.getElementById('exploreDefaultView').classList.add('active');
+ document.getElementById('exploreSearchResultsView').classList.remove('active');
+ document.getElementById('searchForYouResults').replaceChildren();
+ document.getElementById('searchProfilesResults').replaceChildren();
+}
+
+function switchSearchTab(tabKey, btnElement) {
+ document.querySelectorAll('.search-cat-tab').forEach(b => b.classList.remove('active'));
+ btnElement.classList.add('active');
+
+ document.querySelectorAll('.search-tab-content').forEach(content => {
+  content.style.display = 'none';
+ });
+
+ const targetTab = document.getElementById(`searchTab-${tabKey}`);
+ if(targetTab) targetTab.style.display = 'block';
+}
+
+async function executeAdvancedSearch(queryText) {
+ const query = queryText.toLowerCase();
+
+ // 1. Buscar Perfiles (Usuarios)
+ const { data: profilesData } = await db.from('profiles')
+  .select('id, username, display_name, avatar_url')
+  .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+  .limit(15);
+
+ const profilesContainer = document.getElementById('searchProfilesResults');
+ profilesContainer.replaceChildren();
+
+ if(!profilesData || !profilesData.length) {
+  profilesContainer.innerHTML = '<div class="activity-empty">No se encontraron perfiles.</div>';
+ } else {
+  const profileFragment = document.createDocumentFragment();
+  profilesData.forEach(profile => {
    if(profile.id === currentUser?.id) return;
    profilesCache[profile.id] = profile;
    const item = document.createElement('div');
    item.className = 'public-user';
+   item.style.padding = '8px 16px';
    item.append(createAvatarNode(profile, false));
    const info = document.createElement('div');
    info.className = 'public-user-info';
    info.innerHTML = `<strong>${profile.display_name || profile.username}</strong><small>@${profile.username}</small>`;
    item.append(info);
    item.onclick = () => openPublicProfile(profile.id);
-   fragment.append(item);
+   profileFragment.append(item);
   });
-  resultBox.replaceChildren(fragment);
- }, 200);
+  profilesContainer.replaceChildren(profileFragment);
+ }
+
+ // 2. Buscar Contenido para "Para ti" (Publicaciones cuyo texto coincida)
+ const { data: postsData } = await db.from('posts')
+  .select('*')
+  .ilike('content', `%${query}%`)
+  .order('created_at', {ascending: false})
+  .limit(18);
+
+ const forYouContainer = document.getElementById('searchForYouResults');
+ forYouContainer.replaceChildren();
+
+ if(!postsData || !postsData.length) {
+  forYouContainer.innerHTML = '<div class="activity-empty" style="grid-column: span 3;">No hay publicaciones relacionadas.</div>';
+ } else {
+  const postsFragment = document.createDocumentFragment();
+  postsData.forEach(post => {
+   const item = document.createElement('div');
+   item.className = 'explore-grid-item';
+   item.onclick = () => openPostDetail(post);
+   if(post.image_url){
+    const img = document.createElement('img');
+    img.src = post.image_url;
+    item.append(img);
+   } else {
+    item.textContent = (post.content || '').slice(0, 45);
+   }
+   postsFragment.append(item);
+  });
+  forYouContainer.replaceChildren(postsFragment);
+ }
 }
 
 async function openPublicProfile(userId){
