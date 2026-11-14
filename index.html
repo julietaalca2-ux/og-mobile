@@ -33,13 +33,12 @@
 body{
  margin:0;background:#000000;color:#f4f4f5;
  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
- padding-top:calc(54px + env(safe-area-inset-top) + 4px);
+ padding-top:calc(56px + env(safe-area-inset-top));
  padding-bottom:calc(74px + env(safe-area-inset-bottom));
  -webkit-font-smoothing:antialiased;
  overflow-x:hidden;
  scrollbar-width: none !important;
 }
-
 
 * {
  scrollbar-width: none !important;
@@ -165,48 +164,30 @@ button:active, .post-action-btn:active, .story:active {
 .auth-panel{display:none;width:100%;flex-direction:column;gap:12px;animation:fadeInScale 0.2s ease}
 .auth-panel.active{display:flex}
 
-/* HEADER FIJO NÍTIDO CON SOPORTE IPHONE SAFE AREA */
+/* HEADER FIJO ESTILO INSTAGRAM CON SOPORTE IPHONE SAFE AREA */
 header{
  position:fixed;top:0;left:0;right:0;
- height:calc(54px + env(safe-area-inset-top) + 4px);
- padding:calc(env(safe-area-inset-top) + 4px) 14px 0 14px;
- display:grid;
- grid-template-columns:1fr auto 1fr;
- align-items:center;
+ height:calc(56px + env(safe-area-inset-top));
+ padding:env(safe-area-inset-top) 16px 0 16px;
+ display:flex;align-items:center;justify-content:space-between;
  border-bottom:1px solid rgba(255,255,255,0.08);
- background:rgba(0,0,0,0.92);
+ background:rgba(0,0,0,0.88);
  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
  z-index:90;
+ transform:translateZ(0);
+ -webkit-transform:translateZ(0);
 }
-.header-left-slot{
- grid-column:1;
- justify-self:start;
- display:flex;align-items:center;gap:4px;
-}
+.header-left-slot{display:flex;align-items:center;gap:4px;min-width:40px}
 .header-center-slot{
- grid-column:2;
- justify-self:center;
- display:flex;align-items:center;justify-content:center;
- pointer-events:none;
+ position:absolute;left:50%;top:calc(50% + (env(safe-area-inset-top) / 2));
+ transform:translate(-50%, -50%);
+ display:flex;align-items:center;pointer-events:none;
 }
-.logo{
- font-size:25px;font-weight:900;letter-spacing:-1.2px;color:#fff;
- line-height:1;
-}
-.header-right-slot{
- grid-column:3;
- justify-self:end;
- display:flex;align-items:center;gap:2px;
-}
+.logo{font-size:24px;font-weight:900;letter-spacing:-1.5px;color:#fff}
+.header-right-slot{display:flex;align-items:center;gap:4px;min-width:40px;justify-content:flex-end}
 
-.icon{
- background:none;border:0;color:#fff;
- width:40px;height:40px;padding:0;
- cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
- position:relative;
-}
-.icon svg{width:23px;height:23px;display:block}
-
+.icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative}
+.icon svg{width:24px;height:24px}
 
 /* INDICADOR ROJO DE NOTIFICACIONES EN EL CORAZÓN */
 .header-notif-badge{
@@ -476,58 +457,6 @@ main > div.active {display: block !important;}
 .chat-bubble.received{background:#27272a;color:#f4f4f5;align-self:flex-start;border-bottom-left-radius:4px}
 .chat-bubble-reply-preview{font-size:12px;background:rgba(0,0,0,0.2);padding:4px 8px;border-radius:8px;margin-bottom:6px;border-left:3px solid #fff;opacity:0.9}
 .chat-bubble-time{font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;text-align:right}
-/* PERSONALIZACIÓN Y FONDO DEL CHAT */
-.chat-messages-container{
- background-size:cover !important;
- background-position:center !important;
- background-repeat:no-repeat !important;
- transition:background 0.25s ease;
-}
-.chat-messages-container.has-custom-bg .chat-bubble.received{
- background:rgba(24,24,27,0.86);
- backdrop-filter:blur(12px);
- -webkit-backdrop-filter:blur(12px);
- border:1px solid rgba(255,255,255,0.1);
-}
-.chat-style-preview-box{
- border-radius:18px;padding:16px;border:1px solid rgba(255,255,255,0.12);
- display:flex;flex-direction:column;gap:10px;min-height:145px;justify-content:center;
- background-size:cover !important;background-position:center !important;
- position:relative;overflow:hidden;
-}
-.theme-swatches-grid{
- display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
-}
-.theme-swatch-card{
- background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);
- border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;
- align-items:center;gap:6px;cursor:pointer;color:#e4e4e7;font-size:12px;font-weight:500;
-}
-.theme-swatch-card.active{
- border-color:#3b82f6;background:rgba(59,130,246,0.14);color:#fff;
-}
-.theme-color-circle{
- width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);
-}
-.bg-preset-card{
- height:68px;border-radius:14px;border:1.5px solid rgba(255,255,255,0.12);
- display:flex;align-items:flex-end;padding:8px;cursor:pointer;
- font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.9);
- background-size:cover;background-position:center;
-}
-.bg-preset-card.active{
- border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.45);
-}
-.font-pill-row{
- display:grid;grid-template-columns:repeat(2,1fr);gap:8px;
-}
-.font-pill-btn{
- background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);
- border-radius:12px;padding:10px;color:#e4e4e7;font-size:13px;cursor:pointer;text-align:center;
-}
-.font-pill-btn.active{
- border-color:#3b82f6;background:rgba(59,130,246,0.14);color:#fff;font-weight:600;
-}
 
 .chat-input-footer{
  padding:10px 16px calc(env(safe-area-inset-bottom) + 12px) 16px;
@@ -3814,18 +3743,8 @@ async function loadConversations(){
 
   const conversationsList = await Promise.all(convIds.map(async convId => {
    const otherId = convMap[convId].otherUserId;
-   let profile = profilesCache[otherId];
-   
-   if(!profile && otherId){
-    const { data: singleProf } = await db.from('profiles').select('*').eq('id', otherId).maybeSingle();
-    if(singleProf){
-     profile = singleProf;
-     profilesCache[otherId] = singleProf;
-    }
-   }
-
+   const profile = profilesCache[otherId];
    if(!profile) return null;
-
 
    const { data: lastMsg } = await db.from('messages')
     .select('content, created_at, sender_id')
@@ -3968,36 +3887,27 @@ async function openDirectChatWithUser(recipientId){
   profilesCache[recipientId] = prof;
  }
 
- // Asignar explícitamente el perfil activo globalmente
- activeRecipientProfile = profile;
- viewedProfile = profile;
-
  document.getElementById('dmSearchInput').value = '';
  document.getElementById('dmSearchResults').replaceChildren();
  cachedConversationsList = null;
  openChatRoom(convId, profile);
 }
 
-
 async function openChatRoom(conversationId, recipientProfile){
  activeConversationId = conversationId;
- if(recipientProfile){
-  activeRecipientProfile = recipientProfile;
-  profilesCache[recipientProfile.id] = recipientProfile;
-  viewedProfile = recipientProfile;
- }
+ activeRecipientProfile = recipientProfile;
  cancelReply();
 
- document.getElementById('chatRoomTitle').textContent = activeRecipientProfile.display_name || activeRecipientProfile.username;
+ document.getElementById('chatRoomTitle').textContent = recipientProfile.display_name || recipientProfile.username;
  
  const headerAvatarContainer = document.getElementById('chatRoomHeaderAvatar');
  
  let img = headerAvatarContainer.querySelector('img');
  if(!img){
   headerAvatarContainer.replaceChildren();
-  if(activeRecipientProfile.avatar_url){
+  if(recipientProfile.avatar_url){
    img = document.createElement('img');
-   img.src = activeRecipientProfile.avatar_url;
+   img.src = recipientProfile.avatar_url;
    img.alt = 'Avatar';
    img.loading = 'lazy';
    headerAvatarContainer.append(img);
@@ -4011,23 +3921,22 @@ async function openChatRoom(conversationId, recipientProfile){
   dot.className = 'online-dot';
   dot.id = 'chatRoomOnlineDot';
   headerAvatarContainer.append(dot);
- } else if(activeRecipientProfile.avatar_url){
-  img.src = activeRecipientProfile.avatar_url;
+ } else if(recipientProfile.avatar_url){
+  img.src = recipientProfile.avatar_url;
  }
 
- if(onlineUsersMap[activeRecipientProfile.id]){
+ if(onlineUsersMap[recipientProfile.id]){
   document.getElementById('chatRoomOnlineDot').classList.add('active');
   document.getElementById('chatRoomStatusSub').textContent = 'En línea';
  } else {
   document.getElementById('chatRoomOnlineDot').classList.remove('active');
   document.getElementById('chatRoomStatusSub').textContent = 'Desconectado';
  }
- applyChatCustomization(conversationId);
+
  showTab('chatRoomPage');
  await loadChatMessages(conversationId);
  markConversationAsRead(conversationId);
 }
-
 
 /* ========================================================================= */
 /* LÓGICA DE PANTALLA “DETALLES DEL CHAT”                                     */
@@ -4068,13 +3977,8 @@ function openChatDetailsPage(){
 function openChatRecipientProfile(){
  if(activeRecipientProfile && activeRecipientProfile.id){
   openPublicProfile(activeRecipientProfile.id);
- } else if(viewedProfile && viewedProfile.id){
-  openPublicProfile(viewedProfile.id);
- } else {
-  alert('No se pudo cargar el perfil de este usuario.');
  }
 }
-
 
 function triggerChatSearch(){
  showTab('chatRoomPage');
@@ -4103,128 +4007,12 @@ function handleChatActionMenu(action){
  if(action === 'restrict') alert('Usuario restringido.');
 }
 
-const CHAT_BUBBLE_THEMES = {
- blue: { name: 'Azul Ög', bg: '#3b82f6', text: '#ffffff' },
- insta: { name: 'Atardecer', bg: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)', text: '#ffffff' },
- neon: { name: 'Violeta', bg: 'linear-gradient(135deg, #6366f1, #a855f7)', text: '#ffffff' },
- emerald: { name: 'Esmeralda', bg: '#10b981', text: '#ffffff' },
- rose: { name: 'Rosa', bg: 'linear-gradient(135deg, #ec4899, #f43f5e)', text: '#ffffff' },
- mono: { name: 'Claro', bg: '#f4f4f5', text: '#09090b' }
-};
-
-const CHAT_BG_PRESETS = {
- black: { name: 'Negro puro', css: '#000000', isCustom: false },
- midnight: { name: 'Noche azul', css: 'radial-gradient(circle at top, #1e1b4b 0%, #09090b 65%, #000000 100%)', isCustom: true },
- forest: { name: 'Bosque', css: 'linear-gradient(180deg, #052e16 0%, #09090b 100%)', isCustom: true },
- velvet: { name: 'Púrpura', css: 'linear-gradient(180deg, #3b0764 0%, #18181b 65%, #000000 100%)', isCustom: true },
- dots: { name: 'Trama Ög', css: 'radial-gradient(rgba(255,255,255,0.09) 1px, #050507 1px)', isCustom: true }
-};
-
-const CHAT_FONT_OPTIONS = {
- system: { name: 'Sistema', family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
- rounded: { name: 'Moderna', family: '"Trebuchet MS", "Segoe UI", sans-serif' },
- mono: { name: 'Código', family: 'ui-monospace, SFMono-Regular, Menlo, monospace' },
- serif: { name: 'Editorial', family: 'Georgia, "Times New Roman", serif' }
-};
-
-function getChatCustomizationKey(conversationId){
- return `og_chat_style_${currentUser?.id || 'guest'}_${conversationId}`;
-}
-
-function getChatCustomization(conversationId){
- const defaults = { theme: 'blue', bgType: 'preset', bgValue: 'black', font: 'system', fontSize: 14 };
- if(!conversationId) return defaults;
- try{
-  const raw = localStorage.getItem(getChatCustomizationKey(conversationId));
-  return raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
- }catch(e){
-  return defaults;
- }
-}
-
-function saveChatCustomization(conversationId, partial){
- if(!conversationId) return;
- const current = getChatCustomization(conversationId);
- const updated = { ...current, ...partial };
- localStorage.setItem(getChatCustomizationKey(conversationId), JSON.stringify(updated));
- applyChatCustomization(conversationId);
- return updated;
-}
-
-function applyChatCustomization(conversationId){
- const container = document.getElementById('chatMessagesContainer');
- if(!container) return;
- const cfg = getChatCustomization(conversationId);
- const theme = CHAT_BUBBLE_THEMES[cfg.theme] || CHAT_BUBBLE_THEMES.blue;
- const font = CHAT_FONT_OPTIONS[cfg.font] || CHAT_FONT_OPTIONS.system;
-
- if(cfg.bgType === 'image' && cfg.bgValue){
-  container.style.background = `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url("${cfg.bgValue}")`;
-  container.classList.add('has-custom-bg');
- } else {
-  const preset = CHAT_BG_PRESETS[cfg.bgValue] || CHAT_BG_PRESETS.black;
-  container.style.background = preset.css;
-  if(preset.css.includes('radial-gradient(rgba')){
-   container.style.backgroundSize = '18px 18px';
-  }
-  if(preset.isCustom) container.classList.add('has-custom-bg');
-  else container.classList.remove('has-custom-bg');
- }
-
- container.querySelectorAll('.chat-bubble').forEach(b => {
-  b.style.fontFamily = font.family;
-  b.style.fontSize = (cfg.fontSize || 14) + 'px';
-  if(b.classList.contains('sent')){
-   b.style.background = theme.bg;
-   b.style.color = theme.text;
-  }
- });
-}
-
-async function handleCustomChatBgUpload(input){
- const file = input.files?.[0];
- input.value = '';
- if(!file || !activeConversationId || !currentUser) return;
-
- const statusEl = document.getElementById('chatBgUploadStatus');
- if(statusEl) statusEl.textContent = 'Subiendo fondo...';
-
- try{
-  const compressed = await compressImage(file, 1080, 0.82);
-  const path = `${currentUser.id}/chat-bg-${activeConversationId}-${Date.now()}.jpg`;
-  const { error } = await db.storage.from('og-media').upload(path, compressed, {
-   cacheControl: '3600',
-   upsert: false,
-   contentType: 'image/jpeg'
-  });
-
-  if(error){
-   if(statusEl) statusEl.textContent = 'Error al subir imagen: ' + error.message;
-   return;
-  }
-
-  const { data } = db.storage.from('og-media').getPublicUrl(path);
-  saveChatCustomization(activeConversationId, { bgType: 'image', bgValue: data.publicUrl });
-  if(statusEl) statusEl.textContent = '¡Fondo aplicado!';
-  openChatSubSettings('style');
- }catch(e){
-  if(statusEl) statusEl.textContent = 'No se pudo procesar la imagen.';
- }
-}
-
-function resetChatCustomization(){
- if(!activeConversationId) return;
- localStorage.removeItem(getChatCustomizationKey(activeConversationId));
- applyChatCustomization(activeConversationId);
- openChatSubSettings('style');
-}
-
 function openChatSubSettings(sectionType){
  const titleMap = {
   privacy: 'Privacidad y seguridad',
   timer: 'Mensajes temporales',
   nickname: 'Apodos',
-  style: 'Estilo y fondo del chat'
+  style: 'Personalizar estilo y fuente'
  };
 
  document.getElementById('chatSubSettingsTitle').textContent = titleMap[sectionType] || 'Configuración';
@@ -4260,98 +4048,17 @@ function openChatSubSettings(sectionType){
     <button class="primary" style="margin-top:12px;" onclick="alert('Apodo guardado con éxito')">Guardar apodo</button>
    </div>`;
  } else if(sectionType === 'style'){
-  const cfg = getChatCustomization(activeConversationId);
-  const currentTheme = CHAT_BUBBLE_THEMES[cfg.theme] || CHAT_BUBBLE_THEMES.blue;
-  const currentFont = CHAT_FONT_OPTIONS[cfg.font] || CHAT_FONT_OPTIONS.system;
-  const previewBg = cfg.bgType === 'image' && cfg.bgValue
-   ? `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('${cfg.bgValue}')`
-   : (CHAT_BG_PRESETS[cfg.bgValue]?.css || '#000000');
-
-  const themeCardsHTML = Object.entries(CHAT_BUBBLE_THEMES).map(([key, item]) => `
-   <div class="theme-swatch-card ${cfg.theme === key ? 'active' : ''}" onclick="saveChatCustomization('${activeConversationId}', { theme: '${key}' }); openChatSubSettings('style');">
-    <div class="theme-color-circle" style="background:${item.bg};"></div>
-    <span>${item.name}</span>
-   </div>
-  `).join('');
-
-  const bgCardsHTML = Object.entries(CHAT_BG_PRESETS).map(([key, item]) => `
-   <div class="bg-preset-card ${cfg.bgType === 'preset' && cfg.bgValue === key ? 'active' : ''}"
-        style="background:${item.css};"
-        onclick="saveChatCustomization('${activeConversationId}', { bgType: 'preset', bgValue: '${key}' }); openChatSubSettings('style');">
-    <span>${item.name}</span>
-   </div>
-  `).join('');
-
-  const fontCardsHTML = Object.entries(CHAT_FONT_OPTIONS).map(([key, item]) => `
-   <button class="font-pill-btn ${cfg.font === key ? 'active' : ''}"
-           style="font-family:${item.family};"
-           onclick="saveChatCustomization('${activeConversationId}', { font: '${key}' }); openChatSubSettings('style');">
-    ${item.name}
-   </button>
-  `).join('');
-
-  const sizeButtonsHTML = [
-   { label: 'Chica', val: 13 },
-   { label: 'Normal', val: 14 },
-   { label: 'Grande', val: 16 }
-  ].map(s => `
-   <button class="font-pill-btn ${Number(cfg.fontSize) === s.val ? 'active' : ''}"
-           onclick="saveChatCustomization('${activeConversationId}', { fontSize: ${s.val} }); openChatSubSettings('style');">
-    ${s.label} (${s.val}px)
-   </button>
-  `).join('');
-
   body.innerHTML = `
    <div class="settings-group">
-    <h4 class="settings-group-title">Vista previa en vivo</h4>
-    <div class="chat-style-preview-box" style="background:${previewBg};">
-     <div class="chat-bubble received" style="font-family:${currentFont.family};font-size:${cfg.fontSize}px;background:rgba(24,24,27,0.88);backdrop-filter:blur(10px);">
-      ¡Hola! ¿Cómo va todo? ✨
-     </div>
-     <div class="chat-bubble sent" style="font-family:${currentFont.family};font-size:${cfg.fontSize}px;background:${currentTheme.bg};color:${currentTheme.text};">
-      Probando el nuevo estilo del chat 🔥
-     </div>
-    </div>
-   </div>
-
-   <div class="settings-group">
-    <h4 class="settings-group-title">Color de tus burbujas</h4>
-    <div class="theme-swatches-grid">${themeCardsHTML}</div>
-   </div>
-
-   <div class="settings-group">
-    <h4 class="settings-group-title">Fondo del chat</h4>
-    <div class="theme-swatches-grid" style="margin-bottom:12px;">
-     ${bgCardsHTML}
-     <div class="bg-preset-card ${cfg.bgType === 'image' ? 'active' : ''}"
-          style="background:rgba(59,130,246,0.16);border-style:dashed;border-color:#3b82f6;align-items:center;justify-content:center;text-align:center;"
-          onclick="document.getElementById('customChatBgInput').click()">
-      <span>📷 Galería</span>
-     </div>
-    </div>
-    <input type="file" id="customChatBgInput" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="handleCustomChatBgUpload(this)">
-    <p id="chatBgUploadStatus" class="status" style="margin:4px 0 0 0;"></p>
-   </div>
-
-   <div class="settings-group">
-    <h4 class="settings-group-title">Tipografía</h4>
-    <div class="font-pill-row">${fontCardsHTML}</div>
-   </div>
-
-   <div class="settings-group" style="border-bottom:none;">
-    <h4 class="settings-group-title">Tamaño de letra</h4>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;">
-     ${sizeButtonsHTML}
-    </div>
-    <button class="secondary" style="width:100%;" onclick="resetChatCustomization()">Restablecer estilo por defecto</button>
-   </div>
-  `;
+    <h4 class="settings-group-title">Tema y burbujas</h4>
+    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">Burbujas azules (Por defecto)</p></div></div>
+    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">Modo oscuro clásico</p></div></div>
+   </div>`;
  }
 
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
  document.getElementById('chatSubSettingsPage').classList.add('active');
 }
-
 
 async function loadChatMessages(conversationId){
  const container = document.getElementById('chatMessagesContainer');
@@ -4386,19 +4093,6 @@ function appendChatMessageNode(msg){
 
  const bubble = document.createElement('div');
  bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
-  
- if(activeConversationId){
-  const cfg = getChatCustomization(activeConversationId);
-  const theme = CHAT_BUBBLE_THEMES[cfg.theme] || CHAT_BUBBLE_THEMES.blue;
-  const font = CHAT_FONT_OPTIONS[cfg.font] || CHAT_FONT_OPTIONS.system;
-  bubble.style.fontFamily = font.family;
-  bubble.style.fontSize = (cfg.fontSize || 14) + 'px';
-  if(isMe){
-   bubble.style.background = theme.bg;
-   bubble.style.color = theme.text;
-  }
- }
-
  bubble.title = "Toca para responder a este mensaje";
  bubble.onclick = () => startReplyingTo(msg);
 
@@ -4419,7 +4113,6 @@ function appendChatMessageNode(msg){
  bubble.append(textNode, timeNode);
  container.append(bubble);
 }
-
 
 function startReplyingTo(msg){
  replyingToMessageId = msg.id;
