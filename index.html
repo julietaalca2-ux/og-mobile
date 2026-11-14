@@ -476,6 +476,58 @@ main > div.active {display: block !important;}
 .chat-bubble.received{background:#27272a;color:#f4f4f5;align-self:flex-start;border-bottom-left-radius:4px}
 .chat-bubble-reply-preview{font-size:12px;background:rgba(0,0,0,0.2);padding:4px 8px;border-radius:8px;margin-bottom:6px;border-left:3px solid #fff;opacity:0.9}
 .chat-bubble-time{font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;text-align:right}
+/* PERSONALIZACIÓN Y FONDO DEL CHAT */
+.chat-messages-container{
+ background-size:cover !important;
+ background-position:center !important;
+ background-repeat:no-repeat !important;
+ transition:background 0.25s ease;
+}
+.chat-messages-container.has-custom-bg .chat-bubble.received{
+ background:rgba(24,24,27,0.86);
+ backdrop-filter:blur(12px);
+ -webkit-backdrop-filter:blur(12px);
+ border:1px solid rgba(255,255,255,0.1);
+}
+.chat-style-preview-box{
+ border-radius:18px;padding:16px;border:1px solid rgba(255,255,255,0.12);
+ display:flex;flex-direction:column;gap:10px;min-height:145px;justify-content:center;
+ background-size:cover !important;background-position:center !important;
+ position:relative;overflow:hidden;
+}
+.theme-swatches-grid{
+ display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.theme-swatch-card{
+ background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);
+ border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;
+ align-items:center;gap:6px;cursor:pointer;color:#e4e4e7;font-size:12px;font-weight:500;
+}
+.theme-swatch-card.active{
+ border-color:#3b82f6;background:rgba(59,130,246,0.14);color:#fff;
+}
+.theme-color-circle{
+ width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);
+}
+.bg-preset-card{
+ height:68px;border-radius:14px;border:1.5px solid rgba(255,255,255,0.12);
+ display:flex;align-items:flex-end;padding:8px;cursor:pointer;
+ font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.9);
+ background-size:cover;background-position:center;
+}
+.bg-preset-card.active{
+ border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.45);
+}
+.font-pill-row{
+ display:grid;grid-template-columns:repeat(2,1fr);gap:8px;
+}
+.font-pill-btn{
+ background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);
+ border-radius:12px;padding:10px;color:#e4e4e7;font-size:13px;cursor:pointer;text-align:center;
+}
+.font-pill-btn.active{
+ border-color:#3b82f6;background:rgba(59,130,246,0.14);color:#fff;font-weight:600;
+}
 
 .chat-input-footer{
  padding:10px 16px calc(env(safe-area-inset-bottom) + 12px) 16px;
