@@ -331,7 +331,7 @@ main > div.active {display: block !important;}
 .dm-conv-time{font-size:11px;color:#71717a;font-weight:normal}
 .dm-unread-dot{width:8px;height:8px;background:#3b82f6;border-radius:50%;display:inline-block}
 
-/* SALA DE CHAT */
+/* SALA DE CHAT (Encabezado 100% nítido y sin desenfoque borroso) */
 #chatRoomPage{
  display:none;flex-direction:column;height:100vh;height:100dvh;position:fixed;inset:0;background:#000;z-index:250;
 }
@@ -344,7 +344,7 @@ main > div.active {display: block !important;}
  padding-right: 16px;
  border-bottom:1px solid rgba(255,255,255,0.08);
  display:flex;align-items:center;gap:12px;
- background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+ background:#000000;
  z-index:40;flex-shrink:0;
  min-height: 64px;
 }
@@ -495,16 +495,24 @@ main > div.active {display: block !important;}
 .create-media-dropzone:active{background:rgba(255,255,255,0.05);border-color:#3b82f6}
 .create-media-dropzone svg{width:32px;height:32px;color:#a1a1aa}
 
-/* NAVEGACIÓN INFERIOR (4 ELEMENTOS SIMÉTRICOS) */
+/* NAVEGACIÓN INFERIOR (Con soporte para ocultarse al hacer scroll hacia abajo) */
 nav{
  position:fixed;bottom:0;left:0;right:0;height:64px;
- background:rgba(0,0,0,0.75);
+ background:rgba(0,0,0,0.85);
  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
  border-top:1px solid rgba(255,255,255,0.1);
  display:flex;justify-content:space-around;align-items:center;
  z-index:100;
  padding-bottom:env(safe-area-inset-bottom);
  box-shadow:0 -10px 30px rgba(0,0,0,0.5);
+ transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s ease;
+ transform: translateY(0);
+ opacity: 1;
+}
+nav.nav-hidden {
+ transform: translateY(110%);
+ opacity: 0;
+ pointer-events: none;
 }
 nav button{
  background:none;border:0;color:#71717a;
@@ -1722,6 +1730,32 @@ let touchEndY = 0;
 let isSwipeLocked = false;
 
 /* ========================================================================= */
+/* CONTROL DE SCROLL PARA OCULTAR / MOSTRAR BARRA INFERIOR EN EL FEED        */
+/* ========================================================================= */
+let lastScrollY = window.scrollY;
+window.addEventListener('scroll', () => {
+  if(!document.getElementById('feed').classList.contains('active')) return;
+
+  const currentScrollY = window.scrollY;
+  const bottomNav = document.getElementById('bottomNavBar');
+  
+  if (bottomNav) {
+    if (currentScrollY > lastScrollY && currentScrollY > 60) {
+      // Desplazamiento hacia abajo: ocultar barra
+      bottomNav.classList.add('nav-hidden');
+    } else {
+      // Desplazamiento hacia arriba o tope: mostrar barra
+      bottomNav.classList.remove('nav-hidden');
+    }
+  }
+  lastScrollY = currentScrollY;
+
+  if((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
+    loadMorePosts();
+  }
+}, {passive: true});
+
+/* ========================================================================= */
 /* DESLIZAMIENTO FLUIDO: INICIO ➔ CHAT ➔ EXPLORE ➔ PERFIL                    */
 /* ========================================================================= */
 const swipeNavigationFlow = ['feed', 'messagesPage', 'explore', 'profile'];
@@ -1819,13 +1853,6 @@ mainContainerElement.addEventListener('touchend', e => {
 }, { passive: true });
 /* ========================================================================= */
 
-window.addEventListener('scroll', () => {
- if(!document.getElementById('feed').classList.contains('active')) return;
- if((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
-  loadMorePosts();
- }
-}, {passive: true});
-
 function switchAuthSubView(viewName){
  document.getElementById('authWelcomePanel').classList.remove('active');
  document.getElementById('authSignupPanel').classList.remove('active');
@@ -1917,7 +1944,10 @@ function showTab(id,btn){
  const headerLogoSlot = document.getElementById('headerLogoSlot');
  const bottomNavBar = document.getElementById('bottomNavBar');
 
- if(bottomNavBar) bottomNavBar.style.display = 'flex';
+ if(bottomNavBar) {
+  bottomNavBar.style.display = 'flex';
+  bottomNavBar.classList.remove('nav-hidden');
+ }
 
  if(id === 'feed'){
   if(headerLogoSlot) headerLogoSlot.style.display = 'flex';
