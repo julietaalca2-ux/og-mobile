@@ -156,7 +156,7 @@ button:active, .post-action-btn:active, .story:active {
 .auth-panel{display:none;width:100%;flex-direction:column;gap:12px;animation:fadeInScale 0.2s ease}
 .auth-panel.active{display:flex}
 
-/* HEADER ESTÁTICO (FIJO ARRIBA ESTILO INSTAGRAM, NUNCA SE DESPLAZA) */
+/* HEADER ESTÁTICO (FIJO ARRIBA ESTILO INSTAGRAM - NUNCA SE MUEVE) */
 header{
  height:56px;
  padding:env(safe-area-inset-top) 16px 0 16px;
@@ -224,7 +224,7 @@ main{
  margin:auto;
  min-height:calc(100vh - 120px);
  background:#000000;
- margin-top: calc(56px + env(safe-area-inset-top)); /* Espacio exacto para que el contenido empiece debajo del header fijo */
+ margin-top: calc(56px + env(safe-area-inset-top)); /* Espacio exacto para que el feed empiece debajo del header fijo */
 }
 main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
@@ -1586,7 +1586,7 @@ let touchEndX = 0;
 let touchEndY = 0;
 let isSwipeLocked = false;
 
-/* CONTROL DE SCROLL INFINITO EN EL FEED (LA BARRA SUPERIOR YA QUEDA ESTÁTICA) */
+/* CONTROL DE SCROLL INFINITO EN EL FEED (LA BARRA SUPERIOR QUEDA FIJA) */
 window.addEventListener('scroll', () => {
   if(!document.getElementById('feed').classList.contains('active')) return;
 
