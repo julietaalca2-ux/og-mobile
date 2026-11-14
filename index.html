@@ -1860,7 +1860,6 @@ function showTab(id,btn){
  if(id==='notifications') loadActivity();
  if(id==='explore') {
   loadExploreGrid();
-  // Limpiar buscador al entrar a explore si está vacío
   const searchInput = document.getElementById('search');
   if(!searchInput.value) resetExploreSearch();
  }
@@ -2069,9 +2068,6 @@ function submitHelpReport(){
 
 function populateAccountCenter(){
  if(!currentUser) return;
- document.getElementById('accCenterName').textContent = myProfile?.display_name || myProfile?.username || 'Usuario';
- document.getElementById('accCenterEmail').textContent = currentUser.email || 'Sin correo';
- document.getElementById('accCenterId').textContent = currentUser.id;
  document.getElementById('passwordStatus').textContent = '';
  document.getElementById('newPasswordInput').value = '';
 }
@@ -2324,6 +2320,15 @@ function setupRealtimeNotifications(){
    const newPost = payload.new;
    if (!newPost || loadedPostIds.has(newPost.id)) return;
    
+   // Filtrar publicaciones en tiempo real según si seguimos al usuario o si es propia
+   const { data: followCheck } = await db.from('follows')
+    .select('*')
+    .eq('follower_id', currentUser.id)
+    .eq('following_id', newPost.user_id)
+    .maybeSingle();
+
+   if (newPost.user_id !== currentUser.id && !followCheck) return;
+
    if(!profilesCache[newPost.user_id]){
     const { data: prof } = await db.from('profiles').select('id, username, display_name, avatar_url').eq('id', newPost.user_id).maybeSingle();
     if(prof) profilesCache[prof.id] = prof;
@@ -2377,16 +2382,29 @@ async function loadMorePosts(){
 }
 
 async function fetchAndAppendPosts(isInitial){
+ if(feedLoading || !feedHasMore || !currentUser) return;
  feedLoading = true;
  const loader = document.getElementById('feedLoader');
  loader.style.display = 'block';
 
- const from = feedPage * FEED_PAGE_SIZE;
- const to = from + FEED_PAGE_SIZE - 1;
-
  try {
-  const {data:posts, error} = await db.from('posts')
+  // 1. Obtener los IDs de las cuentas que sigue el usuario
+  const { data: followingRes } = await db.from('follows')
+   .select('following_id')
+   .eq('follower_id', currentUser.id);
+
+  const followingIds = (followingRes || []).map(f => f.following_id);
+  
+  // 2. Incluir el propio usuario en el feed personalizado
+  const allowedUserIds = [...followingIds, currentUser.id];
+
+  const from = feedPage * FEED_PAGE_SIZE;
+  const to = from + FEED_PAGE_SIZE - 1;
+
+  // 3. Consultar posts filtrando estrictamente por las cuentas permitidas
+  const {data: posts, error} = await db.from('posts')
    .select('*')
+   .in('user_id', allowedUserIds)
    .order('created_at', {ascending: false})
    .range(from, to);
 
@@ -2399,7 +2417,12 @@ async function fetchAndAppendPosts(isInitial){
    feedHasMore = false;
   }
 
-  if(!posts || !posts.length) return;
+  if(!posts || !posts.length) {
+   if(isInitial) {
+    document.getElementById('posts').innerHTML = '<div class="activity-empty">Aún no sigues a nadie o no hay publicaciones en tu feed. ¡Explora perfiles para ver contenido!</div>';
+   }
+   return;
+  }
 
   const uniqueNewPosts = posts.filter(p => !loadedPostIds.has(p.id));
   if(!uniqueNewPosts.length && isInitial) return;
@@ -2706,7 +2729,6 @@ function switchSearchTab(tabKey, btnElement) {
 async function executeAdvancedSearch(queryText) {
  const query = queryText.toLowerCase();
 
- // 1. Buscar Perfiles (Usuarios)
  const { data: profilesData } = await db.from('profiles')
   .select('id, username, display_name, avatar_url')
   .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
@@ -2736,7 +2758,6 @@ async function executeAdvancedSearch(queryText) {
   profilesContainer.replaceChildren(profileFragment);
  }
 
- // 2. Buscar Contenido para "Para ti" (Publicaciones cuyo texto coincida)
  const { data: postsData } = await db.from('posts')
   .select('*')
   .ilike('content', `%${query}%`)
@@ -2840,6 +2861,13 @@ async function toggleFollow(){
   btn.className = 'secondary';
  }
  loadPublicCounts(viewedProfile.id);
+
+ // Actualizar feed e historias inmediatamente al cambiar de estado de seguimiento
+ cachedFeedPosts = null;
+ await Promise.all([
+  loadInitialPosts(),
+  loadStoriesData()
+ ]);
 }
 
 async function loadPublicUserPosts(userId){
@@ -3360,34 +3388,64 @@ function closeFollowListModal(){
  document.getElementById('followListModal').classList.remove('open');
 }
 
+/* ========================================================================= */
+/* LÓGICA DE HISTORIAS PERSONALIZADAS SEGÚN CUENTAS SEGUIDAS Y PROPIAS     */
+/* ========================================================================= */
 async function loadStoriesData(){
  if(!currentUser) return;
- const [myStoryRes, followingRes] = await Promise.all([
-  db.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(1).maybeSingle(),
-  db.from('follows').select('following_id').eq('follower_id', currentUser.id)
- ]);
- myActiveStory = myStoryRes.data || null;
+
+ // 1. Obtener los IDs de las cuentas que sigue el usuario
+ const { data: followingRes } = await db.from('follows')
+  .select('following_id')
+  .eq('follower_id', currentUser.id);
+
+ const followingIds = (followingRes || []).map(f => f.following_id);
+ 
+ // Incluir el propio ID del usuario actual para mostrar sus historias
+ const allowedUserIds = [...followingIds, currentUser.id];
+
+ // 2. Obtener mi propia historia activa
+ const { data: myStoryRes } = await db.from('stories')
+  .select('*')
+  .eq('user_id', currentUser.id)
+  .order('created_at', {ascending:false})
+  .limit(1)
+  .maybeSingle();
+
+ myActiveStory = myStoryRes || null;
 
  const container = document.getElementById('storiescontainer');
  const fragment = document.createDocumentFragment();
 
+ // Renderizar botón de historia propia
  const myDiv = document.createElement('div');
  myDiv.className = myActiveStory ? 'story has-story' : 'story';
  myDiv.onclick = handleStoryClick;
  myDiv.innerHTML = `<div class="story-avatar-container"><div class="story-avatar-inner">${myProfile?.avatar_url ? `<img src="${myProfile.avatar_url}">` : '👤'}</div>${!myActiveStory ? '<div class="story-plus-badge">+</div>' : ''}</div>Tu historia`;
  fragment.append(myDiv);
 
- const following = followingRes.data;
- if(following && following.length > 0){
-  const {data: storiesData} = await db.from('stories').select('id, user_id, image_url, created_at').in('user_id', following.map(f=>f.following_id)).order('created_at', {ascending: false});
+ // 3. Obtener historias exclusivas de las cuentas permitidas (seguidos + propio usuario)
+ if(allowedUserIds.length > 0){
+  const { data: storiesData } = await db.from('stories')
+   .select('id, user_id, image_url, created_at')
+   .in('user_id', allowedUserIds)
+   .order('created_at', {ascending: false});
+
   if(storiesData && storiesData.length > 0){
    const unique = {};
-   storiesData.forEach(s => { if(!unique[s.user_id]) unique[s.user_id] = s; });
+   // Filtrar para mostrar solo la historia más reciente por usuario y excluir la propia del bucle general
+   storiesData.forEach(s => { 
+    if(s.user_id !== currentUser.id && !unique[s.user_id]) {
+     unique[s.user_id] = s; 
+    } 
+   });
+
    const missing = Object.keys(unique).filter(id => !profilesCache[id]);
    if(missing.length > 0){
     const {data: profs} = await db.from('profiles').select('id, username, avatar_url').in('id', missing);
     (profs || []).forEach(p => profilesCache[p.id] = p);
    }
+
    Object.values(unique).forEach(story => {
     const profile = profilesCache[story.user_id];
     if(!profile) return;
