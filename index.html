@@ -177,14 +177,30 @@ header{
  transform:translateZ(0);
  -webkit-transform:translateZ(0);
 }
+
 .header-left-slot{display:flex;align-items:center;gap:4px;min-width:40px}
+
+/* Alineación limpia a la izquierda simulando el estilo nativo de Instagram */
 .header-center-slot{
- position:absolute;left:50%;top:calc(50% + (env(safe-area-inset-top) / 2));
- transform:translate(-50%, -50%);
+ position:absolute;left:16px;top:calc(50% + (env(safe-area-inset-top) / 2));
+ transform:translateY(-50%);
  display:flex;align-items:center;pointer-events:none;
 }
-.logo{font-size:24px;font-weight:900;letter-spacing:-1.5px;color:#fff}
+
+/* Logotipo totalmente nítido sin sombras ni efectos borrosos */
+.logo{
+ font-size:24px;
+ font-weight:900;
+ letter-spacing:-1.5px;
+ color:#fff;
+ text-shadow:none !important;
+ filter:none !important;
+ -webkit-font-smoothing:antialiased;
+ -moz-osx-font-smoothing:grayscale;
+}
+
 .header-right-slot{display:flex;align-items:center;gap:4px;min-width:40px;justify-content:flex-end}
+
 
 .icon{background:none;border:0;color:#fff;padding:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative}
 .icon svg{width:24px;height:24px}
