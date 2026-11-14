@@ -156,7 +156,7 @@ button:active, .post-action-btn:active, .story:active {
 .auth-panel{display:none;width:100%;flex-direction:column;gap:12px;animation:fadeInScale 0.2s ease}
 .auth-panel.active{display:flex}
 
-/* HEADER OPTIMIZADO (NÍTIDO Y PERFECTAMENTE SIMÉTRICO) */
+/* HEADER ESTÁTICO (FIJO ARRIBA ESTILO INSTAGRAM, NUNCA SE DESPLAZA) */
 header{
  height:56px;
  padding:env(safe-area-inset-top) 16px 0 16px;
@@ -164,10 +164,12 @@ header{
  align-items:center;
  justify-content:space-between;
  border-bottom:1px solid rgba(255,255,255,0.06);
- position:sticky;
+ position:fixed;
  top:0;
+ left:0;
+ right:0;
  background:#000000;
- z-index:50;
+ z-index:100;
  box-sizing: content-box;
 }
 .header-left-slot{display:flex;align-items:center;justify-content:flex-start;width:88px;flex-shrink:0}
@@ -217,7 +219,13 @@ header{
  z-index:2;
 }
 
-main{max-width:470px;margin:auto;min-height:calc(100vh - 120px);background:#000000;}
+main{
+ max-width:470px;
+ margin:auto;
+ min-height:calc(100vh - 120px);
+ background:#000000;
+ margin-top: calc(56px + env(safe-area-inset-top)); /* Espacio exacto para que el contenido empiece debajo del header fijo */
+}
 main > div {display: none !important;padding: 16px;content-visibility: auto;}
 main > div.active {display: block !important;}
 #feed.active, #profile.active, #publicprofile.active, #messagesPage.active, #chatRoomPage.active, #chatDetailsPage.active, #chatSubSettingsPage.active, #menuSectionPage.active,
@@ -332,7 +340,7 @@ main > div.active {display: block !important;}
 .dm-conv-time{font-size:11px;color:#71717a;font-weight:normal}
 .dm-unread-dot{width:8px;height:8px;background:#3b82f6;border-radius:50%;display:inline-block}
 
-/* SALA DE CHAT (Encabezado 100% nítido y sin desenfoque borroso) */
+/* SALA DE CHAT */
 #chatRoomPage{
  display:none;flex-direction:column;height:100vh;height:100dvh;position:fixed;inset:0;background:#000;z-index:250;
 }
@@ -432,7 +440,7 @@ main > div.active {display: block !important;}
 }
 #chatSubSettingsPage.active{display:flex !important;}
 
-/* PUBLICACIONES (Optimización con content-visibility) */
+/* PUBLICACIONES */
 .post{
  background:#000;
  border-bottom:1px solid rgba(255,255,255,0.06);
@@ -496,7 +504,7 @@ main > div.active {display: block !important;}
 .create-media-dropzone:active{background:rgba(255,255,255,0.05);border-color:#3b82f6}
 .create-media-dropzone svg{width:32px;height:32px;color:#a1a1aa}
 
-/* NAVEGACIÓN INFERIOR (Cero bordes divisorios, fundido total en negro absoluto) */
+/* NAVEGACIÓN INFERIOR */
 nav{
  position:fixed;bottom:0;left:0;right:0;height:64px;
  background:rgba(0,0,0,0.92);
@@ -619,7 +627,7 @@ textarea{height:110px;resize:none}
 .ig-action-buttons{display:flex;gap:8px}
 .ig-action-buttons button{flex:1}
 
-/* MODAL PANTALLA DE EDICIÓN DE PERFIL ESTILO INSTAGRAM */
+/* MODAL PANTALLA DE EDICIÓN DE PERFIL */
 #editProfileModal {
  position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
  z-index:600;display:flex;flex-direction:column;overflow-y:auto;
@@ -798,16 +806,14 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  <div style="font-size:12px;color:#71717a">Ög — Optimized Supabase Engine</div>
 </div>
 
-<!-- HEADER CON VISIBILIDAD DINÁMICA Y SIMETRÍA EXACTA -->
+<!-- HEADER ESTÁTICO (FIJO ARRIBA ESTILO INSTAGRAM) -->
 <header>
  <div class="header-left-slot">
-  <!-- Botón + (ÚNICAMENTE visible en la sección PERFIL) -->
   <button class="icon" id="headerPlusBtn" onclick="showTab('create')" aria-label="Crear publicación" style="display:none;">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
  </div>
  <div class="header-center-slot" id="headerLogoSlot" style="display:flex;">
-  <!-- Logo ÖG (ÚNICAMENTE visible en la sección INICIO) -->
   <div class="logo">Ög<span style="color:#3b82f6">.</span></div>
  </div>
  <div class="header-right-slot" id="header-default-icons">
@@ -963,7 +969,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- ACTIVIDAD (DESDE HEADER) -->
+<!-- ACTIVIDAD -->
 <div id="notifications" class="section" style="padding: 16px;">
  <h2 style="margin-top:0">Actividad</h2>
  <p class="muted">Novedades e interacciones en tiempo real.</p>
@@ -1019,7 +1025,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- MODAL INDEPENDIENTE: EDICIÓN DE PERFIL (ESTILO INSTAGRAM) -->
+<!-- MODAL: EDICIÓN DE PERFIL -->
 <div id="editProfileModal">
  <div class="edit-modal-card">
   <div class="edit-modal-header">
@@ -1079,7 +1085,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- MENÚ PRINCIPAL DE LAS TRES RAYITAS (PANTALLA COMPLETA) -->
+<!-- MENÚ PRINCIPAL -->
 <div id="menuSectionPage" class="fullscreen-menu-view">
  <div class="menu-section-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="closeMenuSection()">← Perfil</button>
@@ -1087,7 +1093,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
  <div class="menu-section-content">
   
-  <!-- 1. Configuración -->
   <button class="menu-list-btn" onclick="openMenuSubPage('menuConfigPage')">
    <span class="menu-list-left">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1096,7 +1101,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
-  <!-- 2. Privacidad -->
   <button class="menu-list-btn" onclick="openMenuSubPage('menuPrivacyPage')">
    <span class="menu-list-left">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -1105,7 +1109,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
-  <!-- 3. Notificaciones -->
   <button class="menu-list-btn" onclick="openMenuSubPage('menuNotifPage')">
    <span class="menu-list-left">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -1114,7 +1117,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
-  <!-- 4. Tu actividad -->
   <button class="menu-list-btn" onclick="openMenuSubPage('menuActivityPage')">
    <span class="menu-list-left">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -1123,7 +1125,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
-  <!-- 5. Guardados -->
   <button class="menu-list-btn" onclick="openMenuSubPage('menuSavedPage')">
    <span class="menu-list-left">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
@@ -1132,7 +1133,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
-  <!-- 6. Ayuda -->
   <button class="menu-list-btn" onclick="openMenuSubPage('menuHelpPage')">
    <span class="menu-list-left">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -1141,7 +1141,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
-  <!-- 7. Centro de cuentas -->
   <button class="menu-list-btn" onclick="openMenuSubPage('menuAccountsPage')">
    <span class="menu-list-left">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1150,7 +1149,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
-  <!-- 8. Cerrar sesión -->
   <button class="menu-list-btn danger" onclick="promptLogoutConfirmation()">
    <span class="menu-list-left">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1190,28 +1188,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
      <span class="toggle-slider"></span>
     </label>
    </div>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">Idioma de la interfaz</p>
-     <p class="settings-row-desc">Español (Argentina / Latinoamérica)</p>
-    </div>
-   </div>
-  </div>
-
-  <div class="settings-group" style="border-bottom:none">
-   <h4 class="settings-group-title">Información técnica</h4>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">Versión de Ög</p>
-     <p class="settings-row-desc">2.7.0 (Publicaciones Ultra Optimizadas)</p>
-    </div>
-   </div>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">Motor de base de datos</p>
-     <p class="settings-row-desc">Supabase Realtime Engine</p>
-    </div>
-   </div>
   </div>
  </div>
 </div>
@@ -1245,30 +1221,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
      <span class="toggle-slider"></span>
     </label>
    </div>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">Mostrar lista de seguidores y seguidos</p>
-     <p class="settings-row-desc">Permite que otros usuarios vean tu red de contactos.</p>
-    </div>
-    <label class="toggle-switch">
-     <input type="checkbox" id="showFollowersListToggle" checked onchange="saveMenuPreferences()">
-     <span class="toggle-slider"></span>
-    </label>
-   </div>
-  </div>
-
-  <div class="settings-group" style="border-bottom:none">
-   <h4 class="settings-group-title">Interacciones</h4>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">Permitir mensajes directos</p>
-     <p class="settings-row-desc">Cualquier usuario de Ög puede enviarte mensajes.</p>
-    </div>
-    <label class="toggle-switch">
-     <input type="checkbox" id="allowDmToggle" checked onchange="saveMenuPreferences()">
-     <span class="toggle-slider"></span>
-    </label>
-   </div>
   </div>
  </div>
 </div>
@@ -1285,40 +1237,9 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    <div class="settings-row">
     <div class="settings-row-info">
      <p class="settings-row-title">Me gusta en publicaciones</p>
-     <p class="settings-row-desc">Avisar cuando a alguien le gusta una foto tuya.</p>
     </div>
     <label class="toggle-switch">
      <input type="checkbox" id="notifLikesToggle" checked onchange="saveMenuPreferences()">
-     <span class="toggle-slider"></span>
-    </label>
-   </div>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">Comentarios</p>
-     <p class="settings-row-desc">Notificar cuando comentan tus publicaciones.</p>
-    </div>
-    <label class="toggle-switch">
-     <input type="checkbox" id="notifCommentsToggle" checked onchange="saveMenuPreferences()">
-     <span class="toggle-slider"></span>
-    </label>
-   </div>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">Nuevos seguidores</p>
-     <p class="settings-row-desc">Avisar cuando alguien comienza a seguirte.</p>
-    </div>
-    <label class="toggle-switch">
-     <input type="checkbox" id="notifFollowsToggle" checked onchange="saveMenuPreferences()">
-     <span class="toggle-slider"></span>
-    </label>
-   </div>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">Mensajes directos</p>
-     <p class="settings-row-desc">Mostrar indicador rojo en la pestaña Chat al recibir mensajes.</p>
-    </div>
-    <label class="toggle-switch">
-     <input type="checkbox" id="notifDmToggle" checked onchange="saveMenuPreferences()">
      <span class="toggle-slider"></span>
     </label>
    </div>
@@ -1333,9 +1254,8 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <strong style="font-size:16px;color:#fff;">Tu actividad</strong>
  </div>
  <div class="menu-section-content">
-  <p class="muted" style="margin:4px 0 12px 0;">Historial de tus interacciones realizadas en Ög (Me gusta dados, comentarios enviados y cuentas seguidas).</p>
   <div id="userOwnActivityContainer">
-   <div class="activity-empty">Cargando tu historial de actividad...</div>
+   <div class="activity-empty">Cargando tu historial...</div>
   </div>
  </div>
 </div>
@@ -1347,7 +1267,6 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <strong style="font-size:16px;color:#fff;">Guardados</strong>
  </div>
  <div class="menu-section-content" style="padding:0;">
-  <p class="muted" style="padding:12px 16px 6px 16px;margin:0;">Solo vos podés ver las publicaciones que guardaste.</p>
   <div class="ig-posts-grid" id="savedPostsGrid"></div>
  </div>
 </div>
@@ -1359,29 +1278,9 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <strong style="font-size:16px;color:#fff;">Ayuda</strong>
  </div>
  <div class="menu-section-content">
-  <div class="settings-group">
-   <h4 class="settings-group-title">Preguntas frecuentes</h4>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">¿Cómo edito mi perfil?</p>
-     <p class="settings-row-desc">Tocá el botón “Editar” directamente en tu perfil para cambiar foto, portada, nombre, pronombres, sexo y bio.</p>
-    </div>
-   </div>
-   <div class="settings-row">
-    <div class="settings-row-info">
-     <p class="settings-row-title">¿Cómo subo una historia?</p>
-     <p class="settings-row-desc">Deslizá hacia la derecha desde el Inicio o tocá el ícono de cámara superior.</p>
-    </div>
-   </div>
-  </div>
-
-  <div class="settings-group" style="border-bottom:none">
-   <h4 class="settings-group-title">Reportar un problema</h4>
-   <p class="muted" style="margin-top:0">¿Encontraste un fallo o querés sugerir una mejora? Escribinos abajo:</p>
-   <textarea id="helpReportInput" placeholder="Describí el problema o consulta..." style="height:100px;"></textarea>
-   <button class="primary" style="margin-top:12px;" onclick="submitHelpReport()">Enviar mensaje a soporte</button>
-   <p id="helpReportStatus" class="status"></p>
-  </div>
+  <textarea id="helpReportInput" placeholder="Describí el problema..." style="height:100px;"></textarea>
+  <button class="primary" style="margin-top:12px;" onclick="submitHelpReport()">Enviar mensaje a soporte</button>
+  <p id="helpReportStatus" class="status"></p>
  </div>
 </div>
 
@@ -1392,34 +1291,16 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
   <strong style="font-size:16px;color:#fff;">Centro de cuentas</strong>
  </div>
  <div class="menu-section-content">
-  <div class="settings-group">
-   <h4 class="settings-group-title">Cuenta activa en Ög</h4>
-   <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,0.06);">
-    <div id="accCenterAvatar" style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:#27272a;display:grid;place-items:center;font-size:20px;">👤</div>
-    <div style="flex:1;min-width:0;">
-     <strong id="accCenterName" style="display:block;font-size:15px;color:#fff;">Usuario</strong>
-     <small id="accCenterEmail" style="color:#a1a1aa;font-size:12px;display:block;overflow:hidden;text-overflow:ellipsis;">correo@ejemplo.com</small>
-    </div>
-    <span style="font-size:11px;background:rgba(34,197,94,0.15);color:#22c55e;padding:4px 8px;border-radius:8px;font-weight:600;">Activa</span>
-   </div>
-   <p class="muted" style="font-size:11px;margin-top:8px;font-family:monospace;">ID: <span id="accCenterId">—</span></p>
-  </div>
-
-  <div class="settings-group" style="border-bottom:none">
-   <h4 class="settings-group-title">Contraseña y seguridad</h4>
-   <p class="settings-row-desc" style="margin-bottom:8px;">Cambiá la contraseña de acceso a tu cuenta de Supabase.</p>
-   <input class="field" id="newPasswordInput" type="password" placeholder="Nueva contraseña (mín. 8 caracteres)">
-   <button class="primary" style="margin-top:12px" onclick="updateUserPassword()">Actualizar contraseña</button>
-   <p id="passwordStatus" class="status"></p>
-  </div>
+  <input class="field" id="newPasswordInput" type="password" placeholder="Nueva contraseña">
+  <button class="primary" style="margin-top:12px" onclick="updateUserPassword()">Actualizar contraseña</button>
+  <p id="passwordStatus" class="status"></p>
  </div>
 </div>
 
-<!-- MODAL CONFIRMACIÓN CERRAR SESIÓN -->
+<!-- MODAL CERRAR SESIÓN -->
 <div id="logoutConfirmModal" onclick="closeLogoutConfirmation()">
  <div class="confirm-card" onclick="event.stopPropagation()">
   <h3 style="margin:0 0 8px 0;font-size:18px;color:#fff;">¿Cerrar sesión en Ög?</h3>
-  <p class="muted" style="margin:0 0 20px 0;line-height:1.4;">Tendrás que volver a ingresar tu correo y contraseña para acceder a tu cuenta.</p>
   <div style="display:flex;flex-direction:column;gap:10px;">
    <button class="danger-btn" onclick="executeConfirmedSignOut()">Sí, cerrar sesión</button>
    <button class="secondary" onclick="closeLogoutConfirmation()">Cancelar</button>
@@ -1493,7 +1374,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
     <small id="chatRoomStatusSub" style="color:#71717a;font-size:11px;display:block;">Desconectado</small>
    </div>
   </div>
-  <button class="icon" onclick="openChatDetailsPage()" aria-label="Detalles del chat">
+  <button class="icon" onclick="openChatDetailsPage()" aria-label="Detalles">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
   </button>
  </div>
@@ -1514,7 +1395,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- PANTALLA INDEPENDIENTE: DETALLES DEL CHAT -->
+<!-- DETALLES DEL CHAT -->
 <div id="chatDetailsPage" class="section">
  <div class="chat-details-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('chatRoomPage')">← Volver</button>
@@ -1532,17 +1413,13 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 
  <div class="chat-details-content">
-  <!-- PERFIL DEL USUARIO -->
   <div class="chat-details-profile-card">
-   <div class="chat-details-avatar" id="chatDetailsAvatarContainer">
-    👤
-   </div>
+   <div class="chat-details-avatar" id="chatDetailsAvatarContainer">👤</div>
    <h3 id="chatDetailsName" style="margin:0 0 4px 0;font-size:18px;color:#fff;">Usuario</h3>
    <p id="chatDetailsUsername" style="margin:0 0 6px 0;font-size:13px;color:#71717a;">@usuario</p>
    <small id="chatDetailsActivityStatus" style="font-size:12px;color:#22c55e;">Desconectado</small>
   </div>
 
-  <!-- TRES ACCIONES HORIZONTALES -->
   <div class="chat-actions-row-horizontal">
    <div class="chat-action-pill" onclick="openChatRecipientProfile()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -1558,53 +1435,35 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
    </div>
   </div>
 
-  <!-- CUATRO SECCIONES INDEPENDIENTES -->
   <div style="display:flex;flex-direction:column;gap:6px;">
    <button class="menu-list-btn" onclick="openChatSubSettings('privacy')">
-    <span class="menu-list-left">
-     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-     <span>Privacidad y seguridad</span>
-    </span>
+    <span class="menu-list-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Privacidad y seguridad</span></span>
     <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
    </button>
-
    <button class="menu-list-btn" onclick="openChatSubSettings('timer')">
-    <span class="menu-list-left">
-     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-     <span>Mensajes temporales</span>
-    </span>
+    <span class="menu-list-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Mensajes temporales</span></span>
     <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
    </button>
-
    <button class="menu-list-btn" onclick="openChatSubSettings('nickname')">
-    <span class="menu-list-left">
-     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-     <span>Apodos</span>
-    </span>
+    <span class="menu-list-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Apodos</span></span>
     <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
    </button>
-
    <button class="menu-list-btn" onclick="openChatSubSettings('style')">
-    <span class="menu-list-left">
-     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
-     <span>Personalizar estilo y fuente</span>
-    </span>
+    <span class="menu-list-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg><span>Personalizar estilo y fuente</span></span>
     <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
    </button>
   </div>
  </div>
 </div>
 
-<!-- SUB-PANTALLA DINÁMICA PARA SECCIONES DE DETALLES DE CHAT -->
+<!-- SUB-PANTALLA DE DETALLES DE CHAT -->
 <div id="chatSubSettingsPage" class="section">
  <div class="chat-details-header">
   <button class="secondary" style="padding:6px 12px;font-size:13px;" onclick="showTab('chatDetailsPage')">← Volver</button>
   <strong id="chatSubSettingsTitle" style="font-size:16px;color:#fff;">Configuración</strong>
   <div style="width:40px;"></div>
  </div>
- <div class="chat-details-content" id="chatSubSettingsBody">
-  <!-- Contenido dinámico inyectado -->
- </div>
+ <div class="chat-details-content" id="chatSubSettingsBody"></div>
 </div>
 
 </main>
@@ -1634,7 +1493,7 @@ input:checked + .toggle-slider:before{transform:translateX(20px)}
  </div>
 </div>
 
-<!-- NAVEGACIÓN INFERIOR (4 ELEMENTOS: INICIO, CHAT, EXPLORE, PERFIL) -->
+<!-- NAVEGACIÓN INFERIOR -->
 <nav id="bottomNavBar">
  <button class="active" onclick="showTab('feed',this)" aria-label="Inicio">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -1696,9 +1555,6 @@ let currentActiveStoryId = null;
 let stagedAvatarBlob = null;
 let stagedCoverBlob = null;
 
-/* ========================================================================= */
-/* VARIABLES DE OPTIMIZACIÓN Y CACHÉ DEL SISTEMA DE PUBLICACIONES           */
-/* ========================================================================= */
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedLoading = false;
@@ -1730,35 +1586,16 @@ let touchEndX = 0;
 let touchEndY = 0;
 let isSwipeLocked = false;
 
-/* ========================================================================= */
-/* CONTROL DE SCROLL PARA OCULTAR / MOSTRAR BARRA INFERIOR EN EL FEED        */
-/* ========================================================================= */
-let lastScrollY = window.scrollY;
+/* CONTROL DE SCROLL INFINITO EN EL FEED (LA BARRA SUPERIOR YA QUEDA ESTÁTICA) */
 window.addEventListener('scroll', () => {
   if(!document.getElementById('feed').classList.contains('active')) return;
-
-  const currentScrollY = window.scrollY;
-  const bottomNav = document.getElementById('bottomNavBar');
-  
-  if (bottomNav) {
-    if (currentScrollY > lastScrollY && currentScrollY > 60) {
-      // Desplazamiento hacia abajo: ocultar barra
-      bottomNav.classList.add('nav-hidden');
-    } else {
-      // Desplazamiento hacia arriba o tope: mostrar barra
-      bottomNav.classList.remove('nav-hidden');
-    }
-  }
-  lastScrollY = currentScrollY;
 
   if((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
     loadMorePosts();
   }
 }, {passive: true});
 
-/* ========================================================================= */
-/* DESLIZAMIENTO FLUIDO: INICIO ➔ CHAT ➔ EXPLORE ➔ PERFIL                    */
-/* ========================================================================= */
+/* DESLIZAMIENTO FLUIDO: INICIO ➔ CHAT ➔ EXPLORE ➔ PERFIL */
 const swipeNavigationFlow = ['feed', 'messagesPage', 'explore', 'profile'];
 
 function isAnyModalOrSubViewOpen() {
@@ -1781,7 +1618,7 @@ function applySwipeEntranceAnimation(targetTabId, direction) {
   if (!targetEl) return;
 
   targetEl.classList.remove('swipe-enter-right', 'swipe-enter-left');
-  void targetEl.offsetWidth; // Reinicia la animación CSS
+  void targetEl.offsetWidth;
   targetEl.classList.add(direction === 'left' ? 'swipe-enter-right' : 'swipe-enter-left');
 
   setTimeout(() => {
@@ -1852,7 +1689,6 @@ mainContainerElement.addEventListener('touchend', e => {
   handleSwipeGesture();
   touchStartX = 0;
 }, { passive: true });
-/* ========================================================================= */
 
 function switchAuthSubView(viewName){
  document.getElementById('authWelcomePanel').classList.remove('active');
@@ -1973,10 +1809,6 @@ function showTab(id,btn){
  if(id==='profile' && currentUser) loadMyPostsGrid();
  window.scrollTo(0,0);
 }
-
-/* ========================================================================= */
-/* MENÚ Y SUB-PANTALLAS                                                      */
-/* ========================================================================= */
 
 function openMenuSection(){
  if(!currentUser){
@@ -2139,7 +1971,7 @@ async function loadSavedPostsGrid(){
  grid.replaceChildren();
 
  if(!savedIds.length){
-  grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #71717a; padding: 50px 20px; font-size: 14px;">Todavía no guardaste ninguna publicación.<br><small>Tocá el ícono de marcador en cualquier publicación del inicio para guardarla acá.</small></div>';
+  grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #71717a; padding: 50px 20px; font-size: 14px;">Todavía no guardaste ninguna publicación.</div>';
   return;
  }
 
@@ -2172,7 +2004,7 @@ function submitHelpReport(){
  const val = document.getElementById('helpReportInput').value.trim();
  if(!val) return status('helpReportStatus', 'Escribí tu mensaje antes de enviar.');
  document.getElementById('helpReportInput').value = '';
- status('helpReportStatus', '¡Gracias! Tu mensaje fue enviado al equipo de soporte de Ög.');
+ status('helpReportStatus', '¡Gracias! Tu mensaje fue enviado al soporte.');
  setTimeout(() => status('helpReportStatus', ''), 3500);
 }
 
@@ -2183,19 +2015,6 @@ function populateAccountCenter(){
  document.getElementById('accCenterId').textContent = currentUser.id;
  document.getElementById('passwordStatus').textContent = '';
  document.getElementById('newPasswordInput').value = '';
-
- const avBox = document.getElementById('accCenterAvatar');
- avBox.replaceChildren();
- if(myProfile?.avatar_url){
-  const img = document.createElement('img');
-  img.src = myProfile.avatar_url;
-  img.style.width = '100%';
-  img.style.height = '100%';
-  img.style.objectFit = 'cover';
-  avBox.append(img);
- } else {
-  avBox.textContent = '👤';
- }
 }
 
 async function updateUserPassword(){
@@ -2319,10 +2138,7 @@ async function loadAccount(user){
  let {data:profile,error}=await db.from('profiles')
   .select('*').eq('id',user.id).maybeSingle();
 
- if(error){
-  console.error('Error al consultar perfil:', error.message);
-  return;
- }
+ if(error) return;
 
  if(!profile){
   const username=user.user_metadata?.username||('usuario_'+user.id.slice(0,8));
@@ -2330,10 +2146,7 @@ async function loadAccount(user){
    .insert({id:user.id,username,display_name:username})
    .select().single();
 
-  if(createError){
-   console.error('No se pudo crear perfil:', createError.message);
-   return;
-  }
+  if(createError) return;
   profile=created;
  }
 
@@ -2483,10 +2296,6 @@ async function checkGlobalUnreadMessages(){
  document.getElementById('navUnreadDot').classList.remove('active');
 }
 
-/* ========================================================================= */
-/* SISTEMA DE PUBLICACIONES OPTIMIZADO                                       */
-/* ========================================================================= */
-
 async function loadInitialPosts(){
  feedPage = 0;
  feedHasMore = true;
@@ -2525,23 +2334,13 @@ async function fetchAndAppendPosts(isInitial){
   loader.style.display = 'none';
   feedLoading = false;
 
-  if(error){
-   if(isInitial && (!cachedFeedPosts || !cachedFeedPosts.length)){
-    document.getElementById('posts').innerHTML = '<div class="activity-empty">Error al cargar publicaciones.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Volver a intentar</button></div>';
-   }
-   return;
-  }
+  if(error) return;
 
   if(!posts || posts.length < FEED_PAGE_SIZE){
    feedHasMore = false;
   }
 
-  if(!posts || !posts.length){
-   if(isInitial && (!cachedFeedPosts || !cachedFeedPosts.length)){
-    document.getElementById('posts').replaceChildren();
-   }
-   return;
-  }
+  if(!posts || !posts.length) return;
 
   const uniqueNewPosts = posts.filter(p => !loadedPostIds.has(p.id));
   if(!uniqueNewPosts.length && isInitial) return;
@@ -2565,13 +2364,9 @@ async function fetchAndAppendPosts(isInitial){
    });
    container.append(fragment);
   }
-
  }catch(e){
   loader.style.display = 'none';
   feedLoading = false;
-  if(isInitial && (!cachedFeedPosts || !cachedFeedPosts.length)){
-   document.getElementById('posts').innerHTML = '<div class="activity-empty">Error de conexión.<br><button class="secondary" style="margin-top:10px" onclick="loadInitialPosts()">Reintentar</button></div>';
-  }
  }
 }
 
@@ -2581,10 +2376,7 @@ function renderPostsToDOM(posts, container, reset = false){
   container.replaceChildren();
  }
 
- if(!posts || !posts.length){
-  if(reset) container.innerHTML = '';
-  return;
- }
+ if(!posts || !posts.length) return;
 
  const fragment = document.createDocumentFragment();
  posts.forEach(post => {
@@ -2687,14 +2479,11 @@ function buildPostDOMElement(post){
  const commentIconBtn = document.createElement('button');
  commentIconBtn.className = 'post-action-btn';
  commentIconBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
- 
  commentIconBtn.onclick = () => {
   if(!currentUser){ showAuthOverlay(); return; }
   const box = document.getElementById(`commentbox-${post.id}`);
   box.classList.toggle('open');
-  if(box.classList.contains('open')){
-   box.querySelector('input').focus();
-  }
+  if(box.classList.contains('open')) box.querySelector('input').focus();
  };
 
  const saveBtn = document.createElement('button');
@@ -2719,137 +2508,57 @@ function buildPostDOMElement(post){
 }
 
 async function toggleLike(postId, btn, countDiv){
- if(!currentUser){
-  showAuthOverlay();
-  return;
- }
-
- const { data, error } = await db.rpc('toggle_like', {
-  p_post_id: postId,
-  p_user_id: currentUser.id
- });
-
- if(error){
-  console.error('Error al dar Me gusta:', error);
-  await toggleLikeFallback(postId, btn, countDiv);
-  return;
- }
-
+ if(!currentUser){ showAuthOverlay(); return; }
+ const { data, error } = await db.rpc('toggle_like', { p_post_id: postId, p_user_id: currentUser.id });
+ if(error) return;
  if(data){
-  if(data.liked){
-   btn.classList.add('liked');
-  } else {
-   btn.classList.remove('liked');
-  }
-  const count = data.count !== undefined ? data.count : 0;
-  countDiv.textContent = `${count} Me gusta`;
- } else {
-  await loadPostLikes(postId, btn, countDiv);
+  if(data.liked) btn.classList.add('liked');
+  else btn.classList.remove('liked');
+  countDiv.textContent = `${data.count || 0} Me gusta`;
  }
-}
-
-async function toggleLikeFallback(postId, btn, countDiv){
- const userId = currentUser.id;
- const { data: existing } = await db.from('likes').select('id').eq('post_id', postId).eq('user_id', userId).maybeSingle();
-
- if(existing){
-  await db.from('likes').delete().eq('post_id', postId).eq('user_id', userId);
-  btn.classList.remove('liked');
- } else {
-  await db.from('likes').insert({ post_id: postId, user_id: userId });
-  btn.classList.add('liked');
- }
- await loadPostLikes(postId, btn, countDiv);
 }
 
 async function loadPostLikes(postId, btn, countDiv){
- const { data: likes, error } = await db.from('likes').select('user_id').eq('post_id', postId);
- if(error) return;
-
+ const { data: likes } = await db.from('likes').select('user_id').eq('post_id', postId);
  const count = likes ? likes.length : 0;
  countDiv.textContent = `${count} Me gusta`;
-
- if(currentUser && likes && likes.some(l => l.user_id === currentUser.id)){
-  btn.classList.add('liked');
- } else {
-  btn.classList.remove('liked');
- }
+ if(currentUser && likes && likes.some(l => l.user_id === currentUser.id)) btn.classList.add('liked');
 }
 
 async function loadPostComments(postId, container){
- const {data: comments} = await db.from('comments')
-  .select('*')
-  .eq('post_id', postId)
-  .order('created_at', {ascending: true});
+ const {data: comments} = await db.from('comments').select('*').eq('post_id', postId).order('created_at', {ascending: true});
+ if(!comments || !comments.length){ container.replaceChildren(); return; }
 
- if(!comments || !comments.length){
-  container.replaceChildren();
-  return;
- }
-
- const missingUserIds = [...new Set(comments.map(c => c.user_id))].filter(id => !profilesCache[id]);
- if(missingUserIds.length > 0){
-  const {data: profs} = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missingUserIds);
+ const missing = [...new Set(comments.map(c => c.user_id))].filter(id => !profilesCache[id]);
+ if(missing.length > 0){
+  const {data: profs} = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
   (profs || []).forEach(p => profilesCache[p.id] = p);
  }
 
  const fragment = document.createDocumentFragment();
- const maxShow = 3;
- const showComments = comments.slice(0, maxShow);
-
- showComments.forEach(c => {
+ comments.slice(0, 3).forEach(c => {
   const profile = profilesCache[c.user_id] || {username: 'usuario'};
   const div = document.createElement('div');
   div.className = 'comment-item';
   div.innerHTML = `<span class="comment-user">${profile.display_name || profile.username}</span><span class="comment-text">${c.content}</span>`;
   fragment.append(div);
  });
-
- if(comments.length > maxShow){
-  const btn = document.createElement('button');
-  btn.className = 'view-more-comments';
-  btn.textContent = `Ver los ${comments.length} comentarios`;
-  btn.onclick = () => openPostDetail({ id: postId, user_id: profilesCache[postId]?.id });
-  fragment.append(btn);
- }
-
  container.replaceChildren(fragment);
 }
 
 async function quickComment(postId, input){
- if(!currentUser){
-  showAuthOverlay();
-  return;
- }
+ if(!currentUser){ showAuthOverlay(); return; }
  const text = input.value.trim();
  if(!text) return;
-
  input.value = '';
- const {error} = await db.from('comments').insert({
-  post_id: postId,
-  user_id: currentUser.id,
-  content: text
- });
-
- if(error){
-  alert('Error al comentar: ' + error.message);
-  return;
- }
-
+ await db.from('comments').insert({ post_id: postId, user_id: currentUser.id, content: text });
  cachedActivityEvents = null;
- const commentSec = document.getElementById(`comments-${postId}`) || document.getElementById(`modal-comments-${postId}`);
- if(commentSec){
-  loadPostComments(postId, commentSec);
- }
+ const sec = document.getElementById(`comments-${postId}`);
+ if(sec) loadPostComments(postId, sec);
 }
 
 async function publish(){
- if(!currentUser){
-  showAuthOverlay();
-  return;
- }
- if(isPublishing) return;
-
+ if(!currentUser || isPublishing) return;
  const text = document.getElementById('newpost').value.trim();
  if(!text && !postImageBlob) return status('publishStatus', 'Escribe algo o agrega una foto.');
 
@@ -2860,30 +2569,17 @@ async function publish(){
  let imageUrl = null;
  if(postImageBlob){
   const path = currentUser.id + '/post-' + Date.now() + '.jpg';
-  const {error: uploadError} = await db.storage.from('og-media')
-   .upload(path, postImageBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
-
-  if(uploadError){
-   status('publishStatus', 'Error al subir imagen: ' + uploadError.message);
-   isPublishing = false;
-   document.getElementById('publishBtn').disabled = false;
-   return;
+  const {error: uploadError} = await db.storage.from('og-media').upload(path, postImageBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
+  if(!uploadError){
+   const {data: urlData} = db.storage.from('og-media').getPublicUrl(path);
+   imageUrl = urlData.publicUrl;
   }
-  const {data: urlData} = db.storage.from('og-media').getPublicUrl(path);
-  imageUrl = urlData.publicUrl;
  }
 
- const {error} = await db.from('posts').insert({
-  user_id: currentUser.id,
-  content: text,
-  image_url: imageUrl
- });
+ await db.from('posts').insert({ user_id: currentUser.id, content: text, image_url: imageUrl });
 
  isPublishing = false;
  document.getElementById('publishBtn').disabled = false;
-
- if(error) return status('publishStatus', error.message);
-
  document.getElementById('newpost').value = '';
  removePostImage();
  status('publishStatus', '¡Publicado con éxito!');
@@ -2893,43 +2589,27 @@ async function publish(){
  await loadInitialPosts();
 }
 
-/* ========================================================================= */
-/* OTRAS SECCIONES (EXPLORAR, PERFIL, CHAT, ACTIVIDAD, HISTORIAS)            */
-/* ========================================================================= */
-
 function searchUsers(){
  clearTimeout(searchTimer);
  const val = document.getElementById('search').value.trim();
  const resultBox = document.getElementById('searchresult');
-
- if(val.length < 2){
-  resultBox.replaceChildren();
-  return;
- }
+ if(val.length < 2){ resultBox.replaceChildren(); return; }
 
  searchTimer = setTimeout(async () => {
   const {data} = await db.from('profiles').select('id, username, display_name, avatar_url').ilike('username', '%' + val + '%').limit(10);
-  if(!data || !data.length){
-   resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>';
-   return;
-  }
+  if(!data || !data.length){ resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>'; return; }
 
   const fragment = document.createDocumentFragment();
   data.forEach(profile => {
    if(profile.id === currentUser?.id) return;
    profilesCache[profile.id] = profile;
-
    const item = document.createElement('div');
    item.className = 'public-user';
-   const av = createAvatarNode(profile, false);
+   item.append(createAvatarNode(profile, false));
    const info = document.createElement('div');
    info.className = 'public-user-info';
-   const name = document.createElement('strong');
-   name.textContent = profile.display_name || profile.username;
-   const username = document.createElement('small');
-   username.textContent = '@' + profile.username;
-   info.append(name, username);
-   item.append(av, info);
+   info.innerHTML = `<strong>${profile.display_name || profile.username}</strong><small>@${profile.username}</small>`;
+   item.append(info);
    item.onclick = () => openPublicProfile(profile.id);
    fragment.append(item);
   });
@@ -2938,11 +2618,7 @@ function searchUsers(){
 }
 
 async function openPublicProfile(userId){
- if(currentUser && userId === currentUser.id){
-  showTab('profile');
-  return;
- }
-
+ if(currentUser && userId === currentUser.id){ showTab('profile'); return; }
  const {data: profile} = await db.from('profiles').select('*').eq('id', userId).single();
  if(!profile) return;
 
@@ -2960,8 +2636,6 @@ async function openPublicProfile(userId){
  if(profile.avatar_url){
   const img = document.createElement('img');
   img.src = profile.avatar_url;
-  img.alt = profile.username;
-  img.loading = 'lazy';
   avBox.append(img);
  } else {
   avBox.textContent = '👤';
@@ -2972,15 +2646,7 @@ async function openPublicProfile(userId){
  if(profile.cover_url){
   const img = document.createElement('img');
   img.src = profile.cover_url;
-  img.alt = 'Portada';
-  img.loading = 'lazy';
   cover.append(img);
- }
-
- if(onlineUsersMap[userId]){
-  document.getElementById('publicProfileOnlineDot').classList.add('active');
- } else {
-  document.getElementById('publicProfileOnlineDot').classList.remove('active');
  }
 
  showTab('publicprofile');
@@ -2995,7 +2661,6 @@ async function loadPublicCounts(userId){
   db.from('follows').select('*', {count: 'exact', head: true}).eq('follower_id', userId),
   db.from('posts').select('*', {count: 'exact', head: true}).eq('user_id', userId)
  ]);
-
  document.getElementById('publicfollowerscount').textContent = followers.count || 0;
  document.getElementById('publicfollowingcount').textContent = following.count || 0;
  document.getElementById('publicpostscount').textContent = posts.count || 0;
@@ -3004,7 +2669,6 @@ async function loadPublicCounts(userId){
 async function checkFollowStatus(userId){
  if(!currentUser) return;
  const {data} = await db.from('follows').select('*').eq('follower_id', currentUser.id).eq('following_id', userId).maybeSingle();
- 
  isFollowing = !!data;
  const btn = document.getElementById('publicfollow');
  btn.textContent = isFollowing ? 'Siguiendo' : 'Seguir';
@@ -3013,10 +2677,7 @@ async function checkFollowStatus(userId){
 
 async function toggleFollow(){
  if(!currentUser || !viewedProfile) return;
- 
  const btn = document.getElementById('publicfollow');
- btn.disabled = true;
-
  if(isFollowing){
   await db.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', viewedProfile.id);
   isFollowing = false;
@@ -3028,15 +2689,12 @@ async function toggleFollow(){
   btn.textContent = 'Siguiendo';
   btn.className = 'secondary';
  }
- btn.disabled = false;
- cachedActivityEvents = null;
  loadPublicCounts(viewedProfile.id);
 }
 
 async function loadPublicUserPosts(userId){
  const grid = document.getElementById('publicposts');
  const {data: posts} = await db.from('posts').select('*').eq('user_id', userId).order('created_at', {ascending: false});
- 
  grid.replaceChildren();
  if(!posts || !posts.length) return;
 
@@ -3045,11 +2703,9 @@ async function loadPublicUserPosts(userId){
   const item = document.createElement('div');
   item.className = 'ig-grid-item';
   item.onclick = () => openPostDetail(post);
-
   if(post.image_url){
    const img = document.createElement('img');
    img.src = post.image_url;
-   img.loading = 'lazy';
    item.append(img);
   } else {
    item.textContent = (post.content || '').slice(0, 55);
@@ -3061,96 +2717,59 @@ async function loadPublicUserPosts(userId){
 
 async function loadExploreGrid(){
  const grid = document.getElementById('exploreGrid');
- const {data:posts, error} = await db.from('posts').select('*').order('created_at', {ascending: false});
- 
- if(error || !posts || !posts.length){
-  grid.innerHTML = '<div style="grid-column: span 3; text-align: center; color: #71717a; padding: 40px;">No hay publicaciones para explorar.</div>';
-  return;
- }
+ const {data:posts} = await db.from('posts').select('*').order('created_at', {ascending: false});
+ if(!posts || !posts.length) return;
 
  const fragment = document.createDocumentFragment();
  posts.forEach(post => {
   const item = document.createElement('div');
   item.className = 'explore-grid-item';
   item.onclick = () => openPostDetail(post);
-
   if(post.image_url){
    const img = document.createElement('img');
    img.src = post.image_url;
-   img.loading='lazy';
    item.append(img);
   } else {
-   item.style.padding = '8px';
-   item.style.fontSize = '11px';
-   item.style.color = '#a1a1aa';
-   item.style.textAlign = 'center';
    item.textContent = (post.content || '').slice(0, 45);
   }
-
   const badge = document.createElement('div');
   badge.className = 'explore-grid-badge';
-  badge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3 z"/></svg> <span data-post-views="${post.id}">${post.views || 0}</span>`;
+  badge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg> <span data-post-views="${post.id}">${post.views || 0}</span>`;
   item.append(badge);
-
   fragment.append(item);
  });
  grid.replaceChildren(fragment);
 }
 
 async function openPostDetail(post){
- if(!currentUser){
-  showAuthOverlay();
-  return;
- }
-
- const { data: newTotalViews, error } = await db.rpc('register_post_view', {
-  p_post_id: post.id,
-  p_visitor_id: visitorId
- });
-
- if (!error && newTotalViews !== null) {
-  post.views = newTotalViews;
-  const badgeElem = document.querySelector(`[data-post-views="${post.id}"]`);
-  if(badgeElem) badgeElem.textContent = newTotalViews;
- }
-
+ if(!currentUser){ showAuthOverlay(); return; }
+ await db.rpc('register_post_view', { p_post_id: post.id, p_visitor_id: visitorId });
  const modal = document.getElementById('postDetailModal');
  const container = document.getElementById('modalPostContainer');
  container.replaceChildren();
 
  const profile = profilesCache[post.user_id] || myProfile || {username: 'usuario'};
-
  const article = document.createElement('article');
  article.className = 'post';
  article.style.borderBottom = 'none';
 
  const head = document.createElement('div');
  head.className = 'posthead';
- const av = createAvatarNode(profile, false);
+ head.append(createAvatarNode(profile, false));
  const info = document.createElement('div');
- const name = document.createElement('div');
- name.className = 'username';
- name.textContent = profile.display_name || profile.username || 'Usuario';
- const time = document.createElement('div');
- time.className = 'time';
- time.textContent = formatDate(post.created_at);
-
- info.append(name, time);
- head.append(av, info);
+ info.innerHTML = `<div class="username">${profile.display_name || profile.username}</div><div class="time">${formatDate(post.created_at)}</div>`;
+ head.append(info);
  article.append(head);
 
  if(post.image_url){
   const img = document.createElement('img');
   img.className = 'postimage';
   img.src = post.image_url;
-  img.loading = 'lazy';
   article.append(img);
  }
-
  if(post.content){
   const content = document.createElement('p');
   content.className = 'posttext';
-  content.style.marginTop = post.image_url ? '12px' : '0';
   content.textContent = post.content;
   article.append(content);
  }
@@ -3162,11 +2781,9 @@ async function openPostDetail(post){
 
  const commentInputBox = document.createElement('div');
  commentInputBox.className = 'comment-input-box open';
- 
  const commentInput = document.createElement('input');
  commentInput.className = 'comment-input';
  commentInput.placeholder = 'Agrega un comentario...';
- 
  const commentSend = document.createElement('button');
  commentSend.className = 'comment-send-btn';
  commentSend.textContent = 'Publicar';
@@ -3174,37 +2791,11 @@ async function openPostDetail(post){
   await quickComment(post.id, commentInput);
   loadPostComments(post.id, commentsSec);
  };
-
  commentInputBox.append(commentInput, commentSend);
  article.append(commentInputBox);
 
- const actions = document.createElement('div');
- actions.className = 'post-actions';
-
- const likeBtn = document.createElement('button');
- likeBtn.className = 'post-action-btn';
- likeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78 z"/></svg>`;
- likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
-
- const saveBtn = document.createElement('button');
- saveBtn.className = 'post-action-btn';
- saveBtn.style.marginLeft = 'auto';
- if(getSavedPostIds().includes(post.id)) saveBtn.classList.add('saved');
- saveBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
- saveBtn.onclick = () => toggleSavePost(post.id, saveBtn);
-
- actions.append(likeBtn, saveBtn);
- article.append(actions);
-
- const likesCountDiv = document.createElement('div');
- likesCountDiv.className = 'likes-count';
- likesCountDiv.textContent = '0 Me gusta';
- article.append(likesCountDiv);
-
  container.append(article);
  modal.classList.add('active');
-
- loadPostLikes(post.id, likeBtn, likesCountDiv);
  loadPostComments(post.id, commentsSec);
 }
 
@@ -3214,17 +2805,13 @@ function closePostDetailModal(){
 }
 
 async function loadFollowCounts(){
- if(!currentUser)return;
-
- const [followers,following]=await Promise.all([
-  db.from('follows').select('*',{count:'exact',head:true}).eq('following_id',currentUser.id),
-  db.from('follows').select('*',{count:'exact',head:true}).eq('follower_id',currentUser.id)
+ if(!currentUser) return;
+ const [followers, following] = await Promise.all([
+  db.from('follows').select('*', {count: 'exact', head: true}).eq('following_id', currentUser.id),
+  db.from('follows').select('*', {count: 'exact', head: true}).eq('follower_id', currentUser.id)
  ]);
-
- if(followers.error||following.error)return;
-
- document.getElementById('myfollowerscount').textContent=followers.count||0;
- document.getElementById('myfollowingcount').textContent=following.count||0;
+ document.getElementById('myfollowerscount').textContent = followers.count || 0;
+ document.getElementById('myfollowingcount').textContent = following.count || 0;
 }
 
 function formatDate(date){
@@ -3232,132 +2819,79 @@ function formatDate(date){
 }
 
 async function loadActivity(){
- const container=document.getElementById('activitylist');
-
- if(!currentUser){
-  showAuthOverlay();
-  return;
- }
-
- if(cachedActivityEvents && cachedActivityEvents.length > 0){
-  renderActivityDOM(cachedActivityEvents, container);
- } else {
-  container.textContent='Cargando actividad...';
- }
+ const container = document.getElementById('activitylist');
+ if(!currentUser){ showAuthOverlay(); return; }
 
  try{
-  const {data:ownPosts,error:postsError}=await db.from('posts').select('id').eq('user_id',currentUser.id);
-  if(postsError)throw postsError;
+  const {data:ownPosts} = await db.from('posts').select('id').eq('user_id', currentUser.id);
+  const postIds = (ownPosts || []).map(p => p.id);
 
-  const postIds=(ownPosts||[]).map(p=>p.id);
-
-  const {data:ownStories,error:storiesError}=await db.from('stories').select('id').eq('user_id',currentUser.id);
-  const storyIds=(ownStories||[]).map(s=>s.id);
-
-  const [followsResult,likesResult,commentsResult,storyLikesResult]=await Promise.all([
-   db.from('follows').select('follower_id,created_at').eq('following_id',currentUser.id).order('created_at',{ascending:false}).limit(30),
-   postIds.length?db.from('likes').select('user_id,post_id,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]}),
-   postIds.length?db.from('comments').select('id,user_id,post_id,content,created_at').in('post_id',postIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]}),
-   storyIds.length?db.from('story_likes').select('visitor_id,story_id,created_at').in('story_id',storyIds).order('created_at',{ascending:false}).limit(40):Promise.resolve({data:[]})
+  const [followsResult, likesResult, commentsResult] = await Promise.all([
+   db.from('follows').select('follower_id,created_at').eq('following_id', currentUser.id).order('created_at', {ascending:false}).limit(30),
+   postIds.length ? db.from('likes').select('user_id,post_id,created_at').in('post_id', postIds).order('created_at', {ascending:false}).limit(40) : Promise.resolve({data:[]}),
+   postIds.length ? db.from('comments').select('id,user_id,post_id,content,created_at').in('post_id', postIds).order('created_at', {ascending:false}).limit(40) : Promise.resolve({data:[]})
   ]);
 
-  const events=[];
-  (followsResult.data||[]).forEach(f=>{
-   if(f.follower_id!==currentUser.id) events.push({type:'follow',user_id:f.follower_id,created_at:f.created_at});
-  });
-  (likesResult.data||[]).forEach(l=>{
-   if(l.user_id!==currentUser.id) events.push({type:'like',user_id:l.user_id,created_at:l.created_at});
-  });
-  (commentsResult.data||[]).forEach(c=>{
-   if(c.user_id!==currentUser.id) events.push({type:'comment',user_id:c.user_id,content:c.content,created_at:c.created_at});
-  });
-  
-  (storyLikesResult.data||[]).forEach(sl=>{
-   if(sl.visitor_id !== visitorId){
-    events.push({type:'story_like', visitor_id: sl.visitor_id, created_at: sl.created_at});
-   }
-  });
+  const events = [];
+  (followsResult.data || []).forEach(f => { if(f.follower_id !== currentUser.id) events.push({type:'follow', user_id:f.follower_id, created_at:f.created_at}); });
+  (likesResult.data || []).forEach(l => { if(l.user_id !== currentUser.id) events.push({type:'like', user_id:l.user_id, created_at:l.created_at}); });
+  (commentsResult.data || []).forEach(c => { if(c.user_id !== currentUser.id) events.push({type:'comment', user_id:c.user_id, content:c.content, created_at:c.created_at}); });
 
-  events.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
-
-  cachedActivityEvents = events;
+  events.sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
   renderActivityDOM(events, container);
-
- }catch(error){
-  console.error('Error al cargar actividad:',error);
-  if(!cachedActivityEvents){
-   container.textContent='No se pudo cargar la actividad.';
-  }
+ }catch(e){
+  container.textContent = 'No se pudo cargar la actividad.';
  }
 }
 
 function renderActivityDOM(events, container){
- if(!events.length){
-  container.innerHTML='<div class="activity-empty">Todavía no tenés actividad reciente.</div>';
-  return;
- }
+ if(!events.length){ container.innerHTML = '<div class="activity-empty">Todavía no tenés actividad reciente.</div>'; return; }
 
  (async () => {
-  const missingUserIds=[...new Set(events.map(e=>e.user_id).filter(Boolean))].filter(id=>!profilesCache[id]);
-  if(missingUserIds.length>0){
-   const {data:newProfiles}=await db.from('profiles').select('id,username,display_name,avatar_url').in('id',missingUserIds);
-   (newProfiles||[]).forEach(p=>profilesCache[p.id]=p);
+  const missing = [...new Set(events.map(e => e.user_id).filter(Boolean))].filter(id => !profilesCache[id]);
+  if(missing.length > 0){
+   const {data:newProfiles} = await db.from('profiles').select('id,username,display_name,avatar_url').in('id', missing);
+   (newProfiles || []).forEach(p => profilesCache[p.id] = p);
   }
 
-  const fragment=document.createDocumentFragment();
-  events.forEach(event=>{
-   const item=document.createElement('div');
-   item.className='activity-item';
+  const fragment = document.createDocumentFragment();
+  events.forEach(event => {
+   const profile = profilesCache[event.user_id];
+   if(!profile) return;
 
-   const info=document.createElement('div');
-   info.className='activity-info';
-   const message=document.createElement('div');
-   const date=document.createElement('div');
-   date.className='activity-date';
-   date.textContent=event.created_at?formatDate(event.created_at):'Reciente';
+   const item = document.createElement('div');
+   item.className = 'activity-item';
+   item.append(createAvatarNode(profile, false));
 
-   if(event.type === 'story_like'){
-    const name=document.createElement('strong');
-    name.textContent = 'Visitante (' + event.visitor_id.slice(0, 6) + '...)';
-    message.append(name, document.createTextNode(' le dio Me gusta a tu historia 📸❤️'));
-    info.append(message, date);
-    
-    const dummyAvatar = document.createElement('div');
-    dummyAvatar.className = 'story-avatar-container';
-    dummyAvatar.style.width = '42px';
-    dummyAvatar.style.height = '42px';
-    dummyAvatar.innerHTML = '<div class="story-avatar-inner" style="font-size:18px">⭐</div>';
-    item.append(dummyAvatar, info);
-   } else {
-    const profile=profilesCache[event.user_id];
-    if(!profile)return;
-    const av=createAvatarNode(profile, false);
+   const info = document.createElement('div');
+   info.className = 'activity-info';
+   const message = document.createElement('div');
+   const name = document.createElement('strong');
+   name.textContent = profile.display_name || profile.username;
+   message.append(name);
 
-    const name=document.createElement('strong');
-    name.textContent=profile.display_name||profile.username||'Usuario';
-    message.append(name);
+   if(event.type === 'follow') message.append(document.createTextNode(' comenzó a seguirte.'));
+   else if(event.type === 'like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
+   else if(event.type === 'comment') message.append(document.createTextNode(' comentó tu publicación.'));
 
-    if(event.type==='follow') message.append(document.createTextNode(' comenzó a seguirte.'));
-    else if(event.type==='like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
-    else if(event.type==='comment') message.append(document.createTextNode(' comentó tu publicación.'));
-
-    info.append(message);
-
-    if(event.type==='comment'){
-     const commentText=document.createElement('div');
-     commentText.style.color='#a1a1aa';
-     commentText.style.marginTop='3px';
-     commentText.textContent='“'+(event.content||'')+'”';
-     info.append(commentText);
-    }
-    info.append(date);
-    item.append(av,info);
-    item.onclick=()=>openPublicProfile(profile.id);
+   info.append(message);
+   if(event.type === 'comment'){
+    const cText = document.createElement('div');
+    cText.style.color = '#a1a1aa';
+    cText.style.marginTop = '3px';
+    cText.textContent = '“' + event.content + '”';
+    info.append(cText);
    }
 
+   const date = document.createElement('div');
+   date.className = 'activity-date';
+   date.textContent = formatDate(event.created_at);
+   info.append(date);
+
+   item.append(info);
+   item.onclick = () => openPublicProfile(profile.id);
    fragment.append(item);
   });
-
   container.replaceChildren(fragment);
  })();
 }
@@ -3366,18 +2900,10 @@ async function loadConversations(){
  const container = document.getElementById('dmConversationsList');
  if(!currentUser) return;
 
- if(cachedConversationsList && cachedConversationsList.length > 0){
-  renderConversationsDOM(cachedConversationsList, container);
- } else {
-  container.innerHTML = '<div class="activity-empty">Cargando conversaciones...</div>';
- }
-
  try {
-  const { data: myParts, error: partErr } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
-  if(partErr || !myParts || !myParts.length){
-   cachedConversationsList = [];
-   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.<br>Buscá a alguien arriba para iniciar un chat.</div>';
-   document.getElementById('navUnreadDot').classList.remove('active');
+  const { data: myParts } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
+  if(!myParts || !myParts.length){
+   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.</div>';
    return;
   }
 
@@ -3386,12 +2912,7 @@ async function loadConversations(){
   
   const convMap = {};
   convIds.forEach(id => { convMap[id] = { otherUserId: null, last_read_at: myParts.find(p=>p.conversation_id===id)?.last_read_at }; });
-
-  (allParts || []).forEach(p => {
-   if(p.user_id !== currentUser.id && convMap[p.conversation_id]){
-    convMap[p.conversation_id].otherUserId = p.user_id;
-   }
-  });
+  (allParts || []).forEach(p => { if(p.user_id !== currentUser.id && convMap[p.conversation_id]) convMap[p.conversation_id].otherUserId = p.user_id; });
 
   const otherUserIds = [...new Set(Object.values(convMap).map(c => c.otherUserId).filter(Boolean))];
   const missing = otherUserIds.filter(id => !profilesCache[id]);
@@ -3405,13 +2926,7 @@ async function loadConversations(){
    const profile = profilesCache[otherId];
    if(!profile) return null;
 
-   const { data: lastMsg } = await db.from('messages')
-    .select('content, created_at, sender_id')
-    .eq('conversation_id', convId)
-    .order('created_at', {ascending: false})
-    .limit(1)
-    .maybeSingle();
-
+   const { data: lastMsg } = await db.from('messages').select('content, created_at, sender_id').eq('conversation_id', convId).order('created_at', {ascending: false}).limit(1).maybeSingle();
    const isUnread = lastMsg && lastMsg.sender_id !== currentUser.id && (!convMap[convId].last_read_at || new Date(lastMsg.created_at) > new Date(convMap[convId].last_read_at));
 
    return {
@@ -3424,105 +2939,62 @@ async function loadConversations(){
    };
   }));
 
-  const validConversations = conversationsList.filter(Boolean);
-  validConversations.sort((a,b) => b.timestamp - a.timestamp);
-
-  cachedConversationsList = validConversations;
-  renderConversationsDOM(validConversations, container);
-
+  const valid = conversationsList.filter(Boolean);
+  valid.sort((a,b) => b.timestamp - a.timestamp);
+  renderConversationsDOM(valid, container);
  }catch(e){
-  if(!cachedConversationsList){
-   container.innerHTML = '<div class="activity-empty">No se pudieron cargar las conversaciones.</div>';
-  }
+  container.innerHTML = '<div class="activity-empty">Error al cargar conversaciones.</div>';
  }
 }
 
 function renderConversationsDOM(conversationsList, container){
- if(!conversationsList.length){
-  container.innerHTML = '<div class="activity-empty">No hay conversaciones recientes.</div>';
-  return;
- }
-
+ if(!conversationsList.length){ container.innerHTML = '<div class="activity-empty">No hay conversaciones recientes.</div>'; return; }
  const fragment = document.createDocumentFragment();
- let hasUnreadGlobal = false;
 
  conversationsList.forEach(item => {
-  if(item.isUnread) hasUnreadGlobal = true;
-
   const row = document.createElement('div');
   row.className = 'dm-conv-item';
   row.onclick = () => openChatRoom(item.conversationId, item.profile);
-
+  
   const av = createAvatarNode(item.profile, false);
   av.className += ' dm-conv-avatar';
-
+  
   const info = document.createElement('div');
   info.className = 'dm-conv-info';
-
-  const nameRow = document.createElement('div');
-  nameRow.className = 'dm-conv-name';
-  const nameSpan = document.createElement('span');
-  nameSpan.textContent = item.profile.display_name || item.profile.username;
-  
-  const timeSpan = document.createElement('span');
-  timeSpan.className = 'dm-conv-time';
-  timeSpan.textContent = item.time;
-  nameRow.append(nameSpan, timeSpan);
-
-  const snippetRow = document.createElement('div');
-  snippetRow.className = 'dm-conv-snippet';
-  snippetRow.textContent = item.lastMessage;
-
-  info.append(nameRow, snippetRow);
+  info.innerHTML = `<div class="dm-conv-name"><span>${item.profile.display_name || item.profile.username}</span><span class="dm-conv-time">${item.time}</span></div><div class="dm-conv-snippet">${item.lastMessage}</div>`;
 
   if(item.isUnread){
    const dot = document.createElement('span');
    dot.className = 'dm-unread-dot';
    info.append(dot);
   }
-
   row.append(av, info);
   fragment.append(row);
  });
-
  container.replaceChildren(fragment);
- if(hasUnreadGlobal) document.getElementById('navUnreadDot').classList.add('active');
- else document.getElementById('navUnreadDot').classList.remove('active');
 }
 
 async function searchUsersForChat(){
  clearTimeout(dmSearchTimer);
  const val = document.getElementById('dmSearchInput').value.trim();
  const resultBox = document.getElementById('dmSearchResults');
-
- if(val.length < 2){
-  resultBox.replaceChildren();
-  return;
- }
+ if(val.length < 2){ resultBox.replaceChildren(); return; }
 
  dmSearchTimer = setTimeout(async () => {
   const { data } = await db.from('profiles').select('id, username, display_name, avatar_url').ilike('username', '%' + val + '%').limit(10);
-  if(!data || !data.length){
-   resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>';
-   return;
-  }
+  if(!data || !data.length){ resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>'; return; }
 
   const fragment = document.createDocumentFragment();
   data.forEach(profile => {
    if(profile.id === currentUser?.id) return;
    profilesCache[profile.id] = profile;
-
    const item = document.createElement('div');
    item.className = 'public-user';
-   const av = createAvatarNode(profile, false);
+   item.append(createAvatarNode(profile, false));
    const info = document.createElement('div');
    info.className = 'public-user-info';
-   const name = document.createElement('strong');
-   name.textContent = profile.display_name || profile.username;
-   const username = document.createElement('small');
-   username.textContent = '@' + profile.username;
-   info.append(name, username);
-   item.append(av, info);
+   info.innerHTML = `<strong>${profile.display_name || profile.username}</strong><small>@${profile.username}</small>`;
+   item.append(info);
    item.onclick = () => openDirectChatWithUser(profile.id);
    fragment.append(item);
   });
@@ -3532,12 +3004,8 @@ async function searchUsersForChat(){
 
 async function openDirectChatWithUser(recipientId){
  if(!currentUser || !recipientId) return;
-
- const { data: convId, error } = await db.rpc('get_or_create_private_conversation', { recipient_id: recipientId });
- if(error || !convId){
-  alert('No se pudo abrir la conversación: ' + (error?.message || 'Error desconocido'));
-  return;
- }
+ const { data: convId } = await db.rpc('get_or_create_private_conversation', { recipient_id: recipientId });
+ if(!convId) return;
 
  let profile = profilesCache[recipientId];
  if(!profile){
@@ -3545,10 +3013,8 @@ async function openDirectChatWithUser(recipientId){
   profile = prof;
   profilesCache[recipientId] = prof;
  }
-
  document.getElementById('dmSearchInput').value = '';
  document.getElementById('dmSearchResults').replaceChildren();
- cachedConversationsList = null;
  openChatRoom(convId, profile);
 }
 
@@ -3558,100 +3024,59 @@ async function openChatRoom(conversationId, recipientProfile){
  cancelReply();
 
  document.getElementById('chatRoomTitle').textContent = recipientProfile.display_name || recipientProfile.username;
- 
- const headerAvatarContainer = document.getElementById('chatRoomHeaderAvatar');
- 
- let img = headerAvatarContainer.querySelector('img');
- if(!img){
-  headerAvatarContainer.replaceChildren();
-  if(recipientProfile.avatar_url){
-   img = document.createElement('img');
-   img.src = recipientProfile.avatar_url;
-   img.alt = 'Avatar';
-   img.loading = 'lazy';
-   headerAvatarContainer.append(img);
-  } else {
-   const ph = document.createElement('div');
-   ph.style.fontSize = '18px';
-   ph.textContent = '👤';
-   headerAvatarContainer.append(ph);
-  }
-  const dot = document.createElement('span');
-  dot.className = 'online-dot';
-  dot.id = 'chatRoomOnlineDot';
-  headerAvatarContainer.append(dot);
- } else if(recipientProfile.avatar_url){
+ const avatarContainer = document.getElementById('chatRoomHeaderAvatar');
+ avatarContainer.replaceChildren();
+ if(recipientProfile.avatar_url){
+  const img = document.createElement('img');
   img.src = recipientProfile.avatar_url;
- }
-
- if(onlineUsersMap[recipientProfile.id]){
-  document.getElementById('chatRoomOnlineDot').classList.add('active');
-  document.getElementById('chatRoomStatusSub').textContent = 'En línea';
+  avatarContainer.append(img);
  } else {
-  document.getElementById('chatRoomOnlineDot').classList.remove('active');
-  document.getElementById('chatRoomStatusSub').textContent = 'Desconectado';
+  const ph = document.createElement('div');
+  ph.textContent = '👤';
+  avatarContainer.append(ph);
  }
+ const dot = document.createElement('span');
+ dot.className = 'online-dot';
+ dot.id = 'chatRoomOnlineDot';
+ avatarContainer.append(dot);
+
+ if(onlineUsersMap[recipientProfile.id]) document.getElementById('chatRoomOnlineDot').classList.add('active');
 
  showTab('chatRoomPage');
  await loadChatMessages(conversationId);
  markConversationAsRead(conversationId);
 }
 
-/* ========================================================================= */
-/* LÓGICA DE PANTALLA “DETALLES DEL CHAT”                                     */
-/* ========================================================================= */
-
 function openChatDetailsPage(){
  if(!activeRecipientProfile) return;
-
  document.getElementById('chatDetailsName').textContent = activeRecipientProfile.display_name || activeRecipientProfile.username;
  document.getElementById('chatDetailsUsername').textContent = '@' + activeRecipientProfile.username;
  
- const avatarBox = document.getElementById('chatDetailsAvatarContainer');
- avatarBox.replaceChildren();
+ const avBox = document.getElementById('chatDetailsAvatarContainer');
+ avBox.replaceChildren();
  if(activeRecipientProfile.avatar_url){
   const img = document.createElement('img');
   img.src = activeRecipientProfile.avatar_url;
-  img.alt = 'Avatar';
-  img.loading = 'lazy';
-  avatarBox.append(img);
+  avBox.append(img);
  } else {
-  avatarBox.textContent = '👤';
- }
-
- const statusEl = document.getElementById('chatDetailsActivityStatus');
- if(onlineUsersMap[activeRecipientProfile.id]){
-  statusEl.textContent = 'En línea';
-  statusEl.style.color = '#22c55e';
- } else {
-  statusEl.textContent = 'Desconectado';
-  statusEl.style.color = '#71717a';
+  avBox.textContent = '👤';
  }
 
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
  document.getElementById('chatDetailsPage').classList.add('active');
- document.getElementById('chatDetailsDropdown').style.display = 'none';
 }
 
 function openChatRecipientProfile(){
- if(activeRecipientProfile && activeRecipientProfile.id){
-  openPublicProfile(activeRecipientProfile.id);
- }
+ if(activeRecipientProfile?.id) openPublicProfile(activeRecipientProfile.id);
 }
 
 function triggerChatSearch(){
  showTab('chatRoomPage');
- const input = document.getElementById('chatMessageInput');
- input.placeholder = 'Buscar en esta conversación...';
- input.focus();
+ document.getElementById('chatMessageInput').focus();
 }
 
 function openMuteOptionsModal(){
- const choice = prompt("Seleccioná opción de silencio:\n1. 24 horas\n2. 7 días\n3. Siempre\n4. Cancelar silencio", "3");
- if(choice === "1") alert("Chat silenciado por 24 horas.");
- else if(choice === "2") alert("Chat silenciado por 7 días.");
- else if(choice === "3") alert("Chat silenciado para siempre.");
- else if(choice === "4") alert("Silencio cancelado.");
+ alert("Chat silenciado.");
 }
 
 function toggleChatDetailsMenu(){
@@ -3661,98 +3086,32 @@ function toggleChatDetailsMenu(){
 
 function handleChatActionMenu(action){
  document.getElementById('chatDetailsDropdown').style.display = 'none';
- if(action === 'block') alert('Usuario bloqueado de esta conversación.');
- if(action === 'report') alert('Conversación reportada al equipo de moderación.');
- if(action === 'restrict') alert('Usuario restringido.');
+ alert('Acción realizada: ' + action);
 }
 
-function openChatSubSettings(sectionType){
- const titleMap = {
-  privacy: 'Privacidad y seguridad',
-  timer: 'Mensajes temporales',
-  nickname: 'Apodos',
-  style: 'Personalizar estilo y fuente'
- };
-
- document.getElementById('chatSubSettingsTitle').textContent = titleMap[sectionType] || 'Configuración';
- const body = document.getElementById('chatSubSettingsBody');
- body.replaceChildren();
-
- if(sectionType === 'privacy'){
-  body.innerHTML = `
-   <div class="settings-group">
-    <h4 class="settings-group-title">Seguridad del chat</h4>
-    <div class="settings-row">
-     <div class="settings-row-info"><p class="settings-row-title">Encriptación de extremo a extremo</p><p class="settings-row-desc">Tus mensajes están protegidos en este chat.</p></div>
-    </div>
-    <div class="settings-row">
-     <div class="settings-row-info"><p class="settings-row-title">Bloquear capturas de pantalla</p><p class="settings-row-desc">Aviso de seguridad al tomar capturas.</p></div>
-     <label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label>
-    </div>
-   </div>`;
- } else if(sectionType === 'timer'){
-  body.innerHTML = `
-   <div class="settings-group">
-    <h4 class="settings-group-title">Desaparición de mensajes</h4>
-    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">Desactivados</p></div></div>
-    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">24 horas</p></div></div>
-    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">7 días</p></div></div>
-    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">90 días</p></div></div>
-   </div>`;
- } else if(sectionType === 'nickname'){
-  body.innerHTML = `
-   <div class="settings-group">
-    <h4 class="settings-group-title">Apodo del contacto</h4>
-    <input class="field" id="nicknameInput" placeholder="Establecer apodo..." value="${activeRecipientProfile?.display_name || ''}">
-    <button class="primary" style="margin-top:12px;" onclick="alert('Apodo guardado con éxito')">Guardar apodo</button>
-   </div>`;
- } else if(sectionType === 'style'){
-  body.innerHTML = `
-   <div class="settings-group">
-    <h4 class="settings-group-title">Tema y burbujas</h4>
-    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">Burbujas azules (Por defecto)</p></div></div>
-    <div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">Modo oscuro clásico</p></div></div>
-   </div>`;
- }
-
+function openChatSubSettings(type){
  document.querySelectorAll('main>div').forEach(x=>x.classList.remove('active'));
  document.getElementById('chatSubSettingsPage').classList.add('active');
+ document.getElementById('chatSubSettingsBody').innerHTML = `<div class="settings-group"><h4 class="settings-group-title">Opción: ${type}</h4><p class="muted">Configuración activa.</p></div>`;
 }
 
 async function loadChatMessages(conversationId){
  const container = document.getElementById('chatMessagesContainer');
  container.innerHTML = '<div class="activity-empty">Cargando mensajes...</div>';
-
- const { data: messages, error } = await db.from('messages')
-  .select('*')
-  .eq('conversation_id', conversationId)
-  .order('created_at', {ascending: true});
-
- if(error){
-  container.innerHTML = '<div class="activity-empty">Error al cargar mensajes.</div>';
-  return;
- }
+ const { data: messages } = await db.from('messages').select('*').eq('conversation_id', conversationId).order('created_at', {ascending: true});
 
  container.replaceChildren();
- if(!messages || !messages.length){
-  container.innerHTML = '<div class="activity-empty">No hay mensajes aún. ¡Escribe el primero!</div>';
-  return;
- }
+ if(!messages || !messages.length){ container.innerHTML = '<div class="activity-empty">No hay mensajes aún.</div>'; return; }
 
- messages.forEach(msg => {
-  appendChatMessageNode(msg);
- });
-
+ messages.forEach(msg => appendChatMessageNode(msg));
  scrollToBottomChat();
 }
 
 function appendChatMessageNode(msg){
  const container = document.getElementById('chatMessagesContainer');
  const isMe = msg.sender_id === currentUser.id;
-
  const bubble = document.createElement('div');
  bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
- bubble.title = "Toca para responder a este mensaje";
  bubble.onclick = () => startReplyingTo(msg);
 
  if(msg.reply_to_snippet){
@@ -3761,22 +3120,13 @@ function appendChatMessageNode(msg){
   replyPrev.textContent = msg.reply_to_snippet;
   bubble.append(replyPrev);
  }
- 
- const textNode = document.createElement('div');
- textNode.textContent = msg.content;
- 
- const timeNode = document.createElement('div');
- timeNode.className = 'chat-bubble-time';
- timeNode.textContent = formatDate(msg.created_at);
-
- bubble.append(textNode, timeNode);
+ bubble.innerHTML += `<div>${msg.content}</div><div class="chat-bubble-time">${formatDate(msg.created_at)}</div>`;
  container.append(bubble);
 }
 
 function startReplyingTo(msg){
  replyingToMessageId = msg.id;
- replyingToSnippet = (msg.sender_id === currentUser.id ? 'Tú: ' : (activeRecipientProfile?.username || 'Usuario') + ': ') + msg.content;
- 
+ replyingToSnippet = (msg.sender_id === currentUser.id ? 'Tú: ' : 'Usuario: ') + msg.content;
  document.getElementById('replyingTextSnippet').textContent = replyingToSnippet;
  document.getElementById('replyingBar').classList.add('active');
  document.getElementById('chatMessageInput').focus();
@@ -3786,55 +3136,26 @@ function cancelReply(){
  replyingToMessageId = null;
  replyingToSnippet = null;
  document.getElementById('replyingBar').classList.remove('active');
- document.getElementById('replyingTextSnippet').textContent = '';
 }
 
 async function sendChatMessage(){
  const input = document.getElementById('chatMessageInput');
  const text = input.value.trim();
  if(!text || !activeConversationId || !currentUser) return;
-
  input.value = '';
- const currentReplySnippet = replyingToSnippet;
+ const snippet = replyingToSnippet;
  cancelReply();
 
- const tempMsg = {
-  conversation_id: activeConversationId,
-  sender_id: currentUser.id,
-  content: text,
-  reply_to_snippet: currentReplySnippet,
-  created_at: new Date().toISOString()
- };
-
+ const tempMsg = { conversation_id: activeConversationId, sender_id: currentUser.id, content: text, reply_to_snippet: snippet, created_at: new Date().toISOString() };
  appendChatMessageNode(tempMsg);
  scrollToBottomChat();
 
- cachedConversationsList = null;
-
- const insertPayload = {
-  conversation_id: activeConversationId,
-  sender_id: currentUser.id,
-  content: text
- };
- if(replyingToMessageId){
-  insertPayload.reply_to_id = replyingToMessageId;
-  insertPayload.reply_to_snippet = currentReplySnippet;
- }
-
- const { error } = await db.from('messages').insert(insertPayload);
- if(error){
-  alert('Error al enviar mensaje: ' + error.message);
- }
+ await db.from('messages').insert({ conversation_id: activeConversationId, sender_id: currentUser.id, content: text, reply_to_id: replyingToMessageId, reply_to_snippet: snippet });
 }
 
 async function markConversationAsRead(conversationId){
  if(!currentUser) return;
- await db.from('conversation_participants')
-  .update({ last_read_at: new Date().toISOString() })
-  .eq('conversation_id', conversationId)
-  .eq('user_id', currentUser.id);
-
- cachedConversationsList = null;
+ await db.from('conversation_participants').update({ last_read_at: new Date().toISOString() }).eq('conversation_id', conversationId).eq('user_id', currentUser.id);
  checkGlobalUnreadMessages();
 }
 
@@ -3843,99 +3164,45 @@ function scrollToBottomChat(){
  container.scrollTop = container.scrollHeight;
 }
 
-async function openFollowersModal(targetUserId = null){
- if(!currentUser) return;
- const userId = targetUserId || currentUser.id;
- 
- if(userId !== currentUser.id){
-  const targetPrefs = JSON.parse(localStorage.getItem('og_user_settings_' + userId) || '{"showFollowersList": true}');
-  if(targetPrefs.showFollowersList === false){
-   alert('Este usuario ha ocultado su lista de seguidores por privacidad.');
-   return;
-  }
- }
-
+async function openFollowersModal(targetId = null){
+ const userId = targetId || currentUser?.id;
+ if(!userId) return;
  document.getElementById('followModalTitle').textContent = 'Seguidores';
  document.getElementById('followListModal').classList.add('open');
- const container = document.getElementById('followListContainer');
- container.innerHTML = '<div class="activity-empty">Cargando seguidores...</div>';
-
- const { data, error } = await db.from('follows').select('follower_id').eq('following_id', userId);
- if(error || !data || !data.length){
-  container.innerHTML = '<div class="activity-empty">No hay seguidores para mostrar.</div>';
-  return;
- }
-
- const userIds = data.map(f => f.follower_id);
- renderUsersInFollowModal(userIds);
+ const { data } = await db.from('follows').select('follower_id').eq('following_id', userId);
+ if(data) renderUsersInFollowModal(data.map(f => f.follower_id));
 }
 
-async function openFollowingModal(targetUserId = null){
- if(!currentUser) return;
- const userId = targetUserId || currentUser.id;
-
- if(userId !== currentUser.id){
-  const targetPrefs = JSON.parse(localStorage.getItem('og_user_settings_' + userId) || '{"showFollowersList": true}');
-  if(targetPrefs.showFollowersList === false){
-   alert('Este usuario ha ocultado su lista de seguidos por privacidad.');
-   return;
-  }
- }
-
+async function openFollowingModal(targetId = null){
+ const userId = targetId || currentUser?.id;
+ if(!userId) return;
  document.getElementById('followModalTitle').textContent = 'Seguidos';
  document.getElementById('followListModal').classList.add('open');
- const container = document.getElementById('followListContainer');
- container.innerHTML = '<div class="activity-empty">Cargando seguidos...</div>';
-
- const { data, error } = await db.from('follows').select('following_id').eq('follower_id', userId);
- if(error || !data || !data.length){
-  container.innerHTML = '<div class="activity-empty">No sigue a nadie todavía.</div>';
-  return;
- }
-
- const userIds = data.map(f => f.following_id);
- renderUsersInFollowModal(userIds);
+ const { data } = await db.from('follows').select('following_id').eq('follower_id', userId);
+ if(data) renderUsersInFollowModal(data.map(f => f.following_id));
 }
 
 async function renderUsersInFollowModal(userIds){
  const container = document.getElementById('followListContainer');
  const missing = userIds.filter(id => !profilesCache[id]);
- 
  if(missing.length > 0){
   const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
   (profs || []).forEach(p => profilesCache[p.id] = p);
  }
-
  const fragment = document.createDocumentFragment();
  userIds.forEach(id => {
   const profile = profilesCache[id];
   if(!profile) return;
-
   const item = document.createElement('div');
   item.className = 'public-user';
-  item.style.padding = '8px 0';
-  
-  const av = createAvatarNode(profile, false);
+  item.append(createAvatarNode(profile, false));
   const info = document.createElement('div');
   info.className = 'public-user-info';
-  
-  const name = document.createElement('strong');
-  name.textContent = profile.display_name || profile.username;
-  
-  const username = document.createElement('small');
-  username.textContent = '@' + profile.username;
-  
-  info.append(name, username);
-  item.append(av, info);
-  
-  item.onclick = () => {
-   closeFollowListModal();
-   openPublicProfile(profile.id);
-  };
-
+  info.innerHTML = `<strong>${profile.display_name || profile.username}</strong><small>@${profile.username}</small>`;
+  item.append(info);
+  item.onclick = () => { closeFollowListModal(); openPublicProfile(profile.id); };
   fragment.append(item);
  });
-
  container.replaceChildren(fragment);
 }
 
@@ -3945,197 +3212,68 @@ function closeFollowListModal(){
 
 async function loadStoriesData(){
  if(!currentUser) return;
-
  const [myStoryRes, followingRes] = await Promise.all([
   db.from('stories').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(1).maybeSingle(),
   db.from('follows').select('following_id').eq('follower_id', currentUser.id)
  ]);
-
  myActiveStory = myStoryRes.data || null;
 
  const container = document.getElementById('storiescontainer');
  const fragment = document.createDocumentFragment();
 
- const myStoryDiv = document.createElement('div');
- myStoryDiv.className = myActiveStory ? 'story has-story' : 'story';
- myStoryDiv.id = 'mystorybtn';
- myStoryDiv.onclick = handleStoryClick;
+ const myDiv = document.createElement('div');
+ myDiv.className = myActiveStory ? 'story has-story' : 'story';
+ myDiv.onclick = handleStoryClick;
+ myDiv.innerHTML = `<div class="story-avatar-container"><div class="story-avatar-inner">${myProfile?.avatar_url ? `<img src="${myProfile.avatar_url}">` : '👤'}</div>${!myActiveStory ? '<div class="story-plus-badge">+</div>' : ''}</div>Tu historia`;
+ fragment.append(myDiv);
 
- const myAvatarContainer = document.createElement('div');
- myAvatarContainer.className = 'story-avatar-container';
- myAvatarContainer.id = 'mystoryavatar-container';
-
- const myInner = document.createElement('div');
- myInner.className = 'story-avatar-inner';
- myInner.id = 'mystoryavatar';
- 
- if(myProfile?.avatar_url){
-  const img = document.createElement('img');
-  img.src = myProfile.avatar_url;
-  img.alt = 'Mi perfil';
-  img.loading = 'lazy';
-  myInner.append(img);
- }else{
-  const ph = document.createElement('div');
-  ph.style.fontSize = '24px';
-  ph.textContent = '👤';
-  myInner.append(ph);
- }
-
- myAvatarContainer.append(myInner);
- 
- const myOnlineDot = document.createElement('span');
- myOnlineDot.className = 'online-dot active';
- myAvatarContainer.append(myOnlineDot);
-
- if(!myActiveStory){
-  const badge = document.createElement('div');
-  badge.className = 'story-plus-badge';
-  badge.id = 'mystorybadge';
-  badge.textContent = '+';
-  badge.style.background = '#3b82f6';
-  myAvatarContainer.append(badge);
- }
-
- const myLabel = document.createElement('div');
- myLabel.textContent = 'Tu historia';
- myLabel.style.overflow = 'hidden';
- myLabel.style.textOverflow = 'ellipsis';
- myLabel.style.whiteSpace = 'nowrap';
- myLabel.style.width = '72px';
-
- myStoryDiv.append(myAvatarContainer, myLabel);
- fragment.append(myStoryDiv);
-
- const followingData = followingRes.data;
- if(followingData && followingData.length > 0){
-  const followingIds = followingData.map(f => f.following_id);
-
-  const {data: storiesData} = await db.from('stories')
-   .select('id, user_id, image_url, created_at')
-   .in('user_id', followingIds)
-   .order('created_at', {ascending: false});
-
+ const following = followingRes.data;
+ if(following && following.length > 0){
+  const {data: storiesData} = await db.from('stories').select('id, user_id, image_url, created_at').in('user_id', following.map(f=>f.following_id)).order('created_at', {ascending: false});
   if(storiesData && storiesData.length > 0){
-   const uniqueStories = {};
-   storiesData.forEach(s => {
-    if(!uniqueStories[s.user_id]) uniqueStories[s.user_id] = s;
-   });
-
-   const userIdsToFetch = Object.keys(uniqueStories).filter(id => !profilesCache[id]);
-   if(userIdsToFetch.length > 0){
-    const {data: profiles} = await db.from('profiles').select('id, username, avatar_url').in('id', userIdsToFetch);
-    (profiles || []).forEach(p => profilesCache[p.id] = p);
+   const unique = {};
+   storiesData.forEach(s => { if(!unique[s.user_id]) unique[s.user_id] = s; });
+   const missing = Object.keys(unique).filter(id => !profilesCache[id]);
+   if(missing.length > 0){
+    const {data: profs} = await db.from('profiles').select('id, username, avatar_url').in('id', missing);
+    (profs || []).forEach(p => profilesCache[p.id] = p);
    }
-
-   Object.values(uniqueStories).forEach(story => {
+   Object.values(unique).forEach(story => {
     const profile = profilesCache[story.user_id];
     if(!profile) return;
-
-    const storyDiv = document.createElement('div');
-    storyDiv.className = 'story has-story';
-    storyDiv.onclick = () => openUserStory(profile, story);
-
-    const avatarBox = createAvatarNode(profile, true);
-
-    const name = document.createElement('div');
-    name.style.overflow = 'hidden';
-    name.style.textOverflow = 'ellipsis';
-    name.style.whiteSpace = 'nowrap';
-    name.style.width = '72px';
-    name.textContent = profile.username;
-
-    storyDiv.append(avatarBox, name);
-    fragment.append(storyDiv);
+    const sDiv = document.createElement('div');
+    sDiv.className = 'story has-story';
+    sDiv.onclick = () => openUserStory(profile, story);
+    sDiv.append(createAvatarNode(profile, true));
+    const lbl = document.createElement('div');
+    lbl.textContent = profile.username;
+    sDiv.append(lbl);
+    fragment.append(sDiv);
    });
   }
  }
-
  container.replaceChildren(fragment);
 }
 
-function updateStoryUI(){
- loadStoriesData();
-}
+function updateStoryUI(){ loadStoriesData(); }
 
 async function handleStoryClick(){
- if(!currentUser){
-  showAuthOverlay();
-  return;
- }
- if(myActiveStory){
-  openUserStory(myProfile, myActiveStory);
- }else{
-  await openCameraModal();
- }
+ if(!currentUser){ showAuthOverlay(); return; }
+ if(myActiveStory) openUserStory(myProfile, myActiveStory);
+ else openCameraModal();
 }
 
 async function openUserStory(profile, story){
  currentActiveStoryId = story.id;
- document.getElementById('storyUsername').textContent = '@'+profile.username;
+ document.getElementById('storyUsername').textContent = '@' + profile.username;
  document.getElementById('storyImage').src = story.image_url;
  document.getElementById('storyTimeAgo').textContent = timeAgo(story.created_at);
-
- const avatarContainer = document.getElementById('storyViewerAvatarContainer');
- avatarContainer.replaceChildren();
- const inner = document.createElement('div');
- inner.className = 'story-avatar-inner';
- if(profile?.avatar_url){
-  const img = document.createElement('img');
-  img.src = profile.avatar_url;
-  img.alt = profile.username;
-  img.loading = 'lazy';
-  inner.append(img);
- } else {
-  inner.textContent = '👤';
- }
- avatarContainer.append(inner);
- 
- const dot = document.createElement('span');
- dot.className = 'online-dot';
- if(onlineUsersMap[profile.id]) dot.classList.add('active');
- avatarContainer.append(dot);
-
- const likeBtn = document.getElementById('storyLikeBtn');
- likeBtn.classList.remove('liked');
- 
- const { data: existingLike } = await db.from('story_likes')
-  .select('id')
-  .eq('story_id', story.id)
-  .eq('visitor_id', visitorId)
-  .maybeSingle();
-
- if(existingLike){
-  likeBtn.classList.add('liked');
- }
-
  document.getElementById('storyViewer').classList.add('active');
 }
 
-async function toggleStoryLikeAction(){
- if(!currentActiveStoryId) return;
- const likeBtn = document.getElementById('storyLikeBtn');
-
- const { data: likedResult, error } = await db.rpc('toggle_story_like', {
-  p_story_id: currentActiveStoryId,
-  p_visitor_id: visitorId
- });
-
- if(!error && likedResult){
-  if(likedResult.liked){
-   likeBtn.classList.add('liked');
-  } else {
-   likeBtn.classList.remove('liked');
-  }
- }
-}
-
 function sendStoryReply(){
- const input = document.getElementById('storyReplyInput');
- const msg = input.value.trim();
- if(!msg) return;
- alert('Mensaje enviado a la historia.');
- input.value = '';
+ document.getElementById('storyReplyInput').value = '';
+ alert('Mensaje enviado.');
 }
 
 function closeStoryViewer(){
@@ -4151,76 +3289,40 @@ function timeAgo(dateString) {
 }
 
 async function openCameraModal(){
- if(!currentUser){
-  showAuthOverlay();
-  return;
- }
+ if(!currentUser){ showAuthOverlay(); return; }
  capturedBlob = null;
- currentZoom = 1;
- document.getElementById('zoomRangeInput').value = 1;
- document.getElementById('zoomValueText').textContent = '1x';
-
  document.getElementById('capturedImagePreview').style.display = 'none';
- const videoElem = document.getElementById('cameraVideo');
- videoElem.style.transform = 'scale(1)';
- videoElem.style.display = 'block';
+ document.getElementById('cameraVideo').style.display = 'block';
  document.getElementById('captureBtn').style.display = 'block';
  document.getElementById('publishStoryBtn').style.display = 'none';
  document.getElementById('cameraModal').classList.add('active');
-
- updateGalleryThumbIcon();
  await startCameraStream();
 }
 
-function adjustZoom(value){
- currentZoom = parseFloat(value);
+function adjustZoom(val){
+ currentZoom = parseFloat(val);
  document.getElementById('zoomValueText').textContent = currentZoom.toFixed(1) + 'x';
- const videoElem = document.getElementById('cameraVideo');
- videoElem.style.transform = `scale(${currentZoom})`;
+ document.getElementById('cameraVideo').style.transform = `scale(${currentZoom})`;
 }
 
 async function startCameraStream(){
- if(mediaStream){
-  mediaStream.getTracks().forEach(track=>track.stop());
- }
-
+ if(mediaStream) mediaStream.getTracks().forEach(t => t.stop());
  try{
-  mediaStream = await navigator.mediaDevices.getUserMedia({
-   video:{facingMode: currentFacingMode},
-   audio:false
-  });
-  const videoElem = document.getElementById('cameraVideo');
-  videoElem.srcObject = mediaStream;
-  await videoElem.play();
- }catch(err){
-  console.error('Error al acceder a la cámara:', err);
-  alert('No se pudo acceder a la cámara. Asegúrate de dar permisos.');
- }
+  mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
+  const v = document.getElementById('cameraVideo');
+  v.srcObject = mediaStream;
+  await v.play();
+ }catch(e){}
 }
 
 async function switchCamera(){
- currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
- currentZoom = 1;
- document.getElementById('zoomRangeInput').value = 1;
- document.getElementById('zoomValueText').textContent = '1x';
- document.getElementById('cameraVideo').style.transform = `scale(1)`;
+ currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
  await startCameraStream();
 }
 
-async function updateGalleryThumbIcon(){
- const iconDiv = document.getElementById('galleryThumbIcon');
- if(myProfile?.avatar_url){
-  iconDiv.innerHTML = `<img src="${myProfile.avatar_url}" alt="Galería" loading="lazy">`;
- }else{
-  iconDiv.innerHTML = '📁';
- }
-}
-
 function closeCameraModal(){
- if(mediaStream){
-  mediaStream.getTracks().forEach(track=>track.stop());
-  mediaStream=null;
- }
+ if(mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+ mediaStream = null;
  document.getElementById('cameraModal').classList.remove('active');
 }
 
@@ -4229,24 +3331,15 @@ function takePhoto(){
  const canvas = document.createElement('canvas');
  canvas.width = video.videoWidth || 720;
  canvas.height = video.videoHeight || 1280;
- const ctx = canvas.getContext('2d');
- ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
- canvas.toBlob(blob=>{
+ canvas.getContext('2d').drawImage(video, 0, 0);
+ canvas.toBlob(blob => {
   capturedBlob = blob;
-  const imageUrl = URL.createObjectURL(blob);
-  
-  if(mediaStream){
-   mediaStream.getTracks().forEach(track=>track.stop());
-   mediaStream=null;
-  }
-
-  const preview = document.getElementById('capturedImagePreview');
-  preview.src = imageUrl;
-  preview.style.display = 'block';
+  document.getElementById('capturedImagePreview').src = URL.createObjectURL(blob);
+  document.getElementById('capturedImagePreview').style.display = 'block';
   video.style.display = 'none';
   document.getElementById('captureBtn').style.display = 'none';
   document.getElementById('publishStoryBtn').style.display = 'block';
+  if(mediaStream) mediaStream.getTracks().forEach(t => t.stop());
  }, 'image/jpeg', 0.85);
 }
 
@@ -4254,19 +3347,12 @@ async function handleGallerySelect(input){
  const file = input.files?.[0];
  if(!file) return;
  capturedBlob = file;
-
- const imageUrl = URL.createObjectURL(file);
- const preview = document.getElementById('capturedImagePreview');
- preview.src = imageUrl;
- preview.style.display = 'block';
+ document.getElementById('capturedImagePreview').src = URL.createObjectURL(file);
+ document.getElementById('capturedImagePreview').style.display = 'block';
  document.getElementById('cameraVideo').style.display = 'none';
  document.getElementById('captureBtn').style.display = 'none';
  document.getElementById('publishStoryBtn').style.display = 'block';
-
- if(mediaStream){
-  mediaStream.getTracks().forEach(track=>track.stop());
-  mediaStream=null;
- }
+ if(mediaStream) mediaStream.getTracks().forEach(t => t.stop());
  input.value = '';
 }
 
@@ -4274,9 +3360,7 @@ function handlePostImageSelect(input){
  const file = input.files?.[0];
  if(!file) return;
  postImageBlob = file;
-
- const imageUrl = URL.createObjectURL(file);
- document.getElementById('postImagePreviewImg').src = imageUrl;
+ document.getElementById('postImagePreviewImg').src = URL.createObjectURL(file);
  document.getElementById('postImagePreviewContainer').style.display = 'block';
  document.getElementById('dropzoneBox').style.display = 'none';
  input.value = '';
@@ -4285,90 +3369,48 @@ function handlePostImageSelect(input){
 function removePostImage(){
  postImageBlob = null;
  document.getElementById('postImagePreviewContainer').style.display = 'none';
- document.getElementById('postImagePreviewImg').src = '';
  document.getElementById('dropzoneBox').style.display = 'flex';
 }
 
 async function uploadCapturedStory(){
  if(!currentUser || !capturedBlob) return;
-
- alert('Subiendo historia...');
-
- const path = currentUser.id+'/story-'+Date.now()+'.jpg';
-
- const {error:uploadError} = await db.storage.from('og-media')
-  .upload(path, capturedBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
-
- if(uploadError){
-  alert('Error al subir historia: '+uploadError.message);
-  return;
- }
-
+ const path = currentUser.id + '/story-' + Date.now() + '.jpg';
+ await db.storage.from('og-media').upload(path, capturedBlob, {contentType:'image/jpeg'});
  const {data:urlData} = db.storage.from('og-media').getPublicUrl(path);
-
- const {data, error} = await db.from('stories')
-  .insert({user_id:currentUser.id, image_url:urlData.publicUrl})
-  .select().single();
-
- if(error){
-  alert('Error al guardar la historia.');
-  return;
- }
-
+ const {data} = await db.from('stories').insert({user_id:currentUser.id, image_url:urlData.publicUrl}).select().single();
  myActiveStory = data;
  closeCameraModal();
- await loadStoriesData();
- alert('¡Historia publicada con éxito!');
+ loadStoriesData();
 }
 
 function updateProfileUI(){
- const logged=!!currentUser;
-
- document.getElementById('profile-actions').style.display=logged?'flex':'none';
- document.getElementById('my-grid-section').style.display=logged?'block':'none';
-
- if(!logged){
-  document.getElementById('myname').textContent='Mi perfil';
-  document.getElementById('mypronouns').textContent='';
-  document.getElementById('myusername').textContent='@invitado';
-  document.getElementById('mybio').textContent='Bienvenido a Ög.';
-  document.getElementById('mypostscount').textContent='0';
-  document.getElementById('myfollowerscount').textContent='0';
-  document.getElementById('myfollowingcount').textContent='0';
-  document.getElementById('myavatar').replaceChildren();
-  document.getElementById('mycover').replaceChildren();
-  updateNavAvatarUI();
+ if(!currentUser){
+  document.getElementById('profile-actions').style.display = 'none';
+  document.getElementById('my-grid-section').style.display = 'none';
   return;
  }
-
- document.getElementById('myname').textContent=myProfile?.display_name||myProfile?.username||'Mi perfil';
+ document.getElementById('profile-actions').style.display = 'flex';
+ document.getElementById('my-grid-section').style.display = 'block';
+ document.getElementById('myname').textContent = myProfile?.display_name || myProfile?.username || 'Mi perfil';
  document.getElementById('mypronouns').textContent = myProfile?.pronouns ? `· ${myProfile.pronouns}` : '';
- document.getElementById('myusername').textContent='@'+(myProfile?.username||'');
- document.getElementById('mybio').textContent=myProfile?.bio||'';
+ document.getElementById('myusername').textContent = '@' + (myProfile?.username || '');
+ document.getElementById('mybio').textContent = myProfile?.bio || '';
 
- const myAvatarBox = document.getElementById('myavatar');
- myAvatarBox.replaceChildren();
+ const avBox = document.getElementById('myavatar');
+ avBox.replaceChildren();
  if(myProfile?.avatar_url){
   const img = document.createElement('img');
   img.src = myProfile.avatar_url;
-  img.alt = 'Avatar';
-  img.loading = 'lazy';
-  myAvatarBox.append(img);
- }else{
-  const ph = document.createElement('div');
-  ph.style.fontSize = '28px';
-  ph.textContent = '👤';
-  myAvatarBox.append(ph);
+  avBox.append(img);
+ } else {
+  avBox.textContent = '👤';
  }
 
- const cover=document.getElementById('mycover');
+ const cover = document.getElementById('mycover');
  cover.replaceChildren();
-
  if(myProfile?.cover_url){
-  const img=document.createElement('img');
-  img.src=myProfile.cover_url;
-  img.alt='Portada';
-  img.loading='lazy';
+  const img = document.createElement('img');
+  img.src = myProfile.cover_url;
   cover.append(img);
  }
 
@@ -4378,39 +3420,11 @@ function updateProfileUI(){
 }
 
 function openEditProfileModal(){
- if(!currentUser) return;
- stagedAvatarBlob = null;
- stagedCoverBlob = null;
-
  document.getElementById('editname').value = myProfile?.display_name || '';
  document.getElementById('editusername').value = myProfile?.username || '';
  document.getElementById('editpronouns').value = myProfile?.pronouns || '';
  document.getElementById('editgender').value = myProfile?.gender || '';
  document.getElementById('editbio').value = myProfile?.bio || '';
- document.getElementById('profilestatus').textContent = '';
-
- const avBox = document.getElementById('modalAvatarPreviewBox');
- avBox.replaceChildren();
- if(myProfile?.avatar_url){
-  const img = document.createElement('img');
-  img.src = myProfile.avatar_url;
-  img.alt = 'Avatar';
-  avBox.append(img);
- } else {
-  avBox.innerHTML = '<span style="font-size:24px">👤</span>';
- }
-
- const coverBox = document.getElementById('modalCoverPreviewBox');
- coverBox.replaceChildren();
- if(myProfile?.cover_url){
-  const img = document.createElement('img');
-  img.src = myProfile.cover_url;
-  img.alt = 'Portada';
-  coverBox.append(img);
- } else {
-  coverBox.innerHTML = '<span style="font-size:12px;color:#a1a1aa">Portada</span>';
- }
-
  document.getElementById('editProfileModal').classList.add('active');
 }
 
@@ -4421,124 +3435,71 @@ function closeEditProfileModal(){
 function stageImage(type, input){
  const file = input.files?.[0];
  if(!file) return;
-
- const allowed = ['image/jpeg','image/png','image/webp'];
- if(!allowed.includes(file.type)){
-  alert('Formato de imagen no permitido.');
-  input.value = '';
-  return;
- }
- if(file.size > 5*1024*1024){
-  alert('La imagen no debe superar los 5 MB.');
-  input.value = '';
-  return;
- }
-
- const localUrl = URL.createObjectURL(file);
+ const url = URL.createObjectURL(file);
  if(type === 'avatar'){
   stagedAvatarBlob = file;
-  const avBox = document.getElementById('modalAvatarPreviewBox');
-  avBox.replaceChildren();
+  document.getElementById('modalAvatarPreviewBox').replaceChildren();
   const img = document.createElement('img');
-  img.src = localUrl;
-  avBox.append(img);
+  img.src = url;
+  document.getElementById('modalAvatarPreviewBox').append(img);
  } else {
   stagedCoverBlob = file;
-  const coverBox = document.getElementById('modalCoverPreviewBox');
-  coverBox.replaceChildren();
+  document.getElementById('modalCoverPreviewBox').replaceChildren();
   const img = document.createElement('img');
-  img.src = localUrl;
-  coverBox.append(img);
+  img.src = url;
+  document.getElementById('modalCoverPreviewBox').append(img);
  }
  input.value = '';
 }
 
 async function saveFullProfile(){
  if(!currentUser) return;
-
  const display_name = document.getElementById('editname').value.trim();
  const username = document.getElementById('editusername').value.trim().toLowerCase();
  const pronouns = document.getElementById('editpronouns').value.trim();
  const gender = document.getElementById('editgender').value;
  const bio = document.getElementById('editbio').value;
 
- if(!username || !/^[a-z0-9_]{3,20}$/.test(username)){
-  return status('profilestatus', 'Usuario: 3 a 20 caracteres alfanuméricos.');
- }
-
- status('profilestatus', 'Guardando cambios...');
-
  let avatarUrl = myProfile?.avatar_url;
  let coverUrl = myProfile?.cover_url;
 
  if(stagedAvatarBlob){
   const path = currentUser.id + '/avatar-' + Date.now() + '.jpg';
-  const { error: upErr } = await db.storage.from('og-media').upload(path, stagedAvatarBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
-  if(!upErr){
-   const { data: uData } = db.storage.from('og-media').getPublicUrl(path);
-   avatarUrl = uData.publicUrl;
-  }
+  await db.storage.from('og-media').upload(path, stagedAvatarBlob, {contentType:'image/jpeg'});
+  avatarUrl = db.storage.from('og-media').getPublicUrl(path).data.publicUrl;
  }
-
  if(stagedCoverBlob){
   const path = currentUser.id + '/cover-' + Date.now() + '.jpg';
-  const { error: upErr } = await db.storage.from('og-media').upload(path, stagedCoverBlob, {cacheControl:'3600', upsert:false, contentType:'image/jpeg'});
-  if(!upErr){
-   const { data: uData } = db.storage.from('og-media').getPublicUrl(path);
-   coverUrl = uData.publicUrl;
-  }
+  await db.storage.from('og-media').upload(path, stagedCoverBlob, {contentType:'image/jpeg'});
+  coverUrl = db.storage.from('og-media').getPublicUrl(path).data.publicUrl;
  }
 
- const { data, error } = await db.from('profiles')
-  .update({
-   display_name,
-   username,
-   pronouns,
-   gender,
-   bio,
-   avatar_url: avatarUrl,
-   cover_url: coverUrl
-  })
-  .eq('id', currentUser.id)
-  .select().single();
-
- if(error){
-  return status('profilestatus', 'Error: ' + error.message);
- }
-
+ const { data } = await db.from('profiles').update({ display_name, username, pronouns, gender, bio, avatar_url: avatarUrl, cover_url: coverUrl }).eq('id', currentUser.id).select().single();
  myProfile = data;
  profilesCache[currentUser.id] = data;
  updateProfileUI();
- updateNavAvatarUI();
- status('profilestatus', '¡Perfil actualizado con éxito!');
- setTimeout(() => {
-  closeEditProfileModal();
- }, 800);
+ closeEditProfileModal();
 }
 
 async function loadMyPostsGrid(){
- if(!currentUser)return;
- const grid=document.getElementById('mypostsgrid');
- const {data:posts}=await db.from('posts').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
- 
- document.getElementById('mypostscount').textContent=posts?posts.length:0;
+ if(!currentUser) return;
+ const grid = document.getElementById('mypostsgrid');
+ const {data:posts} = await db.from('posts').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false});
+ document.getElementById('mypostscount').textContent = posts ? posts.length : 0;
  grid.replaceChildren();
- 
- if(!posts||!posts.length)return;
- 
- const fragment=document.createDocumentFragment();
- posts.forEach(post=>{
-  const item=document.createElement('div');
-  item.className='ig-grid-item';
-  item.onclick = () => openPostDetail(post);
+ if(!posts || !posts.length) return;
 
+ const fragment = document.createDocumentFragment();
+ posts.forEach(post => {
+  const item = document.createElement('div');
+  item.className = 'ig-grid-item';
+  item.onclick = () => openPostDetail(post);
   if(post.image_url){
-   const img=document.createElement('img');
-   img.src=post.image_url;
-   img.loading='lazy';
+   const img = document.createElement('img');
+   img.src = post.image_url;
    item.append(img);
-  }else{
-   item.textContent=(post.content||'').slice(0,55);
+  } else {
+   item.textContent = (post.content || '').slice(0, 55);
   }
   fragment.append(item);
  });
@@ -4548,17 +3509,12 @@ async function loadMyPostsGrid(){
 window.addEventListener('DOMContentLoaded', async () => {
  try {
   const {data:{session}} = await db.auth.getSession();
-  if(session?.user){
-   await loadAccount(session.user);
-  } else {
-   showAuthOverlay();
-  }
+  if(session?.user) await loadAccount(session.user);
+  else showAuthOverlay();
  } catch(e) {
   showAuthOverlay();
  } finally {
-  setTimeout(() => {
-   hideSplashScreen();
-  }, 200);
+  setTimeout(() => hideSplashScreen(), 200);
  }
 });
 </script>
