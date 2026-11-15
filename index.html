@@ -1255,11 +1255,10 @@ nav button.active .nav-avatar-ring { border-color: var(--text-primary); border-w
  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 .edit-modal-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--border-light); }
-.edit-photos-row { display: flex; gap: 12px; align-items: center; justify-content: space-around; padding: 10px 0; }
-.edit-photo-preview-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
-.edit-photo-circle { width: 70px; height: 70px; border-radius: 50%; overflow: hidden; background: var(--border-light); border: 2px solid var(--border-medium); display: grid; place-items: center; position: relative; }
-.edit-photo-circle img, .edit-cover-preview img { width: 100%; height: 100%; object-fit: cover; }
-.edit-cover-preview { width: 100%; height: 65px; border-radius: 12px; overflow: hidden; background: var(--bg-muted); border: 2px solid var(--border-medium); position: relative; display: grid; place-items: center; }
+.edit-photos-row { display: flex; align-items: center; justify-content: center; padding: 6px 0 2px 0; }
+.edit-photo-preview-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+.edit-photo-circle { width: 82px; height: 82px; border-radius: 50%; overflow: hidden; background: var(--border-light); border: 2px solid var(--border-medium); display: grid; place-items: center; position: relative; }
+.edit-photo-circle img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Modales de historias destacadas y cierre de sesión */
 #highlightModal, #addToHighlightModal, #logoutConfirmModal {
@@ -2174,20 +2173,13 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
   <div class="edit-photos-row">
    <div class="edit-photo-preview-wrap" onclick="document.getElementById('avatarfile').click()">
     <div class="edit-photo-circle" id="modalAvatarPreviewBox">
-     <span style="font-size:24px">👤</span>
+     <span style="font-size:28px">👤</span>
     </div>
-    <span style="font-size:12px;color:#3b82f6;font-weight:600;">Cambiar foto</span>
-   </div>
-   <div class="edit-photo-preview-wrap" style="flex:1;" onclick="document.getElementById('coverfile').click()">
-    <div class="edit-cover-preview" id="modalCoverPreviewBox">
-     <span style="font-size:12px;color:#666666">Portada</span>
-    </div>
-    <span style="font-size:12px;color:#3b82f6;font-weight:600;">Cambiar portada</span>
+    <span style="font-size:12px;color:#3b82f6;font-weight:600;">Cambiar foto de perfil</span>
    </div>
   </div>
 
   <input class="hidden-file" id="avatarfile" type="file" accept="image/jpeg,image/png,image/webp" onchange="stageImage('avatar',this)">
-  <input class="hidden-file" id="coverfile" type="file" accept="image/jpeg,image/png,image/webp" onchange="stageImage('cover',this)">
 
   <div>
    <label class="muted field-label">NOMBRE</label>
@@ -2355,7 +2347,6 @@ let currentZoom = 1;
 let currentActiveStoryId = null;
 
 let stagedAvatarBlob = null;
-let stagedCoverBlob = null;
 let stagedHighlightBlob = null;
 let currentHighlightItems = [];
 let currentHighlightIndex = 0;
@@ -3924,6 +3915,9 @@ function updateProfileUI() {
 }
 
 function openEditProfileModal() {
+ stagedAvatarBlob = null;
+ const avatarPreviewBox = document.getElementById('modalAvatarPreviewBox');
+ setAvatarContent(avatarPreviewBox, myProfile?.avatar_url, '👤');
  document.getElementById('editname').value = myProfile?.display_name || '';
  document.getElementById('editusername').value = myProfile?.username || '';
  document.getElementById('editpronouns').value = myProfile?.pronouns || '';
@@ -3945,13 +3939,6 @@ function stageImage(type, input) {
   const img = document.createElement('img');
   setPreviewBlobUrl(img, file);
   box.append(img);
- } else {
-  stagedCoverBlob = file;
-  const box = document.getElementById('modalCoverPreviewBox');
-  box.replaceChildren();
-  const img = document.createElement('img');
-  setPreviewBlobUrl(img, file);
-  box.append(img);
  }
  input.value = '';
 }
@@ -3966,21 +3953,15 @@ async function saveFullProfile() {
  const bio = document.getElementById('editbio').value;
 
  let avatarUrl = myProfile?.avatar_url;
- let coverUrl = myProfile?.cover_url;
 
  if (stagedAvatarBlob) {
   const path = currentUser.id + '/avatar-' + Date.now() + '.jpg';
   await db.storage.from('og-media').upload(path, stagedAvatarBlob, { contentType: 'image/jpeg' });
   avatarUrl = db.storage.from('og-media').getPublicUrl(path).data.publicUrl;
  }
- if (stagedCoverBlob) {
-  const path = currentUser.id + '/cover-' + Date.now() + '.jpg';
-  await db.storage.from('og-media').upload(path, stagedCoverBlob, { contentType: 'image/jpeg' });
-  coverUrl = db.storage.from('og-media').getPublicUrl(path).data.publicUrl;
- }
 
  const { data } = await db.from('profiles')
-  .update({ display_name, username, pronouns, website, gender, bio, avatar_url: avatarUrl, cover_url: coverUrl })
+  .update({ display_name, username, pronouns, website, gender, bio, avatar_url: avatarUrl })
   .eq('id', currentUser.id)
   .select()
   .single();
