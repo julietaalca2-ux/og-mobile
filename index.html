@@ -487,6 +487,7 @@ nav button.active .nav-avatar-ring { border-color: var(--text-primary); border-w
  font-size: 13px;
  font-weight: 700;
  z-index: 2;
+ cursor: pointer;
 }
 
 /* Cámara */
@@ -626,7 +627,35 @@ nav button.active .nav-avatar-ring { border-color: var(--text-primary); border-w
  flex-direction: column;
  justify-content: space-between;
  padding: calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px) 12px;
+ touch-action: pan-y;
 }
+
+.story-progress-bars {
+ display: flex;
+ gap: 4px;
+ width: 100%;
+ padding: 0 4px 8px 4px;
+ position: relative;
+ z-index: 3;
+}
+.story-progress-segment {
+ flex: 1;
+ height: 2.5px;
+ background: rgba(255, 255, 255, 0.32);
+ border-radius: 2px;
+ overflow: hidden;
+}
+.story-progress-fill {
+ height: 100%;
+ width: 0%;
+ background: #ffffff;
+ transition: width 0.2s ease;
+}
+.story-progress-segment.completed .story-progress-fill,
+.story-progress-segment.active .story-progress-fill {
+ width: 100%;
+}
+
 .story-top-bar { display: flex; align-items: center; justify-content: space-between; color: #ffffff; position: relative; z-index: 2; padding: 0 4px; }
 .story-user-info { display: flex; align-items: center; gap: 8px; }
 .story-user-info .story-avatar-container { width: 32px; height: 32px; margin: 0; }
@@ -643,8 +672,9 @@ nav button.active .nav-avatar-ring { border-color: var(--text-primary); border-w
  overflow: hidden;
  border-radius: 12px;
  background: #121214;
+ user-select: none;
 }
-.story-content-area img { width: 100%; height: 100%; object-fit: cover; }
+.story-content-area img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
 .story-bottom-bar {
  display: flex;
@@ -1504,7 +1534,7 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     <div class="story-avatar-inner" id="mystoryavatar">
      <div style="font-size:24px">👤</div>
     </div>
-    <div class="story-plus-badge" id="mystorybadge">+</div>
+    <div class="story-plus-badge" id="mystorybadge" onclick="event.stopPropagation(); openCameraModal();">+</div>
    </div>
    Tu historia
   </div>
@@ -2109,6 +2139,8 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
 
 <!-- Visor de Historias -->
 <div id="storyViewer">
+ <div class="story-progress-bars" id="storyProgressBars"></div>
+
  <div class="story-top-bar">
   <div class="story-user-info">
    <div id="storyViewerAvatarContainer" class="story-avatar-container">
@@ -2142,6 +2174,8 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
 
 <!-- Visor de Historias Destacadas -->
 <div id="highlightViewer">
+ <div class="story-progress-bars" id="highlightProgressBars"></div>
+
  <div class="story-top-bar">
   <div class="story-user-info">
    <div id="highlightViewerAvatarContainer" class="story-avatar-container">
@@ -2231,7 +2265,7 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
    <input type="file" id="highlightFile" class="hidden-file" accept="image/jpeg,image/png,image/webp" onchange="stageHighlightCover(this)">
    <button class="secondary" style="width:100%;margin-top:6px;" onclick="document.getElementById('highlightFile').click()">Seleccionar imagen de portada</button>
   </div>
-  <button class="primary" onclick="saveNewHighlight()">Publicar destacada</button>
+  <button class="primary" id="saveHighlightBtn" onclick="saveNewHighlight()">Publicar destacada</button>
  </div>
 </div>
 
@@ -2338,7 +2372,12 @@ let postsRealtimeChannel = null;
 let presenceChannel = null;
 let onlineUsersMap = {};
 
-let myActiveStory = null;
+let myActiveStories = [];
+let storiesByUserMap = {};
+let currentStoryGroupProfile = null;
+let currentStoryGroupList = [];
+let currentStoryGroupIndex = 0;
+
 let mediaStream = null;
 let capturedBlob = null;
 let postImageBlob = null;
@@ -2348,8 +2387,12 @@ let currentActiveStoryId = null;
 
 let stagedAvatarBlob = null;
 let stagedHighlightBlob = null;
+let pendingStoryImageForHighlight = null;
+let highlightsCacheByUser = {};
 let currentHighlightItems = [];
 let currentHighlightIndex = 0;
+let isUploadingStory = false;
+let isSavingHighlight = false;
 
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
@@ -2399,6 +2442,7 @@ function formatDate(date) {
 
 function timeAgo(dateString) {
  const diff = Math.floor((new Date() - new Date(dateString)) / 1000);
+ if (diff < 60) return 'Ahora';
  if (diff < 3600) return Math.floor(diff / 60) + ' min';
  if (diff < 86400) return Math.floor(diff / 3600) + ' h';
  return Math.floor(diff / 86400) + ' d';
@@ -2848,6 +2892,7 @@ async function loadAccount(user) {
  await Promise.all([
   loadInitialPosts(),
   loadStoriesData(),
+  loadHighlights(user.id, 'highlightsScrollContainer'),
   checkGlobalUnreadMessages()
  ]);
 
@@ -2871,7 +2916,9 @@ async function executeConfirmedSignOut() {
  currentUser = null;
  myProfile = null;
  viewedProfile = null;
- myActiveStory = null;
+ myActiveStories = [];
+ storiesByUserMap = {};
+ highlightsCacheByUser = {};
  cachedConversationsList = null;
  cachedActivityEvents = null;
  cachedFeedPosts = null;
@@ -2943,6 +2990,28 @@ function setupRealtimeNotifications() {
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, () => { cachedActivityEvents = null; loadActivity(); })
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stories' }, () => { loadStoriesData(); })
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'story_likes' }, () => { cachedActivityEvents = null; loadActivity(); })
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'highlights' }, payload => {
+   const targetUid = payload.new?.user_id || payload.old?.user_id;
+   if (targetUid) {
+    delete highlightsCacheByUser[targetUid];
+    if (currentUser && targetUid === currentUser.id) {
+     loadHighlights(currentUser.id, 'highlightsScrollContainer');
+    } else if (viewedProfile && targetUid === viewedProfile.id) {
+     loadHighlights(viewedProfile.id, 'publicHighlightsScrollContainer');
+    }
+   }
+  })
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'highlight_items' }, payload => {
+   const targetUid = payload.new?.user_id || payload.old?.user_id;
+   if (targetUid) {
+    delete highlightsCacheByUser[targetUid];
+    if (currentUser && targetUid === currentUser.id) {
+     loadHighlights(currentUser.id, 'highlightsScrollContainer');
+    } else if (viewedProfile && targetUid === viewedProfile.id) {
+     loadHighlights(viewedProfile.id, 'publicHighlightsScrollContainer');
+    }
+   }
+  })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, payload => {
    const updated = payload.new;
    document.querySelectorAll(`[data-post-views="${updated.id}"]`).forEach(b => { b.textContent = updated.views || 0; });
@@ -3404,68 +3473,109 @@ async function loadSavedPostsProfileGrid() {
 }
 
 /* ========================================================================= */
-/* 7. HISTORIAS, DESTACADAS Y CÁMARA                                         */
+/* 7. HISTORIAS MÚLTIPLES, DESTACADAS EN SUPABASE Y CÁMARA                   */
 /* ========================================================================= */
+function renderProgressSegments(containerId, totalCount, activeIndex) {
+ const container = document.getElementById(containerId);
+ if (!container) return;
+ container.replaceChildren();
+ if (!totalCount || totalCount <= 0) return;
+
+ const fragment = document.createDocumentFragment();
+ for (let i = 0; i < totalCount; i++) {
+  const seg = document.createElement('div');
+  seg.className = 'story-progress-segment';
+  if (i < activeIndex) seg.classList.add('completed');
+  else if (i === activeIndex) seg.classList.add('active');
+
+  const fill = document.createElement('div');
+  fill.className = 'story-progress-fill';
+  seg.append(fill);
+  fragment.append(seg);
+ }
+ container.replaceChildren(fragment);
+}
+
 async function loadStoriesData() {
  if (!currentUser) return;
  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
  const { data: followingRes } = await db.from('follows').select('following_id').eq('follower_id', currentUser.id);
  const followingIds = (followingRes || []).map(f => f.following_id);
- const allowedUserIds = [...followingIds, currentUser.id];
+ const allowedUserIds = [...new Set([...followingIds, currentUser.id])];
 
- const { data: myStoryRes } = await db.from('stories')
-  .select('*')
-  .eq('user_id', currentUser.id)
+ const { data: storiesData } = await db.from('stories')
+  .select('id, user_id, image_url, created_at')
+  .in('user_id', allowedUserIds)
   .gte('created_at', twentyFourHoursAgo)
-  .order('created_at', { ascending: false })
-  .limit(1)
-  .maybeSingle();
+  .order('created_at', { ascending: true });
 
- myActiveStory = myStoryRes || null;
+ storiesByUserMap = {};
+ (storiesData || []).forEach(s => {
+  if (!storiesByUserMap[s.user_id]) storiesByUserMap[s.user_id] = [];
+  storiesByUserMap[s.user_id].push(s);
+ });
+
+ myActiveStories = storiesByUserMap[currentUser.id] || [];
 
  const container = document.getElementById('storiescontainer');
  const fragment = document.createDocumentFragment();
 
  const myDiv = document.createElement('div');
- myDiv.className = myActiveStory ? 'story has-story' : 'story';
+ myDiv.className = myActiveStories.length > 0 ? 'story has-story' : 'story';
  myDiv.onclick = handleStoryClick;
- myDiv.innerHTML = `<div class="story-avatar-container"><div class="story-avatar-inner">${myProfile?.avatar_url ? `<img src="${myProfile.avatar_url}">` : '👤'}</div>${!myActiveStory ? '<div class="story-plus-badge">+</div>' : ''}</div>Tu historia`;
+
+ const avatarWrapper = document.createElement('div');
+ avatarWrapper.className = 'story-avatar-container';
+
+ const avatarInner = document.createElement('div');
+ avatarInner.className = 'story-avatar-inner';
+ if (myProfile?.avatar_url) {
+  const img = document.createElement('img');
+  img.src = myProfile.avatar_url;
+  img.alt = 'Tu historia';
+  avatarInner.append(img);
+ } else {
+  avatarInner.textContent = '👤';
+ }
+ avatarWrapper.append(avatarInner);
+
+ const plusBadge = document.createElement('div');
+ plusBadge.className = 'story-plus-badge';
+ plusBadge.textContent = '+';
+ plusBadge.title = 'Agregar nueva historia';
+ plusBadge.onclick = e => {
+  e.stopPropagation();
+  openCameraModal();
+ };
+ avatarWrapper.append(plusBadge);
+
+ myDiv.append(avatarWrapper, document.createTextNode('Tu historia'));
  fragment.append(myDiv);
 
- if (allowedUserIds.length > 0) {
-  const { data: storiesData } = await db.from('stories')
-   .select('id, user_id, image_url, created_at')
-   .in('user_id', allowedUserIds)
-   .gte('created_at', twentyFourHoursAgo)
-   .order('created_at', { ascending: false });
-
-  if (storiesData && storiesData.length > 0) {
-   const unique = {};
-   storiesData.forEach(s => {
-    if (s.user_id !== currentUser.id && !unique[s.user_id]) unique[s.user_id] = s;
-   });
-
-   const missing = Object.keys(unique).filter(id => !profilesCache[id]);
-   if (missing.length > 0) {
-    const { data: profs } = await db.from('profiles').select('id, username, avatar_url').in('id', missing);
-    (profs || []).forEach(p => profilesCache[p.id] = p);
-   }
-
-   Object.values(unique).forEach(story => {
-    const profile = profilesCache[story.user_id];
-    if (!profile) return;
-    const sDiv = document.createElement('div');
-    sDiv.className = 'story has-story';
-    sDiv.onclick = () => openUserStory(profile, story);
-    sDiv.append(createAvatarNode(profile, true));
-    const lbl = document.createElement('div');
-    lbl.textContent = profile.username;
-    sDiv.append(lbl);
-    fragment.append(sDiv);
-   });
-  }
+ const otherUserIdsWithStories = Object.keys(storiesByUserMap).filter(uid => uid !== currentUser.id && storiesByUserMap[uid].length > 0);
+ const missing = otherUserIdsWithStories.filter(id => !profilesCache[id]);
+ if (missing.length > 0) {
+  const { data: profs } = await db.from('profiles').select('id, username, avatar_url').in('id', missing);
+  (profs || []).forEach(p => profilesCache[p.id] = p);
  }
+
+ otherUserIdsWithStories.forEach(uid => {
+  const profile = profilesCache[uid];
+  const userStories = storiesByUserMap[uid];
+  if (!profile || !userStories || !userStories.length) return;
+
+  const sDiv = document.createElement('div');
+  sDiv.className = 'story has-story';
+  sDiv.onclick = () => openUserStoriesSequence(profile, userStories, 0);
+  sDiv.append(createAvatarNode(profile, true));
+
+  const lbl = document.createElement('div');
+  lbl.textContent = profile.username;
+  sDiv.append(lbl);
+  fragment.append(sDiv);
+ });
+
  container.replaceChildren(fragment);
 }
 
@@ -3473,29 +3583,67 @@ function updateStoryUI() { loadStoriesData(); }
 
 async function handleStoryClick() {
  if (!currentUser) { showAuthOverlay(); return; }
- if (myActiveStory) openUserStory(myProfile, myActiveStory);
- else openCameraModal();
+ if (myActiveStories && myActiveStories.length > 0) {
+  openUserStoriesSequence(myProfile, myActiveStories, 0);
+ } else {
+  openCameraModal();
+ }
 }
 
-async function openUserStory(profile, story) {
- const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).getTime();
- if (new Date(story.created_at).getTime() < twentyFourHoursAgo) {
+function openUserStoriesSequence(profile, storiesArray, startIndex = 0) {
+ const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+ const validStories = (storiesArray || []).filter(s => new Date(s.created_at).getTime() >= twentyFourHoursAgo);
+
+ if (!validStories.length) {
   alert('Esta historia ha expirado.');
   closeStoryViewer();
   loadStoriesData();
   return;
  }
 
+ currentStoryGroupProfile = profile;
+ currentStoryGroupList = validStories;
+ currentStoryGroupIndex = Math.max(0, Math.min(startIndex, validStories.length - 1));
+
+ renderCurrentStorySlide();
+ document.getElementById('storyViewer').classList.add('active');
+}
+
+function renderCurrentStorySlide() {
+ const story = currentStoryGroupList[currentStoryGroupIndex];
+ if (!story || !currentStoryGroupProfile) return;
+
  currentActiveStoryId = story.id;
- document.getElementById('storyUsername').textContent = '@' + profile.username;
+ renderProgressSegments('storyProgressBars', currentStoryGroupList.length, currentStoryGroupIndex);
+
+ document.getElementById('storyUsername').textContent = '@' + currentStoryGroupProfile.username;
  document.getElementById('storyImage').src = story.image_url;
  document.getElementById('storyTimeAgo').textContent = timeAgo(story.created_at);
+ setAvatarContent(document.getElementById('storyViewerAvatarInner'), currentStoryGroupProfile.avatar_url);
  document.getElementById('storyLikeBtn')?.classList.remove('liked');
 
  const addToHighlightTrigger = document.getElementById('storyAddToHighlightTrigger');
- addToHighlightTrigger.style.display = (currentUser && profile.id === currentUser.id) ? 'inline-flex' : 'none';
+ addToHighlightTrigger.style.display = (currentUser && currentStoryGroupProfile.id === currentUser.id) ? 'inline-flex' : 'none';
+}
 
- document.getElementById('storyViewer').classList.add('active');
+function nextStorySlide() {
+ if (!currentStoryGroupList.length) return;
+ if (currentStoryGroupIndex < currentStoryGroupList.length - 1) {
+  currentStoryGroupIndex++;
+  renderCurrentStorySlide();
+ } else {
+  closeStoryViewer();
+ }
+}
+
+function prevStorySlide() {
+ if (!currentStoryGroupList.length) return;
+ if (currentStoryGroupIndex > 0) {
+  currentStoryGroupIndex--;
+  renderCurrentStorySlide();
+ } else {
+  renderCurrentStorySlide();
+ }
 }
 
 function toggleStoryLikeAction() {
@@ -3510,8 +3658,54 @@ function sendStoryReply() {
 
 function closeStoryViewer() {
  currentActiveStoryId = null;
+ currentStoryGroupList = [];
+ currentStoryGroupIndex = 0;
  document.getElementById('storyViewer').classList.remove('active');
 }
+
+/* Gestos táctiles y toque en Visor de Historias */
+(function initStoryViewerGestures() {
+ const area = document.getElementById('storyContentAreaContainer');
+ if (!area) return;
+ let startX = 0;
+ let startY = 0;
+
+ area.addEventListener('touchstart', e => {
+  startX = e.changedTouches[0].clientX;
+  startY = e.changedTouches[0].clientY;
+ }, { passive: true });
+
+ area.addEventListener('touchend', e => {
+  const endX = e.changedTouches[0].clientX;
+  const endY = e.changedTouches[0].clientY;
+  const diffX = endX - startX;
+  const diffY = endY - startY;
+
+  if (Math.abs(diffY) > 90 && diffY > Math.abs(diffX)) {
+   closeStoryViewer();
+   return;
+  }
+
+  if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+   if (diffX < 0) nextStorySlide();
+   else prevStorySlide();
+   return;
+  }
+
+  const rect = area.getBoundingClientRect();
+  const tapX = endX - rect.left;
+  if (tapX < rect.width * 0.35) prevStorySlide();
+  else nextStorySlide();
+ }, { passive: true });
+
+ area.addEventListener('click', e => {
+  if ('ontouchstart' in window) return;
+  const rect = area.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  if (clickX < rect.width * 0.35) prevStorySlide();
+  else nextStorySlide();
+ });
+})();
 
 /* Cámara */
 async function openCameraModal() {
@@ -3521,6 +3715,8 @@ async function openCameraModal() {
  document.getElementById('cameraVideo').style.display = 'block';
  document.getElementById('captureBtn').style.display = 'block';
  document.getElementById('publishStoryBtn').style.display = 'none';
+ document.getElementById('publishStoryBtn').disabled = false;
+ document.getElementById('publishStoryBtn').textContent = 'Compartir en tu historia';
  document.getElementById('cameraModal').classList.add('active');
  await startCameraStream();
 }
@@ -3580,24 +3776,58 @@ async function handleGallerySelect(input) {
 }
 
 async function uploadCapturedStory() {
- if (!currentUser || !capturedBlob) return;
- const path = currentUser.id + '/story-' + Date.now() + '.jpg';
- await db.storage.from('og-media').upload(path, capturedBlob, { contentType: 'image/jpeg' });
- const { data: urlData } = db.storage.from('og-media').getPublicUrl(path);
- const { data } = await db.from('stories').insert({ user_id: currentUser.id, image_url: urlData.publicUrl }).select().single();
- myActiveStory = data;
- closeCameraModal();
- loadStoriesData();
+ if (!currentUser || !capturedBlob || isUploadingStory) return;
+ isUploadingStory = true;
+ const pubBtn = document.getElementById('publishStoryBtn');
+ pubBtn.disabled = true;
+ pubBtn.textContent = 'Subiendo historia...';
+
+ try {
+  const uniqueSuffix = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  const path = `${currentUser.id}/story-${uniqueSuffix}.jpg`;
+
+  const { error: uploadError } = await db.storage.from('og-media').upload(path, capturedBlob, {
+   contentType: 'image/jpeg',
+   upsert: false
+  });
+  if (uploadError) throw uploadError;
+
+  const { data: urlData } = db.storage.from('og-media').getPublicUrl(path);
+  const { error: insertError } = await db.from('stories').insert({
+   user_id: currentUser.id,
+   image_url: urlData.publicUrl
+  });
+  if (insertError) throw insertError;
+
+  capturedBlob = null;
+  closeCameraModal();
+  await loadStoriesData();
+ } catch (e) {
+  alert('No se pudo subir la historia. Intentá nuevamente.');
+  pubBtn.disabled = false;
+  pubBtn.textContent = 'Compartir en tu historia';
+ } finally {
+  isUploadingStory = false;
+ }
 }
 
-/* Historias Destacadas */
-function createNewHighlightModal() {
+/* ========================================================================= */
+/* HISTORIAS DESTACADAS PERSISTENTES EN SUPABASE                             */
+/* ========================================================================= */
+function createNewHighlightModal(initialImageUrl = null) {
  document.getElementById('highlightTitleInput').value = '';
  stagedHighlightBlob = null;
+ pendingStoryImageForHighlight = initialImageUrl;
+ const saveBtn = document.getElementById('saveHighlightBtn');
+ if (saveBtn) {
+  saveBtn.disabled = false;
+  saveBtn.textContent = 'Publicar destacada';
+ }
  document.getElementById('highlightModal').classList.add('active');
 }
 
 function closeHighlightModal() {
+ pendingStoryImageForHighlight = null;
  document.getElementById('highlightModal').classList.remove('active');
 }
 
@@ -3610,33 +3840,129 @@ function stageHighlightCover(input) {
 }
 
 async function saveNewHighlight() {
+ if (!currentUser || isSavingHighlight) return;
  const title = document.getElementById('highlightTitleInput').value.trim();
  if (!title) return alert('Ingresá un título para la historia destacada.');
- if (!stagedHighlightBlob) return alert('Seleccioná una imagen de portada.');
+ if (!stagedHighlightBlob && !pendingStoryImageForHighlight) {
+  return alert('Seleccioná una imagen de portada.');
+ }
 
- const path = currentUser.id + '/highlight-' + Date.now() + '.jpg';
- await db.storage.from('og-media').upload(path, stagedHighlightBlob, { contentType: 'image/jpeg' });
- const { data: urlData } = db.storage.from('og-media').getPublicUrl(path);
+ isSavingHighlight = true;
+ const saveBtn = document.getElementById('saveHighlightBtn');
+ if (saveBtn) {
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Guardando...';
+ }
 
- const highlights = JSON.parse(localStorage.getItem('og_highlights_' + currentUser.id) || '[]');
- highlights.push({ id: 'hl_' + Date.now(), title, cover_url: urlData.publicUrl, items: [], created_at: new Date().toISOString() });
- localStorage.setItem('og_highlights_' + currentUser.id, JSON.stringify(highlights));
+ try {
+  let coverUrl = pendingStoryImageForHighlight || null;
 
- closeHighlightModal();
- loadHighlights(currentUser.id, 'highlightsScrollContainer');
+  if (stagedHighlightBlob) {
+   const uniqueSuffix = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+   const path = `${currentUser.id}/highlight-${uniqueSuffix}.jpg`;
+   const { error: uploadError } = await db.storage.from('og-media').upload(path, stagedHighlightBlob, {
+    contentType: 'image/jpeg',
+    upsert: false
+   });
+   if (uploadError) throw uploadError;
+   coverUrl = db.storage.from('og-media').getPublicUrl(path).data.publicUrl;
+  }
+
+  const { data: createdHighlight, error: hlError } = await db.from('highlights')
+   .insert({
+    user_id: currentUser.id,
+    title,
+    cover_url: coverUrl
+   })
+   .select()
+   .single();
+
+  if (hlError) throw hlError;
+
+  const initialItemsToInsert = [];
+  if (coverUrl) {
+   initialItemsToInsert.push({
+    highlight_id: createdHighlight.id,
+    user_id: currentUser.id,
+    image_url: coverUrl,
+    position: 0
+   });
+  }
+  if (pendingStoryImageForHighlight && pendingStoryImageForHighlight !== coverUrl) {
+   initialItemsToInsert.push({
+    highlight_id: createdHighlight.id,
+    user_id: currentUser.id,
+    image_url: pendingStoryImageForHighlight,
+    position: initialItemsToInsert.length
+   });
+  }
+
+  if (initialItemsToInsert.length > 0) {
+   const { error: itemsError } = await db.from('highlight_items').insert(initialItemsToInsert);
+   if (itemsError) throw itemsError;
+  }
+
+  delete highlightsCacheByUser[currentUser.id];
+  closeHighlightModal();
+  await loadHighlights(currentUser.id, 'highlightsScrollContainer');
+ } catch (e) {
+  alert('Error al guardar la historia destacada en la nube.');
+  if (saveBtn) {
+   saveBtn.disabled = false;
+   saveBtn.textContent = 'Publicar destacada';
+  }
+ } finally {
+  isSavingHighlight = false;
+ }
 }
 
-function openAddToHighlightModal() {
- if (!currentActiveStoryId) return;
+async function fetchUserHighlightsFromSupabase(userId) {
+ if (!userId) return [];
+ const { data: highlightsData, error: hlErr } = await db.from('highlights')
+  .select('id, user_id, title, cover_url, created_at')
+  .eq('user_id', userId)
+  .order('created_at', { ascending: true });
+
+ if (hlErr || !highlightsData) return [];
+ if (!highlightsData.length) {
+  highlightsCacheByUser[userId] = [];
+  return [];
+ }
+
+ const highlightIds = highlightsData.map(h => h.id);
+ const { data: itemsData } = await db.from('highlight_items')
+  .select('id, highlight_id, image_url, position, created_at')
+  .in('highlight_id', highlightIds)
+  .order('position', { ascending: true })
+  .order('created_at', { ascending: true });
+
+ const itemsByHighlightId = {};
+ (itemsData || []).forEach(it => {
+  if (!itemsByHighlightId[it.highlight_id]) itemsByHighlightId[it.highlight_id] = [];
+  itemsByHighlightId[it.highlight_id].push(it.image_url);
+ });
+
+ const enriched = highlightsData.map(h => ({
+  ...h,
+  items: itemsByHighlightId[h.id] || []
+ }));
+
+ highlightsCacheByUser[userId] = enriched;
+ return enriched;
+}
+
+async function openAddToHighlightModal() {
+ if (!currentActiveStoryId || !currentUser) return;
  const listContainer = document.getElementById('addToHighlightList');
- listContainer.replaceChildren();
+ listContainer.innerHTML = '<div class="activity-empty">Cargando destacadas...</div>';
+ document.getElementById('addToHighlightModal').classList.add('active');
 
- const highlights = JSON.parse(localStorage.getItem('og_highlights_' + currentUser.id) || '[]');
  const storyImageUrl = document.getElementById('storyImage').src;
+ const highlights = await fetchUserHighlightsFromSupabase(currentUser.id);
 
+ listContainer.replaceChildren();
  if (!highlights.length) {
   listContainer.innerHTML = '<div class="activity-empty">No tienes historias destacadas creadas. Crea una abajo.</div>';
-  document.getElementById('addToHighlightModal').classList.add('active');
   return;
  }
 
@@ -3649,92 +3975,194 @@ function openAddToHighlightModal() {
   const alreadyAdded = hl.items && hl.items.includes(storyImageUrl);
   btn.innerHTML = `<span style="font-weight:600;">📁 ${hl.title}</span> <span style="margin-left:auto;font-size:12px;color:${alreadyAdded ? '#22c55e' : '#3b82f6'}">${alreadyAdded ? 'Agregada ✓' : 'Agregar +'}</span>`;
 
-  btn.onclick = () => {
-   if (!hl.items) hl.items = [];
-   if (!hl.items.includes(storyImageUrl)) {
-    hl.items.push(storyImageUrl);
-    localStorage.setItem('og_highlights_' + currentUser.id, JSON.stringify(highlights));
-    alert(`Agregada a "${hl.title}"`);
-   } else {
+  btn.onclick = async () => {
+   if (alreadyAdded) {
     alert('Esta historia ya está en esta destacada.');
+    closeAddToHighlightModal();
+    return;
    }
+   btn.disabled = true;
+   const nextPos = Array.isArray(hl.items) ? hl.items.length : 0;
+
+   const { error: insertErr } = await db.from('highlight_items').insert({
+    highlight_id: hl.id,
+    user_id: currentUser.id,
+    image_url: storyImageUrl,
+    position: nextPos
+   });
+
+   if (insertErr) {
+    alert('No se pudo agregar la foto a la destacada.');
+    btn.disabled = false;
+    return;
+   }
+
+   if (!hl.cover_url) {
+    await db.from('highlights').update({ cover_url: storyImageUrl }).eq('id', hl.id).eq('user_id', currentUser.id);
+   }
+
+   delete highlightsCacheByUser[currentUser.id];
+   alert(`Agregada a "${hl.title}"`);
    closeAddToHighlightModal();
+   await loadHighlights(currentUser.id, 'highlightsScrollContainer');
   };
   fragment.append(btn);
  });
  listContainer.replaceChildren(fragment);
- document.getElementById('addToHighlightModal').classList.add('active');
 }
 
 function closeAddToHighlightModal() { document.getElementById('addToHighlightModal').classList.remove('active'); }
 
 function createNewHighlightFromViewer() {
+ const storyImageUrl = document.getElementById('storyImage')?.src || null;
  closeAddToHighlightModal();
- createNewHighlightModal();
+ createNewHighlightModal(storyImageUrl);
 }
 
 function openHighlightViewer(highlightObj, profile) {
- currentHighlightItems = highlightObj.items || [];
- if (!currentHighlightItems.length) {
+ const items = (highlightObj.items && highlightObj.items.length > 0)
+  ? highlightObj.items
+  : (highlightObj.cover_url ? [highlightObj.cover_url] : []);
+
+ if (!items.length) {
   alert('Esta historia destacada no tiene elementos guardados.');
   return;
  }
+
+ currentHighlightItems = items;
  currentHighlightIndex = 0;
 
  const viewer = document.getElementById('highlightViewer');
- document.getElementById('highlightViewerUsername').textContent = '@' + profile.username;
+ document.getElementById('highlightViewerUsername').textContent = '@' + (profile?.username || 'usuario');
  document.getElementById('highlightViewerTitleText').textContent = highlightObj.title;
- setAvatarContent(document.getElementById('highlightViewerAvatarInner'), profile.avatar_url);
+ setAvatarContent(document.getElementById('highlightViewerAvatarInner'), profile?.avatar_url);
 
  renderCurrentHighlightItem();
  viewer.classList.add('active');
 }
 
 function renderCurrentHighlightItem() {
+ renderProgressSegments('highlightProgressBars', currentHighlightItems.length, currentHighlightIndex);
  document.getElementById('highlightViewerImage').src = currentHighlightItems[currentHighlightIndex];
  document.getElementById('highlightViewerCounter').textContent = `${currentHighlightIndex + 1} / ${currentHighlightItems.length}`;
 }
 
-function closeHighlightViewer() { document.getElementById('highlightViewer').classList.remove('active'); }
+function nextHighlightSlide() {
+ if (!currentHighlightItems.length) return;
+ if (currentHighlightIndex < currentHighlightItems.length - 1) {
+  currentHighlightIndex++;
+  renderCurrentHighlightItem();
+ } else {
+  closeHighlightViewer();
+ }
+}
+
+function prevHighlightSlide() {
+ if (!currentHighlightItems.length) return;
+ if (currentHighlightIndex > 0) {
+  currentHighlightIndex--;
+  renderCurrentHighlightItem();
+ } else {
+  renderCurrentHighlightItem();
+ }
+}
+
+function closeHighlightViewer() {
+ currentHighlightItems = [];
+ currentHighlightIndex = 0;
+ document.getElementById('highlightViewer').classList.remove('active');
+}
+
+/* Gestos táctiles y toque en Visor de Destacadas */
+(function initHighlightViewerGestures() {
+ const area = document.getElementById('highlightContentAreaContainer');
+ if (!area) return;
+ let startX = 0;
+ let startY = 0;
+
+ area.addEventListener('touchstart', e => {
+  startX = e.changedTouches[0].clientX;
+  startY = e.changedTouches[0].clientY;
+ }, { passive: true });
+
+ area.addEventListener('touchend', e => {
+  const endX = e.changedTouches[0].clientX;
+  const endY = e.changedTouches[0].clientY;
+  const diffX = endX - startX;
+  const diffY = endY - startY;
+
+  if (Math.abs(diffY) > 90 && diffY > Math.abs(diffX)) {
+   closeHighlightViewer();
+   return;
+  }
+
+  if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+   if (diffX < 0) nextHighlightSlide();
+   else prevHighlightSlide();
+   return;
+  }
+
+  const rect = area.getBoundingClientRect();
+  const tapX = endX - rect.left;
+  if (tapX < rect.width * 0.35) prevHighlightSlide();
+  else nextHighlightSlide();
+ }, { passive: true });
+
+ area.addEventListener('click', e => {
+  if ('ontouchstart' in window) return;
+  const rect = area.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  if (clickX < rect.width * 0.35) prevHighlightSlide();
+  else nextHighlightSlide();
+ });
+})();
 
 async function loadHighlights(userId, containerId) {
  const container = document.getElementById(containerId);
- if (!container) return;
+ if (!container || !userId) return;
 
  const isOwner = currentUser && userId === currentUser.id;
- const highlights = JSON.parse(localStorage.getItem('og_highlights_' + userId) || '[]');
- const profile = profilesCache[userId] || myProfile || viewedProfile;
+ const highlights = await fetchUserHighlightsFromSupabase(userId);
+ const profile = profilesCache[userId] || (isOwner ? myProfile : viewedProfile);
  const fragment = document.createDocumentFragment();
 
  if (isOwner) {
   const newDiv = document.createElement('div');
   newDiv.className = 'highlight-item';
-  newDiv.onclick = createNewHighlightModal;
+  newDiv.onclick = () => createNewHighlightModal();
   newDiv.innerHTML = `<div class="highlight-circle"><svg viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" style="width:24px;height:24px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span class="highlight-title">Nuevo</span>`;
   fragment.append(newDiv);
  }
 
- highlights.forEach((h, index) => {
+ highlights.forEach(h => {
   const item = document.createElement('div');
   item.className = 'highlight-item';
   item.onclick = () => openHighlightViewer(h, profile);
 
   if (isOwner) {
-   item.oncontextmenu = e => {
+   item.oncontextmenu = async e => {
     e.preventDefault();
     if (confirm(`¿Eliminar historia destacada "${h.title}"?`)) {
-     highlights.splice(index, 1);
-     localStorage.setItem('og_highlights_' + userId, JSON.stringify(highlights));
-     loadHighlights(userId, containerId);
+     const { error } = await db.from('highlights').delete().eq('id', h.id).eq('user_id', currentUser.id);
+     if (!error) {
+      delete highlightsCacheByUser[userId];
+      loadHighlights(userId, containerId);
+     }
     }
    };
   }
 
   const circle = document.createElement('div');
   circle.className = 'highlight-circle';
-  const img = document.createElement('img');
-  img.src = h.cover_url || (h.items && h.items[0]) || '';
-  circle.append(img);
+  const coverSrc = h.cover_url || (h.items && h.items[0]) || '';
+  if (coverSrc) {
+   const img = document.createElement('img');
+   img.src = coverSrc;
+   img.loading = 'lazy';
+   circle.append(img);
+  } else {
+   circle.textContent = '⭐';
+  }
 
   const title = document.createElement('span');
   title.className = 'highlight-title';
