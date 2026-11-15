@@ -1,150 +1,2894 @@
+/* ========================================================================= */
+/* 1. CONFIGURACIÓN SUPABASE Y ESTADO GLOBAL                                 */
+/* ========================================================================= */
+const SUPABASE_URL = "https://axxafvggyetnnaumqefi.supabase.co";
+const SUPABASE_KEY = "sb_publishable_O4wRZft0LCo3DYiCWT4iqg_E5_c8B2A";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+ auth: {
+  persistSession: true,
+  autoRefreshToken: true,
+  detectSessionInUrl: true,
+  storage: window.localStorage
+ }
+});
 
-/* =====================================
-   Ög SOCIAL — APP COMPARTIDA
-   ===================================== */
+let currentUser = null;
+let myProfile = null;
+let viewedProfile = null;
+let isFollowing = false;
+let profilesCache = {};
 
-(() => {
-  "use strict";
+let realtimeChannel = null;
+let dmRealtimeChannel = null;
+let postsRealtimeChannel = null;
+let presenceChannel = null;
+let onlineUsersMap = {};
 
-  const SUPABASE_URL =
-    "https://axxafvggyetnnaumqefi.supabase.co";
+let myActiveStories = [];
+let storiesByUserMap = {};
+let currentStoryGroupProfile = null;
+let currentStoryGroupList = [];
+let currentStoryGroupIndex = 0;
 
-  const SUPABASE_KEY =
-    "sb_publishable_O4wRZft0LCo3DYiCWT4iqg_E5_c8B2A";
+let mediaStream = null;
+let capturedBlob = null;
+let postImageBlob = null;
+let currentFacingMode = 'user';
+let currentZoom = 1;
+let currentActiveStoryId = null;
 
-  if (!window.supabase) {
-    console.error("No se pudo cargar Supabase.");
-    return;
+let stagedAvatarBlob = null;
+let stagedHighlightBlob = null;
+let pendingStoryImageForHighlight = null;
+let highlightsCacheByUser = {};
+let currentHighlightItems = [];
+let currentHighlightIndex = 0;
+let isUploadingStory = false;
+let isSavingHighlight = false;
+
+let feedPage = 0;
+const FEED_PAGE_SIZE = 10;
+let feedLoading = false;
+let feedHasMore = true;
+let loadedPostIds = new Set();
+let cachedFeedPosts = null;
+let isPublishing = false;
+
+let activeConversationId = null;
+let activeRecipientProfile = null;
+let replyingToMessageId = null;
+let replyingToSnippet = null;
+let cachedConversationsList = null;
+let cachedActivityEvents = null;
+
+let searchTimer = null;
+let dmSearchTimer = null;
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+let isSwipeLocked = false;
+const swipeNavigationFlow = ['feed', 'messagesPage', 'explore', 'profile'];
+
+let visitorId = localStorage.getItem('og_visitor_uuid');
+if (!visitorId) {
+ visitorId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+  const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+  return v.toString(16);
+ });
+ localStorage.setItem('og_visitor_uuid', visitorId);
+}
+
+/* ========================================================================= */
+/* 1B. GESTIÓN PWA (SERVICE WORKER, ANDROID INSTALL E IPHONE SAFARI)         */
+/* ========================================================================= */
+let deferredInstallPrompt = null;
+
+function isAppInStandaloneMode() {
+ return (
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.navigator.standalone === true ||
+  document.referrer.includes('android-app://')
+ );
+}
+
+function isIosDevice() {
+ const ua = window.navigator.userAgent.toLowerCase();
+ return /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function updatePwaInstallButtonsVisibility() {
+ const standalone = isAppInStandaloneMode();
+ const canInstallAndroid = !standalone && !!deferredInstallPrompt;
+ const canShowIosGuide = !standalone && isIosDevice();
+
+ const androidBtnIds = ['authInstallAndroidBtn', 'headerInstallAndroidBtn', 'menuInstallAndroidBtn'];
+ const iosBtnIds = ['authInstallIosBtn', 'headerInstallIosBtn', 'menuInstallIosBtn'];
+
+ androidBtnIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (id === 'headerInstallAndroidBtn') {
+   const isFeedActive = document.getElementById('feed')?.classList.contains('active');
+   el.style.display = (canInstallAndroid && isFeedActive) ? 'inline-flex' : 'none';
+  } else {
+   el.style.display = canInstallAndroid ? 'flex' : 'none';
   }
+ });
 
-  // Evita crear más de un cliente si el archivo
-  // se carga accidentalmente dos veces.
-  if (!window.ogDB) {
-    window.ogDB = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
+ iosBtnIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (id === 'headerInstallIosBtn') {
+   const isFeedActive = document.getElementById('feed')?.classList.contains('active');
+   el.style.display = (canShowIosGuide && isFeedActive) ? 'inline-flex' : 'none';
+  } else {
+   el.style.display = canShowIosGuide ? 'flex' : 'none';
   }
+ });
+}
 
-  window.og = window.og || {};
+window.addEventListener('beforeinstallprompt', event => {
+ event.preventDefault();
+ deferredInstallPrompt = event;
+ updatePwaInstallButtonsVisibility();
+});
 
-  window.og.db = window.ogDB;
+window.addEventListener('appinstalled', () => {
+ deferredInstallPrompt = null;
+ updatePwaInstallButtonsVisibility();
+});
 
-  // Usuario autenticado
-  window.og.getUser = async function () {
-    const { data, error } =
-      await window.ogDB.auth.getUser();
+async function triggerAndroidInstall() {
+ if (!deferredInstallPrompt) return;
+ deferredInstallPrompt.prompt();
+ const { outcome } = await deferredInstallPrompt.userChoice;
+ if (outcome === 'accepted') {
+  deferredInstallPrompt = null;
+ }
+ updatePwaInstallButtonsVisibility();
+}
 
-    if (error) throw error;
+function openIosInstallModal() {
+ document.getElementById('iosInstallModal')?.classList.add('active');
+}
 
-    return data.user || null;
-  };
+function closeIosInstallModal() {
+ document.getElementById('iosInstallModal')?.classList.remove('active');
+}
 
-  // Sesión actual
-  window.og.getSession = async function () {
-    const { data, error } =
-      await window.ogDB.auth.getSession();
+if ('serviceWorker' in navigator) {
+ window.addEventListener('load', async () => {
+  try {
+   const registration = await navigator.serviceWorker.register('./sw.js', {
+    scope: './',
+    updateViaCache: 'none'
+   });
 
-    if (error) throw error;
-
-    return data.session || null;
-  };
-
-  // Cerrar sesión
-  window.og.signOut = async function () {
-    const { error } =
-      await window.ogDB.auth.signOut();
-
-    if (error) throw error;
-
-    window.location.href = "/index.html";
-  };
-
-  // Escapar texto para mostrarlo de forma segura
-  window.og.escapeHTML = function (value) {
-    return String(value ?? "").replace(
-      /[&<>"']/g,
-      character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      })[character]
-    );
-  };
-
-  // Formato de fechas
-  window.og.formatDate = function (value) {
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "";
-    }
-
-    return date.toLocaleString("es-AR", {
-      dateStyle: "short",
-      timeStyle: "short"
+   registration.addEventListener('updatefound', () => {
+    const newWorker = registration.installing;
+    if (!newWorker) return;
+    newWorker.addEventListener('statechange', () => {
+     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+      newWorker.postMessage({ type: 'SKIP_WAITING' });
+     }
     });
-  };
+   });
 
-  // Subir imágenes al almacenamiento
-  window.og.uploadImage = async function (
-    file,
-    folder = "media"
-  ) {
-    const user = await window.og.getUser();
+   let refreshing = false;
+   navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+   });
+  } catch (err) {}
+ });
+}
 
-    if (!user) {
-      throw new Error("Iniciá sesión primero.");
+/* ========================================================================= */
+/* 2. HELPERS DE DOM, FORMATO Y MEMORIA                                      */
+/* ========================================================================= */
+function status(id, message) {
+ const el = document.getElementById(id);
+ if (el) el.textContent = message;
+}
+
+function formatDate(date) {
+ return new Date(date).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function timeAgo(dateString) {
+ const diff = Math.floor((new Date() - new Date(dateString)) / 1000);
+ if (diff < 60) return 'Ahora';
+ if (diff < 3600) return Math.floor(diff / 60) + ' min';
+ if (diff < 86400) return Math.floor(diff / 3600) + ' h';
+ return Math.floor(diff / 86400) + ' d';
+}
+
+function setPreviewBlobUrl(imgElement, blob) {
+ if (!imgElement) return;
+ if (imgElement.dataset.blobUrl) {
+  URL.revokeObjectURL(imgElement.dataset.blobUrl);
+ }
+ const url = URL.createObjectURL(blob);
+ imgElement.dataset.blobUrl = url;
+ imgElement.src = url;
+}
+
+function setAvatarContent(container, avatarUrl, fallbackEmoji = '👤') {
+ if (!container) return;
+ container.replaceChildren();
+ if (avatarUrl) {
+  const img = document.createElement('img');
+  img.src = avatarUrl;
+  img.alt = 'Avatar';
+  img.loading = 'lazy';
+  container.append(img);
+ } else {
+  container.textContent = fallbackEmoji;
+ }
+}
+
+function createAvatarNode(profile, isStoryActive = false) {
+ const container = document.createElement('div');
+ container.className = 'story-avatar-container';
+
+ const inner = document.createElement('div');
+ inner.className = 'story-avatar-inner';
+
+ if (profile?.avatar_url) {
+  const img = document.createElement('img');
+  img.src = profile.avatar_url;
+  img.alt = 'Avatar';
+  img.loading = 'lazy';
+  inner.append(img);
+ } else {
+  const placeholder = document.createElement('div');
+  placeholder.style.fontSize = '20px';
+  placeholder.textContent = '👤';
+  inner.append(placeholder);
+ }
+ container.append(inner);
+
+ const dot = document.createElement('span');
+ dot.className = 'online-dot';
+ if (profile?.id && onlineUsersMap[profile.id]) {
+  dot.classList.add('active');
+ }
+ dot.id = `online-dot-${profile?.id}`;
+ container.append(dot);
+
+ return container;
+}
+
+function updateNavAvatarUI() {
+ const navContainer = document.getElementById('navAvatarContainer');
+ if (!navContainer) return;
+
+ const dot = document.getElementById('navOnlineDot');
+ navContainer.replaceChildren();
+
+ if (myProfile?.avatar_url) {
+  const img = document.createElement('img');
+  img.src = myProfile.avatar_url;
+  img.alt = 'Perfil';
+  img.loading = 'lazy';
+  navContainer.append(img);
+ } else {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.style.width = '16px';
+  svg.style.height = '16px';
+  svg.innerHTML = '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>';
+  navContainer.append(svg);
+ }
+ if (dot) navContainer.append(dot);
+}
+
+function renderPostsGrid(posts, gridElement, emptyMessage) {
+ if (!gridElement) return;
+ gridElement.replaceChildren();
+ if (!posts || !posts.length) {
+  gridElement.innerHTML = `<div class="grid-empty-msg">${emptyMessage}</div>`;
+  return;
+ }
+
+ const fragment = document.createDocumentFragment();
+ posts.forEach(post => {
+  const item = document.createElement('div');
+  item.className = 'ig-grid-item';
+  item.onclick = () => openPostDetail(post);
+
+  if (post.image_url) {
+   const img = document.createElement('img');
+   img.src = post.image_url;
+   img.loading = 'lazy';
+   item.append(img);
+  } else {
+   item.textContent = (post.content || '').slice(0, 55);
+  }
+  fragment.append(item);
+ });
+ gridElement.replaceChildren(fragment);
+}
+
+/* ========================================================================= */
+/* 3. NAVEGACIÓN, GESTOS SWIPE Y MENÚ                                        */
+/* ========================================================================= */
+window.addEventListener('scroll', () => {
+ if (!document.getElementById('feed').classList.contains('active')) return;
+ if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 300) {
+  loadMorePosts();
+ }
+}, { passive: true });
+
+function isAnyModalOrSubViewOpen() {
+ const modalIds = ['postDetailModal', 'editProfileModal', 'storyViewer', 'cameraModal', 'logoutConfirmModal', 'highlightModal', 'highlightViewer', 'addToHighlightModal', 'iosInstallModal'];
+ for (const id of modalIds) {
+  const el = document.getElementById(id);
+  if (el && el.classList.contains('active')) return true;
+ }
+ const followModal = document.getElementById('followListModal');
+ if (followModal && followModal.classList.contains('open')) return true;
+ const authOverlay = document.getElementById('authWelcomeOverlay');
+ if (authOverlay && authOverlay.classList.contains('visible')) return true;
+ return false;
+}
+
+function applySwipeEntranceAnimation(targetTabId, direction) {
+ const targetEl = document.getElementById(targetTabId);
+ if (!targetEl) return;
+ targetEl.classList.remove('swipe-enter-right', 'swipe-enter-left');
+ void targetEl.offsetWidth;
+ targetEl.classList.add(direction === 'left' ? 'swipe-enter-right' : 'swipe-enter-left');
+ setTimeout(() => {
+  targetEl.classList.remove('swipe-enter-right', 'swipe-enter-left');
+ }, 280);
+}
+
+function handleSwipeGesture() {
+ if (isSwipeLocked || isAnyModalOrSubViewOpen()) return;
+ const swipeDistanceX = touchEndX - touchStartX;
+ const swipeDistanceY = Math.abs(touchEndY - touchStartY);
+ if (swipeDistanceY > Math.abs(swipeDistanceX) * 0.85) return;
+ if (Math.abs(swipeDistanceX) < 55) return;
+
+ const currentActiveTab = document.querySelector('main > div.active');
+ if (!currentActiveTab) return;
+
+ const currentId = currentActiveTab.id;
+ const currentIndex = swipeNavigationFlow.indexOf(currentId);
+ if (currentIndex === -1) return;
+
+ isSwipeLocked = true;
+ setTimeout(() => { isSwipeLocked = false; }, 300);
+
+ if (swipeDistanceX > 70 && currentIndex === 0) {
+  openCameraModal();
+  return;
+ }
+
+ let nextIndex = currentIndex;
+ let direction = null;
+
+ if (swipeDistanceX < -55 && currentIndex < swipeNavigationFlow.length - 1) {
+  nextIndex = currentIndex + 1;
+  direction = 'left';
+ } else if (swipeDistanceX > 55 && currentIndex > 0) {
+  nextIndex = currentIndex - 1;
+  direction = 'right';
+ }
+
+ if (nextIndex !== currentIndex) {
+  const targetTabId = swipeNavigationFlow[nextIndex];
+  const navButtons = document.querySelectorAll('#bottomNavBar button');
+  showTab(targetTabId, navButtons[nextIndex]);
+  applySwipeEntranceAnimation(targetTabId, direction);
+ }
+}
+
+const mainContainerElement = document.querySelector('main');
+mainContainerElement.addEventListener('touchstart', e => {
+ if (e.target.closest('.stories, input, textarea, select, [data-no-swipe]')) {
+  touchStartX = 0;
+  return;
+ }
+ touchStartX = e.changedTouches[0].clientX;
+ touchStartY = e.changedTouches[0].clientY;
+}, { passive: true });
+
+mainContainerElement.addEventListener('touchend', e => {
+ if (touchStartX === 0) return;
+ touchEndX = e.changedTouches[0].clientX;
+ touchEndY = e.changedTouches[0].clientY;
+ handleSwipeGesture();
+ touchStartX = 0;
+}, { passive: true });
+
+function showTab(id, btn) {
+ if (!currentUser && id !== 'profile') {
+  showAuthOverlay();
+  return;
+ }
+
+ document.querySelectorAll('main>div').forEach(x => x.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
+
+ if (btn) {
+  btn.classList.add('active');
+ } else {
+  const tabIds = ['feed', 'messagesPage', 'explore', 'profile'];
+  const index = tabIds.indexOf(id);
+  if (index >= 0) document.querySelectorAll('nav button')[index].classList.add('active');
+ }
+
+ const defaultIcons = document.getElementById('header-default-icons');
+ const profileIcons = document.getElementById('header-profile-icons');
+ const headerPlusBtn = document.getElementById('headerPlusBtn');
+ const headerLogoSlot = document.getElementById('headerLogoSlot');
+ const bottomNavBar = document.getElementById('bottomNavBar');
+
+ if (bottomNavBar) {
+  bottomNavBar.style.display = 'flex';
+  bottomNavBar.classList.remove('nav-hidden');
+ }
+
+ if (id === 'feed') {
+  if (headerLogoSlot) headerLogoSlot.style.display = 'flex';
+  if (headerPlusBtn) headerPlusBtn.style.display = 'none';
+  if (defaultIcons) defaultIcons.style.display = 'flex';
+  if (profileIcons) profileIcons.style.display = 'none';
+ } else if (id === 'profile') {
+  if (headerLogoSlot) headerLogoSlot.style.display = 'none';
+  if (headerPlusBtn) headerPlusBtn.style.display = 'inline-flex';
+  if (defaultIcons) defaultIcons.style.display = 'none';
+  if (profileIcons) profileIcons.style.display = 'flex';
+ } else {
+  if (headerLogoSlot) headerLogoSlot.style.display = 'none';
+  if (headerPlusBtn) headerPlusBtn.style.display = 'none';
+  if (defaultIcons) defaultIcons.style.display = 'none';
+  if (profileIcons) profileIcons.style.display = 'none';
+ }
+
+ updatePwaInstallButtonsVisibility();
+
+ if (id === 'notifications') loadActivity();
+ if (id === 'explore') {
+  loadExploreGrid();
+  if (!document.getElementById('search').value) resetExploreSearch();
+ }
+ if (id === 'messagesPage') loadConversations();
+ if (id === 'profile' && currentUser) {
+  loadMyPostsGrid();
+  loadSavedPostsProfileGrid();
+  loadHighlights(currentUser.id, 'highlightsScrollContainer');
+ }
+ window.scrollTo(0, 0);
+}
+
+function openMenuSection() {
+ if (!currentUser) { showAuthOverlay(); return; }
+ document.querySelectorAll('main>div').forEach(x => x.classList.remove('active'));
+ document.getElementById('menuSectionPage').classList.add('active');
+
+ const bottomNavBar = document.getElementById('bottomNavBar');
+ if (bottomNavBar) bottomNavBar.style.display = 'none';
+
+ document.getElementById('headerLogoSlot').style.display = 'none';
+ document.getElementById('headerPlusBtn').style.display = 'none';
+ document.getElementById('header-default-icons').style.display = 'none';
+ document.getElementById('header-profile-icons').style.display = 'none';
+ updatePwaInstallButtonsVisibility();
+}
+
+function closeMenuSection() {
+ document.getElementById('menuSectionPage').classList.remove('active');
+ showTab('profile');
+}
+
+function openMenuSubPage(pageId) {
+ document.querySelectorAll('main>div').forEach(x => x.classList.remove('active'));
+ document.getElementById(pageId).classList.add('active');
+ loadMenuPreferences();
+
+ if (pageId === 'menuActivityPage') loadUserOwnActivity();
+ if (pageId === 'menuSavedPage') loadSavedPostsGrid();
+ if (pageId === 'menuAccountsPage') populateAccountCenter();
+}
+
+function backToMainMenu(currentPageId) {
+ document.getElementById(currentPageId).classList.remove('active');
+ document.getElementById('menuSectionPage').classList.add('active');
+}
+
+const MENU_PREFS_CONFIG = [
+ { key: 'dataSaver', id: 'cfgDataSaverToggle', defaultVal: false },
+ { key: 'autoplay', id: 'cfgAutoplayToggle', defaultVal: true },
+ { key: 'privateAccount', id: 'privateAccountToggle', defaultVal: false },
+ { key: 'activityStatus', id: 'activityStatusToggle', defaultVal: true },
+ { key: 'showFollowersList', id: 'showFollowersListToggle', defaultVal: true },
+ { key: 'allowDm', id: 'allowDmToggle', defaultVal: true },
+ { key: 'notifLikes', id: 'notifLikesToggle', defaultVal: true },
+ { key: 'notifComments', id: 'notifCommentsToggle', defaultVal: true },
+ { key: 'notifFollows', id: 'notifFollowsToggle', defaultVal: true },
+ { key: 'notifDm', id: 'notifDmToggle', defaultVal: true }
+];
+
+function saveMenuPreferences() {
+ const prefs = {};
+ MENU_PREFS_CONFIG.forEach(({ key, id, defaultVal }) => {
+  const el = document.getElementById(id);
+  prefs[key] = el ? el.checked : defaultVal;
+ });
+ localStorage.setItem('og_user_settings_' + (currentUser?.id || 'guest'), JSON.stringify(prefs));
+ setupPresenceChannel();
+}
+
+function loadMenuPreferences() {
+ try {
+  const raw = localStorage.getItem('og_user_settings_' + (currentUser?.id || 'guest'));
+  if (!raw) return;
+  const prefs = JSON.parse(raw);
+  MENU_PREFS_CONFIG.forEach(({ key, id, defaultVal }) => {
+   const el = document.getElementById(id);
+   if (el) el.checked = defaultVal ? prefs[key] !== false : !!prefs[key];
+  });
+ } catch (e) {}
+}
+
+function submitHelpReport() {
+ const val = document.getElementById('helpReportInput').value.trim();
+ if (!val) return status('helpReportStatus', 'Escribí tu mensaje antes de enviar.');
+ document.getElementById('helpReportInput').value = '';
+ status('helpReportStatus', '¡Gracias! Tu mensaje fue enviado al soporte.');
+ setTimeout(() => status('helpReportStatus', ''), 3500);
+}
+
+function populateAccountCenter() {
+ if (!currentUser) return;
+ document.getElementById('passwordStatus').textContent = '';
+ document.getElementById('newPasswordInput').value = '';
+}
+
+async function updateUserPassword() {
+ const newPassword = document.getElementById('newPasswordInput').value;
+ if (!newPassword || newPassword.length < 8) {
+  return status('passwordStatus', 'La contraseña debe tener al menos 8 caracteres.');
+ }
+ status('passwordStatus', 'Actualizando contraseña...');
+ const { error } = await db.auth.updateUser({ password: newPassword });
+ if (error) return status('passwordStatus', 'Error: ' + error.message);
+
+ document.getElementById('newPasswordInput').value = '';
+ status('passwordStatus', '¡Contraseña actualizada correctamente!');
+}
+
+/* ========================================================================= */
+/* 4. AUTENTICACIÓN Y CUENTA DE USUARIO                                      */
+/* ========================================================================= */
+function switchAuthSubView(viewName) {
+ document.getElementById('authWelcomePanel').classList.remove('active');
+ document.getElementById('authSignupPanel').classList.remove('active');
+ document.getElementById('authSigninPanel').classList.remove('active');
+ document.getElementById('authOverlayStatus').textContent = '';
+
+ if (viewName === 'welcome') document.getElementById('authWelcomePanel').classList.add('active');
+ if (viewName === 'signup') document.getElementById('authSignupPanel').classList.add('active');
+ if (viewName === 'signin') document.getElementById('authSigninPanel').classList.add('active');
+}
+
+function showAuthOverlay() {
+ document.getElementById('authWelcomeOverlay').classList.add('visible');
+ updatePwaInstallButtonsVisibility();
+}
+function hideAuthOverlay() { document.getElementById('authWelcomeOverlay').classList.remove('visible'); }
+
+function hideSplashScreen() {
+ const splash = document.getElementById('appSplashScreen');
+ if (splash) {
+  splash.classList.add('fade-out');
+  setTimeout(() => splash.remove(), 300);
+ }
+}
+
+async function executeSignUp() {
+ const email = document.getElementById('regEmail').value.trim();
+ const password = document.getElementById('regPassword').value;
+ const username = document.getElementById('regUsername').value.trim().toLowerCase();
+
+ if (!email || !password || !username) return status('authOverlayStatus', 'Completá todos los campos.');
+ if (!/^[a-z0-9_]{3,20}$/.test(username)) return status('authOverlayStatus', 'Usuario: 3 a 20 caracteres alfanuméricos.');
+ if (password.length < 8) return status('authOverlayStatus', 'Contraseña mínima de 8 caracteres.');
+
+ status('authOverlayStatus', 'Creando cuenta...');
+ const { data, error } = await db.auth.signUp({ email, password, options: { data: { username } } });
+ if (error) return status('authOverlayStatus', error.message);
+
+ if (data.session) {
+  await loadAccount(data.user);
+  hideAuthOverlay();
+ } else {
+  status('authOverlayStatus', '¡Cuenta creada! Ya podés iniciar sesión.');
+  setTimeout(() => switchAuthSubView('signin'), 1500);
+ }
+}
+
+async function executeSignIn() {
+ const email = document.getElementById('loginEmail').value.trim();
+ const password = document.getElementById('loginPassword').value;
+ if (!email || !password) return status('authOverlayStatus', 'Ingresá correo y contraseña.');
+
+ status('authOverlayStatus', 'Iniciando sesión...');
+ const { data, error } = await db.auth.signInWithPassword({ email, password });
+ if (error) return status('authOverlayStatus', error.message);
+
+ await loadAccount(data.user);
+ hideAuthOverlay();
+}
+
+async function loadAccount(user) {
+ currentUser = user;
+ let { data: profile, error } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
+ if (error) return;
+
+ if (!profile) {
+  const username = user.user_metadata?.username || ('usuario_' + user.id.slice(0, 8));
+  const { data: created, error: createError } = await db.from('profiles')
+   .insert({ id: user.id, username, display_name: username })
+   .select().single();
+  if (createError) return;
+  profile = created;
+ }
+
+ myProfile = profile;
+ profilesCache[user.id] = profile;
+ hideAuthOverlay();
+ updateProfileUI();
+ updateNavAvatarUI();
+ updatePwaInstallButtonsVisibility();
+
+ await Promise.all([
+  loadInitialPosts(),
+  loadStoriesData(),
+  loadHighlights(user.id, 'highlightsScrollContainer'),
+  checkGlobalUnreadMessages()
+ ]);
+
+ setupRealtimeNotifications();
+ setupPresenceChannel();
+}
+
+function promptLogoutConfirmation() { document.getElementById('logoutConfirmModal').classList.add('active'); }
+function closeLogoutConfirmation() { document.getElementById('logoutConfirmModal').classList.remove('active'); }
+
+async function executeConfirmedSignOut() {
+ closeLogoutConfirmation();
+ const { error } = await db.auth.signOut();
+ if (error) return alert(error.message);
+
+ if (realtimeChannel) db.removeChannel(realtimeChannel);
+ if (dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
+ if (postsRealtimeChannel) db.removeChannel(postsRealtimeChannel);
+ if (presenceChannel) db.removeChannel(presenceChannel);
+
+ currentUser = null;
+ myProfile = null;
+ viewedProfile = null;
+ myActiveStories = [];
+ storiesByUserMap = {};
+ highlightsCacheByUser = {};
+ cachedConversationsList = null;
+ cachedActivityEvents = null;
+ cachedFeedPosts = null;
+ loadedPostIds.clear();
+ updateStoryUI();
+ updateNavAvatarUI();
+ updateProfileUI();
+ showAuthOverlay();
+ showTab('feed');
+}
+
+/* ========================================================================= */
+/* 5. REALTIME Y PRESENCIA EN LÍNEA                                          */
+/* ========================================================================= */
+function setupPresenceChannel() {
+ if (presenceChannel) db.removeChannel(presenceChannel);
+
+ try {
+  const raw = localStorage.getItem('og_user_settings_' + (currentUser?.id || 'guest'));
+  const prefs = raw ? JSON.parse(raw) : {};
+  if (prefs.activityStatus === false) return;
+ } catch (e) {}
+
+ presenceChannel = db.channel('online-users-room', {
+  config: { presence: { key: currentUser.id } }
+ });
+
+ presenceChannel
+  .on('presence', { event: 'sync' }, () => {
+   const state = presenceChannel.presenceState();
+   onlineUsersMap = {};
+   Object.keys(state).forEach(userId => { onlineUsersMap[userId] = true; });
+
+   document.querySelectorAll('.online-dot').forEach(dot => dot.classList.remove('active'));
+   Object.keys(onlineUsersMap).forEach(userId => {
+    const d = document.getElementById(`online-dot-${userId}`);
+    if (d) d.classList.add('active');
+   });
+
+   if (activeRecipientProfile && onlineUsersMap[activeRecipientProfile.id]) {
+    document.getElementById('chatRoomOnlineDot').classList.add('active');
+    document.getElementById('chatRoomStatusSub').textContent = 'En línea';
+    const detStatus = document.getElementById('chatDetailsActivityStatus');
+    if (detStatus) { detStatus.textContent = 'En línea'; detStatus.style.color = '#22c55e'; }
+   } else if (activeRecipientProfile) {
+    document.getElementById('chatRoomOnlineDot').classList.remove('active');
+    document.getElementById('chatRoomStatusSub').textContent = 'Desconectado';
+    const detStatus = document.getElementById('chatDetailsActivityStatus');
+    if (detStatus) { detStatus.textContent = 'Desconectado'; detStatus.style.color = '#888888'; }
+   }
+  })
+  .subscribe(async status => {
+   if (status === 'SUBSCRIBED') {
+    await presenceChannel.track({ online_at: new Date().toISOString() });
+   }
+  });
+}
+
+function setupRealtimeNotifications() {
+ if (realtimeChannel) db.removeChannel(realtimeChannel);
+ if (dmRealtimeChannel) db.removeChannel(dmRealtimeChannel);
+ if (postsRealtimeChannel) db.removeChannel(postsRealtimeChannel);
+
+ realtimeChannel = db.channel('public-notifications')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'follows' }, payload => {
+   if (payload.new.following_id === currentUser?.id) { cachedActivityEvents = null; loadActivity(); loadStoriesData(); }
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'likes' }, () => { cachedActivityEvents = null; loadActivity(); })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments' }, () => { cachedActivityEvents = null; loadActivity(); })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stories' }, () => { loadStoriesData(); })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'story_likes' }, () => { cachedActivityEvents = null; loadActivity(); })
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'highlights' }, payload => {
+   const targetUid = payload.new?.user_id || payload.old?.user_id;
+   if (targetUid) {
+    delete highlightsCacheByUser[targetUid];
+    if (currentUser && targetUid === currentUser.id) {
+     loadHighlights(currentUser.id, 'highlightsScrollContainer');
+    } else if (viewedProfile && targetUid === viewedProfile.id) {
+     loadHighlights(viewedProfile.id, 'publicHighlightsScrollContainer');
     }
-
-    if (!file || !file.type.startsWith("image/")) {
-      throw new Error("Seleccioná una imagen válida.");
+   }
+  })
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'highlight_items' }, payload => {
+   const targetUid = payload.new?.user_id || payload.old?.user_id;
+   if (targetUid) {
+    delete highlightsCacheByUser[targetUid];
+    if (currentUser && targetUid === currentUser.id) {
+     loadHighlights(currentUser.id, 'highlightsScrollContainer');
+    } else if (viewedProfile && targetUid === viewedProfile.id) {
+     loadHighlights(viewedProfile.id, 'publicHighlightsScrollContainer');
     }
+   }
+  })
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, payload => {
+   const updated = payload.new;
+   document.querySelectorAll(`[data-post-views="${updated.id}"]`).forEach(b => { b.textContent = updated.views || 0; });
+  })
+  .subscribe();
 
-    if (file.size > 8 * 1024 * 1024) {
-      throw new Error("La imagen supera los 8 MB.");
+ dmRealtimeChannel = db.channel('global-dm-listener')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+   const newMsg = payload.new;
+   if (newMsg.sender_id !== currentUser?.id) {
+    document.getElementById('navUnreadDot').classList.add('active');
+    cachedConversationsList = null;
+    if (document.getElementById('messagesPage').classList.contains('active')) loadConversations();
+    if (activeConversationId === newMsg.conversation_id) {
+     appendChatMessageNode(newMsg);
+     scrollToBottomChat();
     }
+   }
+  })
+  .subscribe();
 
-    const extension =
-      file.name.split(".").pop().toLowerCase();
+ postsRealtimeChannel = db.channel('global-posts-feed')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async payload => {
+   const newPost = payload.new;
+   if (!newPost || loadedPostIds.has(newPost.id)) return;
 
-    const path =
-      user.id + "/" + folder + "-" +
-      Date.now() + "." + extension;
+   const { data: followCheck } = await db.from('follows')
+    .select('*')
+    .eq('follower_id', currentUser.id)
+    .eq('following_id', newPost.user_id)
+    .maybeSingle();
 
-    const { error } = await window.ogDB
-      .storage
-      .from("og-media")
-      .upload(path, file, {
-        upsert: false,
-        contentType: file.type
-      });
+   if (newPost.user_id !== currentUser.id && !followCheck) return;
 
-    if (error) throw error;
+   if (!profilesCache[newPost.user_id]) {
+    const { data: prof } = await db.from('profiles').select('id, username, display_name, avatar_url').eq('id', newPost.user_id).maybeSingle();
+    if (prof) profilesCache[prof.id] = prof;
+   }
 
-    const { data } = window.ogDB
-      .storage
-      .from("og-media")
-      .getPublicUrl(path);
+   if (cachedFeedPosts) cachedFeedPosts.unshift(newPost);
+   prependSinglePostToFeed(newPost);
+  })
+  .subscribe();
+}
 
-    return data.publicUrl;
-  };
+/* ========================================================================= */
+/* 6. FEED, PUBLICACIONES, LIKES, COMENTARIOS Y GUARDADOS                    */
+/* ========================================================================= */
+async function loadInitialPosts() {
+ feedPage = 0;
+ feedHasMore = true;
+ loadedPostIds.clear();
+ const container = document.getElementById('posts');
 
-  // Estado de autenticación
-  window.ogDB.auth.onAuthStateChange(
-    (event, session) => {
-      window.dispatchEvent(
-        new CustomEvent("og:auth", {
-          detail: {
-            event,
-            user: session?.user || null
-          }
-        })
-      );
-    }
-  );
+ if (cachedFeedPosts && cachedFeedPosts.length > 0) {
+  renderPostsToDOM(cachedFeedPosts, container, true);
+ } else {
+  container.innerHTML = '<div class="activity-empty">Cargando publicaciones...</div>';
+ }
+ await fetchAndAppendPosts(true);
+}
 
-  console.log("Ög Social: conexión compartida preparada.");
+async function loadMorePosts() {
+ if (feedLoading || !feedHasMore) return;
+ feedPage++;
+ await fetchAndAppendPosts(false);
+}
+
+async function fetchAndAppendPosts(isInitial) {
+ if (feedLoading || !feedHasMore || !currentUser) return;
+ feedLoading = true;
+ const loader = document.getElementById('feedLoader');
+ loader.style.display = 'block';
+
+ try {
+  const { data: followingRes } = await db.from('follows').select('following_id').eq('follower_id', currentUser.id);
+  const followingIds = (followingRes || []).map(f => f.following_id);
+  const allowedUserIds = [...followingIds, currentUser.id];
+
+  const from = feedPage * FEED_PAGE_SIZE;
+  const to = from + FEED_PAGE_SIZE - 1;
+
+  const { data: posts, error } = await db.from('posts')
+   .select('*')
+   .in('user_id', allowedUserIds)
+   .order('created_at', { ascending: false })
+   .range(from, to);
+
+  loader.style.display = 'none';
+  feedLoading = false;
+  if (error) return;
+
+  if (!posts || posts.length < FEED_PAGE_SIZE) feedHasMore = false;
+
+  if (!posts || !posts.length) {
+   if (isInitial) {
+    document.getElementById('posts').innerHTML = '<div class="activity-empty">Aún no sigues a nadie o no hay publicaciones en tu feed. ¡Explora perfiles para ver contenido!</div>';
+   }
+   return;
+  }
+
+  const uniqueNewPosts = posts.filter(p => !loadedPostIds.has(p.id));
+  if (!uniqueNewPosts.length && isInitial) return;
+
+  const missingUserIds = [...new Set(uniqueNewPosts.map(p => p.user_id))].filter(id => !profilesCache[id]);
+  if (missingUserIds.length > 0) {
+   const { data: newProfiles } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missingUserIds);
+   (newProfiles || []).forEach(p => profilesCache[p.id] = p);
+  }
+
+  if (isInitial) {
+   cachedFeedPosts = posts;
+   renderPostsToDOM(posts, document.getElementById('posts'), true);
+  } else {
+   cachedFeedPosts = (cachedFeedPosts || []).concat(uniqueNewPosts);
+   const container = document.getElementById('posts');
+   const fragment = document.createDocumentFragment();
+   uniqueNewPosts.forEach(post => {
+    loadedPostIds.add(post.id);
+    fragment.append(buildPostDOMElement(post));
+   });
+   container.append(fragment);
+  }
+ } catch (e) {
+  loader.style.display = 'none';
+  feedLoading = false;
+ }
+}
+
+function renderPostsToDOM(posts, container, reset = false) {
+ if (reset) {
+  loadedPostIds.clear();
+  container.replaceChildren();
+ }
+ if (!posts || !posts.length) return;
+
+ const fragment = document.createDocumentFragment();
+ posts.forEach(post => {
+  if (loadedPostIds.has(post.id)) return;
+  loadedPostIds.add(post.id);
+  fragment.append(buildPostDOMElement(post));
+ });
+
+ if (reset) container.replaceChildren(fragment);
+ else container.append(fragment);
+}
+
+function prependSinglePostToFeed(post) {
+ if (loadedPostIds.has(post.id)) return;
+ loadedPostIds.add(post.id);
+ const container = document.getElementById('posts');
+ container.insertBefore(buildPostDOMElement(post), container.firstChild);
+}
+
+function buildPostDOMElement(post) {
+ const profile = profilesCache[post.user_id] || { username: 'usuario' };
+
+ const article = document.createElement('article');
+ article.className = 'post';
+
+ const head = document.createElement('div');
+ head.className = 'posthead';
+
+ const av = createAvatarNode(profile, false);
+ av.style.cursor = 'pointer';
+ av.onclick = () => openPublicProfile(post.user_id);
+
+ const info = document.createElement('div');
+ info.style.cursor = 'pointer';
+ info.onclick = () => openPublicProfile(post.user_id);
+
+ const name = document.createElement('div');
+ name.className = 'username';
+ name.textContent = profile.display_name || profile.username || 'Usuario';
+
+ const time = document.createElement('div');
+ time.className = 'time';
+ time.textContent = formatDate(post.created_at);
+
+ info.append(name, time);
+ head.append(av, info);
+ article.append(head);
+
+ if (post.image_url) {
+  const img = document.createElement('img');
+  img.className = 'postimage';
+  img.src = post.image_url;
+  img.alt = 'Imagen';
+  img.loading = 'lazy';
+  article.append(img);
+ }
+
+ if (post.content) {
+  const content = document.createElement('p');
+  content.className = 'posttext';
+  content.style.marginTop = post.image_url ? '12px' : '0';
+  content.textContent = post.content;
+  article.append(content);
+ }
+
+ const commentsSec = document.createElement('div');
+ commentsSec.className = 'post-comments-section';
+ commentsSec.id = `comments-${post.id}`;
+ article.append(commentsSec);
+
+ const commentInputBox = document.createElement('div');
+ commentInputBox.className = 'comment-input-box';
+ commentInputBox.id = `commentbox-${post.id}`;
+
+ const commentInput = document.createElement('input');
+ commentInput.className = 'comment-input';
+ commentInput.placeholder = 'Agrega un comentario...';
+
+ const commentSend = document.createElement('button');
+ commentSend.className = 'comment-send-btn';
+ commentSend.textContent = 'Publicar';
+ commentSend.onclick = () => quickComment(post.id, commentInput);
+
+ commentInputBox.append(commentInput, commentSend);
+ article.append(commentInputBox);
+
+ const actions = document.createElement('div');
+ actions.className = 'post-actions';
+
+ const likeBtn = document.createElement('button');
+ likeBtn.className = 'post-action-btn';
+ likeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+ likeBtn.onclick = () => toggleLike(post.id, likeBtn, likesCountDiv);
+
+ const commentIconBtn = document.createElement('button');
+ commentIconBtn.className = 'post-action-btn';
+ commentIconBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`;
+ commentIconBtn.onclick = () => {
+  if (!currentUser) { showAuthOverlay(); return; }
+  const box = document.getElementById(`commentbox-${post.id}`);
+  box.classList.toggle('open');
+  if (box.classList.contains('open')) box.querySelector('input').focus();
+ };
+
+ const saveBtn = document.createElement('button');
+ saveBtn.className = 'post-action-btn';
+ saveBtn.style.marginLeft = 'auto';
+ if (getSavedPostIds().includes(post.id)) saveBtn.classList.add('saved');
+ saveBtn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
+ saveBtn.onclick = () => toggleSavePost(post.id, saveBtn);
+
+ actions.append(likeBtn, commentIconBtn, saveBtn);
+ article.append(actions);
+
+ const likesCountDiv = document.createElement('div');
+ likesCountDiv.className = 'likes-count';
+ likesCountDiv.textContent = '0 Me gusta';
+ article.append(likesCountDiv);
+
+ loadPostLikes(post.id, likeBtn, likesCountDiv);
+ loadPostComments(post.id, commentsSec);
+
+ return article;
+}
+
+async function toggleLike(postId, btn, countDiv) {
+ if (!currentUser) { showAuthOverlay(); return; }
+ const { data, error } = await db.rpc('toggle_like', { p_post_id: postId, p_user_id: currentUser.id });
+ if (error) return;
+ if (data) {
+  if (data.liked) btn.classList.add('liked');
+  else btn.classList.remove('liked');
+  countDiv.textContent = `${data.count || 0} Me gusta`;
+ }
+}
+
+async function loadPostLikes(postId, btn, countDiv) {
+ const { data: likes } = await db.from('likes').select('user_id').eq('post_id', postId);
+ const count = likes ? likes.length : 0;
+ countDiv.textContent = `${count} Me gusta`;
+ if (currentUser && likes && likes.some(l => l.user_id === currentUser.id)) btn.classList.add('liked');
+}
+
+async function loadPostComments(postId, container) {
+ const { data: comments } = await db.from('comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+ if (!comments || !comments.length) { container.replaceChildren(); return; }
+
+ const missing = [...new Set(comments.map(c => c.user_id))].filter(id => !profilesCache[id]);
+ if (missing.length > 0) {
+  const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
+  (profs || []).forEach(p => profilesCache[p.id] = p);
+ }
+
+ const fragment = document.createDocumentFragment();
+ comments.slice(0, 3).forEach(c => {
+  const profile = profilesCache[c.user_id] || { username: 'usuario' };
+  const div = document.createElement('div');
+  div.className = 'comment-item';
+  div.innerHTML = `<span class="comment-user">${profile.display_name || profile.username}</span><span class="comment-text">${c.content}</span>`;
+  fragment.append(div);
+ });
+ container.replaceChildren(fragment);
+}
+
+async function quickComment(postId, input) {
+ if (!currentUser) { showAuthOverlay(); return; }
+ const text = input.value.trim();
+ if (!text) return;
+ input.value = '';
+ await db.from('comments').insert({ post_id: postId, user_id: currentUser.id, content: text });
+ cachedActivityEvents = null;
+ const sec = document.getElementById(`comments-${postId}`);
+ if (sec) loadPostComments(postId, sec);
+}
+
+function handlePostImageSelect(input) {
+ const file = input.files?.[0];
+ if (!file) return;
+ postImageBlob = file;
+ setPreviewBlobUrl(document.getElementById('postImagePreviewImg'), file);
+ document.getElementById('postImagePreviewContainer').style.display = 'block';
+ document.getElementById('dropzoneBox').style.display = 'none';
+ input.value = '';
+}
+
+function removePostImage() {
+ postImageBlob = null;
+ document.getElementById('postImagePreviewContainer').style.display = 'none';
+ document.getElementById('dropzoneBox').style.display = 'flex';
+}
+
+async function publish() {
+ if (!currentUser || isPublishing) return;
+ const text = document.getElementById('newpost').value.trim();
+ if (!text && !postImageBlob) return status('publishStatus', 'Escribe algo o agrega una foto.');
+
+ isPublishing = true;
+ status('publishStatus', 'Publicando...');
+ document.getElementById('publishBtn').disabled = true;
+
+ let imageUrl = null;
+ if (postImageBlob) {
+  const path = currentUser.id + '/post-' + Date.now() + '.jpg';
+  const { error: uploadError } = await db.storage.from('og-media').upload(path, postImageBlob, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' });
+  if (!uploadError) {
+   imageUrl = db.storage.from('og-media').getPublicUrl(path).data.publicUrl;
+  }
+ }
+
+ await db.from('posts').insert({ user_id: currentUser.id, content: text, image_url: imageUrl });
+
+ isPublishing = false;
+ document.getElementById('publishBtn').disabled = false;
+ document.getElementById('newpost').value = '';
+ removePostImage();
+ status('publishStatus', '¡Publicado con éxito!');
+ setTimeout(() => status('publishStatus', ''), 2000);
+ cachedFeedPosts = null;
+ showTab('feed');
+ await loadInitialPosts();
+}
+
+async function openPostDetail(post) {
+ if (!currentUser) { showAuthOverlay(); return; }
+ await db.rpc('register_post_view', { p_post_id: post.id, p_visitor_id: visitorId });
+ const modal = document.getElementById('postDetailModal');
+ const container = document.getElementById('modalPostContainer');
+ container.replaceChildren();
+
+ const profile = profilesCache[post.user_id] || myProfile || { username: 'usuario' };
+ const article = document.createElement('article');
+ article.className = 'post';
+ article.style.borderBottom = 'none';
+
+ const head = document.createElement('div');
+ head.className = 'posthead';
+ head.append(createAvatarNode(profile, false));
+ const info = document.createElement('div');
+ info.innerHTML = `<div class="username">${profile.display_name || profile.username}</div><div class="time">${formatDate(post.created_at)}</div>`;
+ head.append(info);
+ article.append(head);
+
+ if (post.image_url) {
+  const img = document.createElement('img');
+  img.className = 'postimage';
+  img.src = post.image_url;
+  article.append(img);
+ }
+ if (post.content) {
+  const content = document.createElement('p');
+  content.className = 'posttext';
+  content.textContent = post.content;
+  article.append(content);
+ }
+
+ const commentsSec = document.createElement('div');
+ commentsSec.className = 'post-comments-section';
+ commentsSec.id = `modal-comments-${post.id}`;
+ article.append(commentsSec);
+
+ const commentInputBox = document.createElement('div');
+ commentInputBox.className = 'comment-input-box open';
+ const commentInput = document.createElement('input');
+ commentInput.className = 'comment-input';
+ commentInput.placeholder = 'Agrega un comentario...';
+ const commentSend = document.createElement('button');
+ commentSend.className = 'comment-send-btn';
+ commentSend.textContent = 'Publicar';
+ commentSend.onclick = async () => {
+  await quickComment(post.id, commentInput);
+  loadPostComments(post.id, commentsSec);
+ };
+ commentInputBox.append(commentInput, commentSend);
+ article.append(commentInputBox);
+
+ container.append(article);
+ modal.classList.add('active');
+ loadPostComments(post.id, commentsSec);
+}
+
+function closePostDetailModal() {
+ document.getElementById('postDetailModal').classList.remove('active');
+ loadExploreGrid();
+}
+
+function getSavedPostIds() {
+ if (!currentUser) return [];
+ try {
+  return JSON.parse(localStorage.getItem('og_saved_posts_' + currentUser.id) || '[]');
+ } catch (e) { return []; }
+}
+
+function toggleSavePost(postId, btn) {
+ if (!currentUser) { showAuthOverlay(); return; }
+ let saved = getSavedPostIds();
+ if (saved.includes(postId)) {
+  saved = saved.filter(id => id !== postId);
+  btn.classList.remove('saved');
+ } else {
+  saved.unshift(postId);
+  btn.classList.add('saved');
+ }
+ localStorage.setItem('og_saved_posts_' + currentUser.id, JSON.stringify(saved));
+}
+
+async function fetchAndRenderSavedGrid(gridId, emptyText) {
+ const grid = document.getElementById(gridId);
+ if (!grid || !currentUser) return;
+ const savedIds = getSavedPostIds();
+ if (!savedIds.length) {
+  renderPostsGrid([], grid, emptyText);
+  return;
+ }
+ const { data: posts } = await db.from('posts').select('*').in('id', savedIds);
+ renderPostsGrid(posts, grid, 'No se encontraron publicaciones guardadas.');
+}
+
+async function loadSavedPostsGrid() {
+ await fetchAndRenderSavedGrid('savedPostsGrid', 'Todavía no guardaste ninguna publicación.');
+}
+
+async function loadSavedPostsProfileGrid() {
+ await fetchAndRenderSavedGrid('savedPostsGridProfile', 'Solo tú puedes ver lo que has guardado.');
+}
+
+/* ========================================================================= */
+/* 7. HISTORIAS MÚLTIPLES, DESTACADAS EN SUPABASE Y CÁMARA                   */
+/* ========================================================================= */
+function renderProgressSegments(containerId, totalCount, activeIndex) {
+ const container = document.getElementById(containerId);
+ if (!container) return;
+ container.replaceChildren();
+ if (!totalCount || totalCount <= 0) return;
+
+ const fragment = document.createDocumentFragment();
+ for (let i = 0; i < totalCount; i++) {
+  const seg = document.createElement('div');
+  seg.className = 'story-progress-segment';
+  if (i < activeIndex) seg.classList.add('completed');
+  else if (i === activeIndex) seg.classList.add('active');
+
+  const fill = document.createElement('div');
+  fill.className = 'story-progress-fill';
+  seg.append(fill);
+  fragment.append(seg);
+ }
+ container.replaceChildren(fragment);
+}
+
+async function loadStoriesData() {
+ if (!currentUser) return;
+ const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+ const { data: followingRes } = await db.from('follows').select('following_id').eq('follower_id', currentUser.id);
+ const followingIds = (followingRes || []).map(f => f.following_id);
+ const allowedUserIds = [...new Set([...followingIds, currentUser.id])];
+
+ const { data: storiesData } = await db.from('stories')
+  .select('id, user_id, image_url, created_at')
+  .in('user_id', allowedUserIds)
+  .gte('created_at', twentyFourHoursAgo)
+  .order('created_at', { ascending: true });
+
+ storiesByUserMap = {};
+ (storiesData || []).forEach(s => {
+  if (!storiesByUserMap[s.user_id]) storiesByUserMap[s.user_id] = [];
+  storiesByUserMap[s.user_id].push(s);
+ });
+
+ myActiveStories = storiesByUserMap[currentUser.id] || [];
+
+ const container = document.getElementById('storiescontainer');
+ const fragment = document.createDocumentFragment();
+
+ const myDiv = document.createElement('div');
+ myDiv.className = myActiveStories.length > 0 ? 'story has-story' : 'story';
+ myDiv.onclick = handleStoryClick;
+
+ const avatarWrapper = document.createElement('div');
+ avatarWrapper.className = 'story-avatar-container';
+
+ const avatarInner = document.createElement('div');
+ avatarInner.className = 'story-avatar-inner';
+ if (myProfile?.avatar_url) {
+  const img = document.createElement('img');
+  img.src = myProfile.avatar_url;
+  img.alt = 'Tu historia';
+  avatarInner.append(img);
+ } else {
+  avatarInner.textContent = '👤';
+ }
+ avatarWrapper.append(avatarInner);
+
+ const plusBadge = document.createElement('div');
+ plusBadge.className = 'story-plus-badge';
+ plusBadge.textContent = '+';
+ plusBadge.title = 'Agregar nueva historia';
+ plusBadge.onclick = e => {
+  e.stopPropagation();
+  openCameraModal();
+ };
+ avatarWrapper.append(plusBadge);
+
+ myDiv.append(avatarWrapper, document.createTextNode('Tu historia'));
+ fragment.append(myDiv);
+
+ const otherUserIdsWithStories = Object.keys(storiesByUserMap).filter(uid => uid !== currentUser.id && storiesByUserMap[uid].length > 0);
+ const missing = otherUserIdsWithStories.filter(id => !profilesCache[id]);
+ if (missing.length > 0) {
+  const { data: profs } = await db.from('profiles').select('id, username, avatar_url').in('id', missing);
+  (profs || []).forEach(p => profilesCache[p.id] = p);
+ }
+
+ otherUserIdsWithStories.forEach(uid => {
+  const profile = profilesCache[uid];
+  const userStories = storiesByUserMap[uid];
+  if (!profile || !userStories || !userStories.length) return;
+
+  const sDiv = document.createElement('div');
+  sDiv.className = 'story has-story';
+  sDiv.onclick = () => openUserStoriesSequence(profile, userStories, 0);
+  sDiv.append(createAvatarNode(profile, true));
+
+  const lbl = document.createElement('div');
+  lbl.textContent = profile.username;
+  sDiv.append(lbl);
+  fragment.append(sDiv);
+ });
+
+ container.replaceChildren(fragment);
+}
+
+function updateStoryUI() { loadStoriesData(); }
+
+async function handleStoryClick() {
+ if (!currentUser) { showAuthOverlay(); return; }
+ if (myActiveStories && myActiveStories.length > 0) {
+  openUserStoriesSequence(myProfile, myActiveStories, 0);
+ } else {
+  openCameraModal();
+ }
+}
+
+function openUserStoriesSequence(profile, storiesArray, startIndex = 0) {
+ const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+ const validStories = (storiesArray || []).filter(s => new Date(s.created_at).getTime() >= twentyFourHoursAgo);
+
+ if (!validStories.length) {
+  alert('Esta historia ha expirado.');
+  closeStoryViewer();
+  loadStoriesData();
+  return;
+ }
+
+ currentStoryGroupProfile = profile;
+ currentStoryGroupList = validStories;
+ currentStoryGroupIndex = Math.max(0, Math.min(startIndex, validStories.length - 1));
+
+ renderCurrentStorySlide();
+ document.getElementById('storyViewer').classList.add('active');
+}
+
+function renderCurrentStorySlide() {
+ const story = currentStoryGroupList[currentStoryGroupIndex];
+ if (!story || !currentStoryGroupProfile) return;
+
+ currentActiveStoryId = story.id;
+ renderProgressSegments('storyProgressBars', currentStoryGroupList.length, currentStoryGroupIndex);
+
+ document.getElementById('storyUsername').textContent = '@' + currentStoryGroupProfile.username;
+ document.getElementById('storyImage').src = story.image_url;
+ document.getElementById('storyTimeAgo').textContent = timeAgo(story.created_at);
+ setAvatarContent(document.getElementById('storyViewerAvatarInner'), currentStoryGroupProfile.avatar_url);
+ document.getElementById('storyLikeBtn')?.classList.remove('liked');
+
+ const addToHighlightTrigger = document.getElementById('storyAddToHighlightTrigger');
+ addToHighlightTrigger.style.display = (currentUser && currentStoryGroupProfile.id === currentUser.id) ? 'inline-flex' : 'none';
+}
+
+function nextStorySlide() {
+ if (!currentStoryGroupList.length) return;
+ if (currentStoryGroupIndex < currentStoryGroupList.length - 1) {
+  currentStoryGroupIndex++;
+  renderCurrentStorySlide();
+ } else {
+  closeStoryViewer();
+ }
+}
+
+function prevStorySlide() {
+ if (!currentStoryGroupList.length) return;
+ if (currentStoryGroupIndex > 0) {
+  currentStoryGroupIndex--;
+  renderCurrentStorySlide();
+ } else {
+  renderCurrentStorySlide();
+ }
+}
+
+function toggleStoryLikeAction() {
+ const btn = document.getElementById('storyLikeBtn');
+ if (btn) btn.classList.toggle('liked');
+}
+
+function sendStoryReply() {
+ document.getElementById('storyReplyInput').value = '';
+ alert('Mensaje enviado.');
+}
+
+function closeStoryViewer() {
+ currentActiveStoryId = null;
+ currentStoryGroupList = [];
+ currentStoryGroupIndex = 0;
+ document.getElementById('storyViewer').classList.remove('active');
+}
+
+/* Gestos táctiles y toque en Visor de Historias */
+(function initStoryViewerGestures() {
+ const area = document.getElementById('storyContentAreaContainer');
+ if (!area) return;
+ let startX = 0;
+ let startY = 0;
+
+ area.addEventListener('touchstart', e => {
+  startX = e.changedTouches[0].clientX;
+  startY = e.changedTouches[0].clientY;
+ }, { passive: true });
+
+ area.addEventListener('touchend', e => {
+  const endX = e.changedTouches[0].clientX;
+  const endY = e.changedTouches[0].clientY;
+  const diffX = endX - startX;
+  const diffY = endY - startY;
+
+  if (Math.abs(diffY) > 90 && diffY > Math.abs(diffX)) {
+   closeStoryViewer();
+   return;
+  }
+
+  if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+   if (diffX < 0) nextStorySlide();
+   else prevStorySlide();
+   return;
+  }
+
+  const rect = area.getBoundingClientRect();
+  const tapX = endX - rect.left;
+  if (tapX < rect.width * 0.35) prevStorySlide();
+  else nextStorySlide();
+ }, { passive: true });
+
+ area.addEventListener('click', e => {
+  if ('ontouchstart' in window) return;
+  const rect = area.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  if (clickX < rect.width * 0.35) prevStorySlide();
+  else nextStorySlide();
+ });
 })();
+
+/* Cámara */
+async function openCameraModal() {
+ if (!currentUser) { showAuthOverlay(); return; }
+ capturedBlob = null;
+ document.getElementById('capturedImagePreview').style.display = 'none';
+ document.getElementById('cameraVideo').style.display = 'block';
+ document.getElementById('captureBtn').style.display = 'block';
+ document.getElementById('publishStoryBtn').style.display = 'none';
+ document.getElementById('publishStoryBtn').disabled = false;
+ document.getElementById('publishStoryBtn').textContent = 'Compartir en tu historia';
+ document.getElementById('cameraModal').classList.add('active');
+ await startCameraStream();
+}
+
+function adjustZoom(val) {
+ currentZoom = parseFloat(val);
+ document.getElementById('zoomValueText').textContent = currentZoom.toFixed(1) + 'x';
+ document.getElementById('cameraVideo').style.transform = `scale(${currentZoom})`;
+}
+
+async function startCameraStream() {
+ if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+ try {
+  mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
+  const v = document.getElementById('cameraVideo');
+  v.srcObject = mediaStream;
+  await v.play();
+ } catch (e) {}
+}
+
+async function switchCamera() {
+ currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+ await startCameraStream();
+}
+
+function closeCameraModal() {
+ if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+ mediaStream = null;
+ document.getElementById('cameraModal').classList.remove('active');
+}
+
+function showCapturedPreview(blob) {
+ capturedBlob = blob;
+ const previewImg = document.getElementById('capturedImagePreview');
+ setPreviewBlobUrl(previewImg, blob);
+ previewImg.style.display = 'block';
+ document.getElementById('cameraVideo').style.display = 'none';
+ document.getElementById('captureBtn').style.display = 'none';
+ document.getElementById('publishStoryBtn').style.display = 'block';
+ if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
+}
+
+function takePhoto() {
+ const video = document.getElementById('cameraVideo');
+ const canvas = document.createElement('canvas');
+ canvas.width = video.videoWidth || 720;
+ canvas.height = video.videoHeight || 1280;
+ canvas.getContext('2d').drawImage(video, 0, 0);
+ canvas.toBlob(blob => showCapturedPreview(blob), 'image/jpeg', 0.85);
+}
+
+async function handleGallerySelect(input) {
+ const file = input.files?.[0];
+ if (!file) return;
+ showCapturedPreview(file);
+ input.value = '';
+}
+
+async function uploadCapturedStory() {
+ if (!currentUser || !capturedBlob || isUploadingStory) return;
+ isUploadingStory = true;
+ const pubBtn = document.getElementById('publishStoryBtn');
+ pubBtn.disabled = true;
+ pubBtn.textContent = 'Subiendo historia...';
+
+ try {
+  const uniqueSuffix = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  const path = `${currentUser.id}/story-${uniqueSuffix}.jpg`;
+
+  const { error: uploadError } = await db.storage.from('og-media').upload(path, capturedBlob, {
+   contentType: 'image/jpeg',
+   upsert: false
+  });
+  if (uploadError) throw uploadError;
+
+  const { data: urlData } = db.storage.from('og-media').getPublicUrl(path);
+  const { error: insertError } = await db.from('stories').insert({
+   user_id: currentUser.id,
+   image_url: urlData.publicUrl
+  });
+  if (insertError) throw insertError;
+
+  capturedBlob = null;
+  closeCameraModal();
+  await loadStoriesData();
+ } catch (e) {
+  alert('No se pudo subir la historia. Intentá nuevamente.');
+  pubBtn.disabled = false;
+  pubBtn.textContent = 'Compartir en tu historia';
+ } finally {
+  isUploadingStory = false;
+ }
+}
+
+/* ========================================================================= */
+/* HISTORIAS DESTACADAS PERSISTENTES EN SUPABASE                             */
+/* ========================================================================= */
+function createNewHighlightModal(initialImageUrl = null) {
+ document.getElementById('highlightTitleInput').value = '';
+ stagedHighlightBlob = null;
+ pendingStoryImageForHighlight = initialImageUrl;
+ const saveBtn = document.getElementById('saveHighlightBtn');
+ if (saveBtn) {
+  saveBtn.disabled = false;
+  saveBtn.textContent = 'Publicar destacada';
+ }
+ document.getElementById('highlightModal').classList.add('active');
+}
+
+function closeHighlightModal() {
+ pendingStoryImageForHighlight = null;
+ document.getElementById('highlightModal').classList.remove('active');
+}
+
+function stageHighlightCover(input) {
+ const file = input.files?.[0];
+ if (!file) return;
+ stagedHighlightBlob = file;
+ alert('Imagen de portada seleccionada.');
+ input.value = '';
+}
+
+async function saveNewHighlight() {
+ if (!currentUser || isSavingHighlight) return;
+ const title = document.getElementById('highlightTitleInput').value.trim();
+ if (!title) return alert('Ingresá un título para la historia destacada.');
+ if (!stagedHighlightBlob && !pendingStoryImageForHighlight) {
+  return alert('Seleccioná una imagen de portada.');
+ }
+
+ isSavingHighlight = true;
+ const saveBtn = document.getElementById('saveHighlightBtn');
+ if (saveBtn) {
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Guardando...';
+ }
+
+ try {
+  let coverUrl = pendingStoryImageForHighlight || null;
+
+  if (stagedHighlightBlob) {
+   const uniqueSuffix = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+   const path = `${currentUser.id}/highlight-${uniqueSuffix}.jpg`;
+   const { error: uploadError } = await db.storage.from('og-media').upload(path, stagedHighlightBlob, {
+    contentType: 'image/jpeg',
+    upsert: false
+   });
+   if (uploadError) throw uploadError;
+   coverUrl = db.storage.from('og-media').getPublicUrl(path).data.publicUrl;
+  }
+
+  const { data: createdHighlight, error: hlError } = await db.from('highlights')
+   .insert({
+    user_id: currentUser.id,
+    title,
+    cover_url: coverUrl
+   })
+   .select()
+   .single();
+
+  if (hlError) throw hlError;
+
+  const initialItemsToInsert = [];
+  if (coverUrl) {
+   initialItemsToInsert.push({
+    highlight_id: createdHighlight.id,
+    user_id: currentUser.id,
+    image_url: coverUrl,
+    position: 0
+   });
+  }
+  if (pendingStoryImageForHighlight && pendingStoryImageForHighlight !== coverUrl) {
+   initialItemsToInsert.push({
+    highlight_id: createdHighlight.id,
+    user_id: currentUser.id,
+    image_url: pendingStoryImageForHighlight,
+    position: initialItemsToInsert.length
+   });
+  }
+
+  if (initialItemsToInsert.length > 0) {
+   const { error: itemsError } = await db.from('highlight_items').insert(initialItemsToInsert);
+   if (itemsError) throw itemsError;
+  }
+
+  delete highlightsCacheByUser[currentUser.id];
+  closeHighlightModal();
+  await loadHighlights(currentUser.id, 'highlightsScrollContainer');
+ } catch (e) {
+  alert('Error al guardar la historia destacada en la nube.');
+  if (saveBtn) {
+   saveBtn.disabled = false;
+   saveBtn.textContent = 'Publicar destacada';
+  }
+ } finally {
+  isSavingHighlight = false;
+ }
+}
+
+async function fetchUserHighlightsFromSupabase(userId) {
+ if (!userId) return [];
+ const { data: highlightsData, error: hlErr } = await db.from('highlights')
+  .select('id, user_id, title, cover_url, created_at')
+  .eq('user_id', userId)
+  .order('created_at', { ascending: true });
+
+ if (hlErr || !highlightsData) return [];
+ if (!highlightsData.length) {
+  highlightsCacheByUser[userId] = [];
+  return [];
+ }
+
+ const highlightIds = highlightsData.map(h => h.id);
+ const { data: itemsData } = await db.from('highlight_items')
+  .select('id, highlight_id, image_url, position, created_at')
+  .in('highlight_id', highlightIds)
+  .order('position', { ascending: true })
+  .order('created_at', { ascending: true });
+
+ const itemsByHighlightId = {};
+ (itemsData || []).forEach(it => {
+  if (!itemsByHighlightId[it.highlight_id]) itemsByHighlightId[it.highlight_id] = [];
+  itemsByHighlightId[it.highlight_id].push(it.image_url);
+ });
+
+ const enriched = highlightsData.map(h => ({
+  ...h,
+  items: itemsByHighlightId[h.id] || []
+ }));
+
+ highlightsCacheByUser[userId] = enriched;
+ return enriched;
+}
+
+async function openAddToHighlightModal() {
+ if (!currentActiveStoryId || !currentUser) return;
+ const listContainer = document.getElementById('addToHighlightList');
+ listContainer.innerHTML = '<div class="activity-empty">Cargando destacadas...</div>';
+ document.getElementById('addToHighlightModal').classList.add('active');
+
+ const storyImageUrl = document.getElementById('storyImage').src;
+ const highlights = await fetchUserHighlightsFromSupabase(currentUser.id);
+
+ listContainer.replaceChildren();
+ if (!highlights.length) {
+  listContainer.innerHTML = '<div class="activity-empty">No tienes historias destacadas creadas. Crea una abajo.</div>';
+  return;
+ }
+
+ const fragment = document.createDocumentFragment();
+ highlights.forEach(hl => {
+  const btn = document.createElement('button');
+  btn.className = 'secondary';
+  btn.style.cssText = 'width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:8px 12px;';
+
+  const alreadyAdded = hl.items && hl.items.includes(storyImageUrl);
+  btn.innerHTML = `<span style="font-weight:600;">📁 ${hl.title}</span> <span style="margin-left:auto;font-size:12px;color:${alreadyAdded ? '#22c55e' : '#3b82f6'}">${alreadyAdded ? 'Agregada ✓' : 'Agregar +'}</span>`;
+
+  btn.onclick = async () => {
+   if (alreadyAdded) {
+    alert('Esta historia ya está en esta destacada.');
+    closeAddToHighlightModal();
+    return;
+   }
+   btn.disabled = true;
+   const nextPos = Array.isArray(hl.items) ? hl.items.length : 0;
+
+   const { error: insertErr } = await db.from('highlight_items').insert({
+    highlight_id: hl.id,
+    user_id: currentUser.id,
+    image_url: storyImageUrl,
+    position: nextPos
+   });
+
+   if (insertErr) {
+    alert('No se pudo agregar la foto a la destacada.');
+    btn.disabled = false;
+    return;
+   }
+
+   if (!hl.cover_url) {
+    await db.from('highlights').update({ cover_url: storyImageUrl }).eq('id', hl.id).eq('user_id', currentUser.id);
+   }
+
+   delete highlightsCacheByUser[currentUser.id];
+   alert(`Agregada a "${hl.title}"`);
+   closeAddToHighlightModal();
+   await loadHighlights(currentUser.id, 'highlightsScrollContainer');
+  };
+  fragment.append(btn);
+ });
+ listContainer.replaceChildren(fragment);
+}
+
+function closeAddToHighlightModal() { document.getElementById('addToHighlightModal').classList.remove('active'); }
+
+function createNewHighlightFromViewer() {
+ const storyImageUrl = document.getElementById('storyImage')?.src || null;
+ closeAddToHighlightModal();
+ createNewHighlightModal(storyImageUrl);
+}
+
+function openHighlightViewer(highlightObj, profile) {
+ const items = (highlightObj.items && highlightObj.items.length > 0)
+  ? highlightObj.items
+  : (highlightObj.cover_url ? [highlightObj.cover_url] : []);
+
+ if (!items.length) {
+  alert('Esta historia destacada no tiene elementos guardados.');
+  return;
+ }
+
+ currentHighlightItems = items;
+ currentHighlightIndex = 0;
+
+ const viewer = document.getElementById('highlightViewer');
+ document.getElementById('highlightViewerUsername').textContent = '@' + (profile?.username || 'usuario');
+ document.getElementById('highlightViewerTitleText').textContent = highlightObj.title;
+ setAvatarContent(document.getElementById('highlightViewerAvatarInner'), profile?.avatar_url);
+
+ renderCurrentHighlightItem();
+ viewer.classList.add('active');
+}
+
+function renderCurrentHighlightItem() {
+ renderProgressSegments('highlightProgressBars', currentHighlightItems.length, currentHighlightIndex);
+ document.getElementById('highlightViewerImage').src = currentHighlightItems[currentHighlightIndex];
+ document.getElementById('highlightViewerCounter').textContent = `${currentHighlightIndex + 1} / ${currentHighlightItems.length}`;
+}
+
+function nextHighlightSlide() {
+ if (!currentHighlightItems.length) return;
+ if (currentHighlightIndex < currentHighlightItems.length - 1) {
+  currentHighlightIndex++;
+  renderCurrentHighlightItem();
+ } else {
+  closeHighlightViewer();
+ }
+}
+
+function prevHighlightSlide() {
+ if (!currentHighlightItems.length) return;
+ if (currentHighlightIndex > 0) {
+  currentHighlightIndex--;
+  renderCurrentHighlightItem();
+ } else {
+  renderCurrentHighlightItem();
+ }
+}
+
+function closeHighlightViewer() {
+ currentHighlightItems = [];
+ currentHighlightIndex = 0;
+ document.getElementById('highlightViewer').classList.remove('active');
+}
+
+/* Gestos táctiles y toque en Visor de Destacadas */
+(function initHighlightViewerGestures() {
+ const area = document.getElementById('highlightContentAreaContainer');
+ if (!area) return;
+ let startX = 0;
+ let startY = 0;
+
+ area.addEventListener('touchstart', e => {
+  startX = e.changedTouches[0].clientX;
+  startY = e.changedTouches[0].clientY;
+ }, { passive: true });
+
+ area.addEventListener('touchend', e => {
+  const endX = e.changedTouches[0].clientX;
+  const endY = e.changedTouches[0].clientY;
+  const diffX = endX - startX;
+  const diffY = endY - startY;
+
+  if (Math.abs(diffY) > 90 && diffY > Math.abs(diffX)) {
+   closeHighlightViewer();
+   return;
+  }
+
+  if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+   if (diffX < 0) nextHighlightSlide();
+   else prevHighlightSlide();
+   return;
+  }
+
+  const rect = area.getBoundingClientRect();
+  const tapX = endX - rect.left;
+  if (tapX < rect.width * 0.35) prevHighlightSlide();
+  else nextHighlightSlide();
+ }, { passive: true });
+
+ area.addEventListener('click', e => {
+  if ('ontouchstart' in window) return;
+  const rect = area.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  if (clickX < rect.width * 0.35) prevHighlightSlide();
+  else nextHighlightSlide();
+ });
+})();
+
+async function loadHighlights(userId, containerId) {
+ const container = document.getElementById(containerId);
+ if (!container || !userId) return;
+
+ const isOwner = currentUser && userId === currentUser.id;
+ const highlights = await fetchUserHighlightsFromSupabase(userId);
+ const profile = profilesCache[userId] || (isOwner ? myProfile : viewedProfile);
+ const fragment = document.createDocumentFragment();
+
+ if (isOwner) {
+  const newDiv = document.createElement('div');
+  newDiv.className = 'highlight-item';
+  newDiv.onclick = () => createNewHighlightModal();
+  newDiv.innerHTML = `<div class="highlight-circle"><svg viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" style="width:24px;height:24px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span class="highlight-title">Nuevo</span>`;
+  fragment.append(newDiv);
+ }
+
+ highlights.forEach(h => {
+  const item = document.createElement('div');
+  item.className = 'highlight-item';
+  item.onclick = () => openHighlightViewer(h, profile);
+
+  if (isOwner) {
+   item.oncontextmenu = async e => {
+    e.preventDefault();
+    if (confirm(`¿Eliminar historia destacada "${h.title}"?`)) {
+     const { error } = await db.from('highlights').delete().eq('id', h.id).eq('user_id', currentUser.id);
+     if (!error) {
+      delete highlightsCacheByUser[userId];
+      loadHighlights(userId, containerId);
+     }
+    }
+   };
+  }
+
+  const circle = document.createElement('div');
+  circle.className = 'highlight-circle';
+  const coverSrc = h.cover_url || (h.items && h.items[0]) || '';
+  if (coverSrc) {
+   const img = document.createElement('img');
+   img.src = coverSrc;
+   img.loading = 'lazy';
+   circle.append(img);
+  } else {
+   circle.textContent = '⭐';
+  }
+
+  const title = document.createElement('span');
+  title.className = 'highlight-title';
+  title.textContent = h.title;
+
+  item.append(circle, title);
+  fragment.append(item);
+ });
+
+ container.replaceChildren(fragment);
+}
+
+/* ========================================================================= */
+/* 8. EXPLORAR Y BÚSQUEDA AVANZADA                                           */
+/* ========================================================================= */
+async function loadExploreGrid() {
+ const grid = document.getElementById('exploreGrid');
+ const { data: posts } = await db.from('posts').select('*').order('created_at', { ascending: false });
+ if (!posts || !posts.length) return;
+
+ const fragment = document.createDocumentFragment();
+ posts.forEach(post => {
+  const item = document.createElement('div');
+  item.className = 'explore-grid-item';
+  item.onclick = () => openPostDetail(post);
+  if (post.image_url) {
+   const img = document.createElement('img');
+   img.src = post.image_url;
+   item.append(img);
+  } else {
+   item.textContent = (post.content || '').slice(0, 45);
+  }
+  const badge = document.createElement('div');
+  badge.className = 'explore-grid-badge';
+  badge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg> <span data-post-views="${post.id}">${post.views || 0}</span>`;
+  item.append(badge);
+  fragment.append(item);
+ });
+ grid.replaceChildren(fragment);
+}
+
+function handleExploreSearchFocus() {
+ const val = document.getElementById('search').value.trim();
+ if (val.length >= 1) {
+  document.getElementById('searchCategoriesBar').classList.add('active');
+  document.getElementById('exploreDefaultView').classList.remove('active');
+  document.getElementById('exploreSearchResultsView').classList.add('active');
+ }
+}
+
+function handleExploreSearchInput() {
+ clearTimeout(searchTimer);
+ const val = document.getElementById('search').value.trim();
+ const catBar = document.getElementById('searchCategoriesBar');
+ const defaultView = document.getElementById('exploreDefaultView');
+ const resultsView = document.getElementById('exploreSearchResultsView');
+
+ if (val.length === 0) {
+  resetExploreSearch();
+  return;
+ }
+
+ catBar.classList.add('active');
+ defaultView.classList.remove('active');
+ resultsView.classList.add('active');
+
+ searchTimer = setTimeout(() => executeAdvancedSearch(val), 250);
+}
+
+function resetExploreSearch() {
+ document.getElementById('searchCategoriesBar').classList.remove('active');
+ document.getElementById('exploreDefaultView').classList.add('active');
+ document.getElementById('exploreSearchResultsView').classList.remove('active');
+ document.getElementById('searchForYouResults').replaceChildren();
+ document.getElementById('searchProfilesResults').replaceChildren();
+}
+
+function switchSearchTab(tabKey, btnElement) {
+ document.querySelectorAll('.search-cat-tab').forEach(b => b.classList.remove('active'));
+ btnElement.classList.add('active');
+ document.querySelectorAll('.search-tab-content').forEach(c => { c.style.display = 'none'; });
+ const targetTab = document.getElementById(`searchTab-${tabKey}`);
+ if (targetTab) targetTab.style.display = 'block';
+}
+
+async function executeAdvancedSearch(queryText) {
+ const query = queryText.toLowerCase();
+
+ const { data: profilesData } = await db.from('profiles')
+  .select('id, username, display_name, avatar_url')
+  .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+  .limit(15);
+
+ const profilesContainer = document.getElementById('searchProfilesResults');
+ profilesContainer.replaceChildren();
+
+ if (!profilesData || !profilesData.length) {
+  profilesContainer.innerHTML = '<div class="activity-empty">No se encontraron perfiles.</div>';
+ } else {
+  const profileFragment = document.createDocumentFragment();
+  profilesData.forEach(profile => {
+   if (profile.id === currentUser?.id) return;
+   profilesCache[profile.id] = profile;
+   const item = document.createElement('div');
+   item.className = 'public-user';
+   item.style.padding = '8px 16px';
+   item.append(createAvatarNode(profile, false));
+   const info = document.createElement('div');
+   info.className = 'public-user-info';
+   info.innerHTML = `<strong>${profile.display_name || profile.username}</strong><small>@${profile.username}</small>`;
+   item.append(info);
+   item.onclick = () => openPublicProfile(profile.id);
+   profileFragment.append(item);
+  });
+  profilesContainer.replaceChildren(profileFragment);
+ }
+
+ const { data: postsData } = await db.from('posts')
+  .select('*')
+  .ilike('content', `%${query}%`)
+  .order('created_at', { ascending: false })
+  .limit(18);
+
+ const forYouContainer = document.getElementById('searchForYouResults');
+ forYouContainer.replaceChildren();
+
+ if (!postsData || !postsData.length) {
+  forYouContainer.innerHTML = '<div class="activity-empty" style="grid-column: span 3;">No hay publicaciones relacionadas.</div>';
+ } else {
+  const postsFragment = document.createDocumentFragment();
+  postsData.forEach(post => {
+   const item = document.createElement('div');
+   item.className = 'explore-grid-item';
+   item.onclick = () => openPostDetail(post);
+   if (post.image_url) {
+    const img = document.createElement('img');
+    img.src = post.image_url;
+    item.append(img);
+   } else {
+    item.textContent = (post.content || '').slice(0, 45);
+   }
+   postsFragment.append(item);
+  });
+  forYouContainer.replaceChildren(postsFragment);
+ }
+}
+
+/* ========================================================================= */
+/* 9. PERFIL PROPIO, PERFIL PÚBLICO Y SEGUIDORES                             */
+/* ========================================================================= */
+function updateProfileUI() {
+ if (!currentUser) {
+  document.getElementById('profile-actions').style.display = 'none';
+  return;
+ }
+ document.getElementById('profile-actions').style.display = 'flex';
+ document.getElementById('myname').textContent = myProfile?.display_name || myProfile?.username || 'Mi perfil';
+ document.getElementById('mypronouns').textContent = myProfile?.pronouns ? `· ${myProfile.pronouns}` : '';
+ document.getElementById('myusername').textContent = '@' + (myProfile?.username || '');
+ document.getElementById('mybio').textContent = myProfile?.bio || '';
+
+ const websiteContainer = document.getElementById('myWebsiteContainer');
+ if (myProfile?.website) {
+  document.getElementById('myWebsiteLink').href = myProfile.website;
+  document.getElementById('myWebsiteText').textContent = myProfile.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  websiteContainer.style.display = 'block';
+ } else {
+  websiteContainer.style.display = 'none';
+ }
+
+ setAvatarContent(document.getElementById('myavatar'), myProfile?.avatar_url);
+
+ loadFollowCounts();
+ loadMyPostsGrid();
+ loadSavedPostsProfileGrid();
+ loadHighlights(currentUser.id, 'highlightsScrollContainer');
+ updateNavAvatarUI();
+}
+
+function openEditProfileModal() {
+ stagedAvatarBlob = null;
+ const avatarPreviewBox = document.getElementById('modalAvatarPreviewBox');
+ setAvatarContent(avatarPreviewBox, myProfile?.avatar_url, '👤');
+ document.getElementById('editname').value = myProfile?.display_name || '';
+ document.getElementById('editusername').value = myProfile?.username || '';
+ document.getElementById('editpronouns').value = myProfile?.pronouns || '';
+ document.getElementById('editwebsite').value = myProfile?.website || '';
+ document.getElementById('editgender').value = myProfile?.gender || '';
+ document.getElementById('editbio').value = myProfile?.bio || '';
+ document.getElementById('editProfileModal').classList.add('active');
+}
+
+function closeEditProfileModal() { document.getElementById('editProfileModal').classList.remove('active'); }
+
+function stageImage(type, input) {
+ const file = input.files?.[0];
+ if (!file) return;
+ if (type === 'avatar') {
+  stagedAvatarBlob = file;
+  const box = document.getElementById('modalAvatarPreviewBox');
+  box.replaceChildren();
+  const img = document.createElement('img');
+  setPreviewBlobUrl(img, file);
+  box.append(img);
+ }
+ input.value = '';
+}
+
+async function saveFullProfile() {
+ if (!currentUser) return;
+ const display_name = document.getElementById('editname').value.trim();
+ const username = document.getElementById('editusername').value.trim().toLowerCase();
+ const pronouns = document.getElementById('editpronouns').value.trim();
+ const website = document.getElementById('editwebsite').value.trim();
+ const gender = document.getElementById('editgender').value;
+ const bio = document.getElementById('editbio').value;
+
+ let avatarUrl = myProfile?.avatar_url;
+
+ if (stagedAvatarBlob) {
+  const path = currentUser.id + '/avatar-' + Date.now() + '.jpg';
+  await db.storage.from('og-media').upload(path, stagedAvatarBlob, { contentType: 'image/jpeg' });
+  avatarUrl = db.storage.from('og-media').getPublicUrl(path).data.publicUrl;
+ }
+
+ const { data } = await db.from('profiles')
+  .update({ display_name, username, pronouns, website, gender, bio, avatar_url: avatarUrl })
+  .eq('id', currentUser.id)
+  .select()
+  .single();
+
+ myProfile = data;
+ profilesCache[currentUser.id] = data;
+ updateProfileUI();
+ closeEditProfileModal();
+}
+
+async function loadMyPostsGrid() {
+ if (!currentUser) return;
+ const grid = document.getElementById('mypostsgrid');
+ const { data: posts } = await db.from('posts').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+ document.getElementById('mypostscount').textContent = posts ? posts.length : 0;
+ grid.replaceChildren();
+ if (!posts || !posts.length) {
+  grid.innerHTML = '<div class="grid-empty-msg">Aún no tienes publicaciones.</div>';
+  return;
+ }
+
+ const pinnedIds = JSON.parse(localStorage.getItem('og_pinned_posts_' + currentUser.id) || '[]');
+ posts.sort((a, b) => {
+  const aPinned = pinnedIds.includes(a.id);
+  const bPinned = pinnedIds.includes(b.id);
+  if (aPinned && !bPinned) return -1;
+  if (!aPinned && bPinned) return 1;
+  return new Date(b.created_at) - new Date(a.created_at);
+ });
+
+ const fragment = document.createDocumentFragment();
+ posts.forEach(post => {
+  const item = document.createElement('div');
+  item.className = 'ig-grid-item';
+  item.onclick = () => openPostDetail(post);
+
+  const isPinned = pinnedIds.includes(post.id);
+  if (isPinned) {
+   const badge = document.createElement('div');
+   badge.className = 'pinned-post-badge';
+   badge.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Fijada`;
+   item.append(badge);
+  }
+
+  item.oncontextmenu = e => {
+   e.preventDefault();
+   const action = isPinned ? 'Quitar de fijados' : 'Fijar en el perfil';
+   if (confirm(`${action}?`)) {
+    let currentPinned = JSON.parse(localStorage.getItem('og_pinned_posts_' + currentUser.id) || '[]');
+    if (isPinned) {
+     currentPinned = currentPinned.filter(id => id !== post.id);
+    } else {
+     if (currentPinned.length >= 3) return alert('Puedes fijar un máximo de 3 publicaciones.');
+     currentPinned.push(post.id);
+    }
+    localStorage.setItem('og_pinned_posts_' + currentUser.id, JSON.stringify(currentPinned));
+    loadMyPostsGrid();
+   }
+  };
+
+  if (post.image_url) {
+   const img = document.createElement('img');
+   img.src = post.image_url;
+   item.append(img);
+  } else {
+   item.textContent = (post.content || '').slice(0, 55);
+  }
+  fragment.append(item);
+ });
+ grid.replaceChildren(fragment);
+}
+
+function switchProfileTab(tabKey) {
+ document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
+ document.querySelectorAll('.profile-tab-content-pane').forEach(p => p.classList.remove('active'));
+ document.getElementById(`tabBtn-${tabKey}`).classList.add('active');
+ document.getElementById(`profileTabPane-${tabKey}`).classList.add('active');
+ if (tabKey === 'saved') loadSavedPostsProfileGrid();
+}
+
+function switchPublicProfileTab(tabKey) {
+ document.querySelectorAll('#publicprofile .profile-tab-btn').forEach(b => b.classList.remove('active'));
+ document.querySelectorAll('#publicprofile .profile-tab-content-pane').forEach(p => p.classList.remove('active'));
+ document.getElementById(`pubTabBtn-${tabKey}`).classList.add('active');
+ document.getElementById(`pubTabPane-${tabKey}`).classList.add('active');
+}
+
+function shareProfileLink() {
+ const profileUrl = window.location.href.split('#')[0] + '#' + (myProfile?.username || currentUser?.id);
+ if (navigator.clipboard) {
+  navigator.clipboard.writeText(profileUrl);
+  alert('¡Enlace del perfil copiado al portapapeles!');
+ } else {
+  prompt('Copia tu enlace de perfil:', profileUrl);
+ }
+}
+
+async function openPublicProfile(userId) {
+ if (currentUser && userId === currentUser.id) { showTab('profile'); return; }
+ const { data: profile } = await db.from('profiles').select('*').eq('id', userId).single();
+ if (!profile) return;
+
+ viewedProfile = profile;
+ profilesCache[userId] = profile;
+
+ document.getElementById('publicname').textContent = profile.display_name || profile.username;
+ document.getElementById('publicpronouns').textContent = profile.pronouns ? `· ${profile.pronouns}` : '';
+ document.getElementById('publicheadername').textContent = profile.username;
+ document.getElementById('publicusername').textContent = '@' + profile.username;
+ document.getElementById('publicbio').textContent = profile.bio || '';
+
+ const websiteContainer = document.getElementById('publicWebsiteContainer');
+ if (profile.website) {
+  document.getElementById('publicWebsiteLink').href = profile.website;
+  document.getElementById('publicWebsiteText').textContent = profile.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  websiteContainer.style.display = 'block';
+ } else {
+  websiteContainer.style.display = 'none';
+ }
+
+ setAvatarContent(document.getElementById('publicavatar'), profile.avatar_url);
+
+ showTab('publicprofile');
+ checkFollowStatus(userId);
+ loadPublicUserPosts(userId);
+ loadPublicCounts(userId);
+ loadHighlights(userId, 'publicHighlightsScrollContainer');
+}
+
+async function loadPublicCounts(userId) {
+ const [followers, following, posts] = await Promise.all([
+  db.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', userId),
+  db.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId),
+  db.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId)
+ ]);
+ document.getElementById('publicfollowerscount').textContent = followers.count || 0;
+ document.getElementById('publicfollowingcount').textContent = following.count || 0;
+ document.getElementById('publicpostscount').textContent = posts.count || 0;
+}
+
+async function checkFollowStatus(userId) {
+ if (!currentUser) return;
+ const { data } = await db.from('follows').select('*').eq('follower_id', currentUser.id).eq('following_id', userId).maybeSingle();
+ isFollowing = !!data;
+ const btn = document.getElementById('publicfollow');
+ btn.textContent = isFollowing ? 'Siguiendo' : 'Seguir';
+ btn.classList.toggle('primary-action', !isFollowing);
+}
+
+async function toggleFollow() {
+ if (!currentUser || !viewedProfile) return;
+ const btn = document.getElementById('publicfollow');
+ if (isFollowing) {
+  await db.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', viewedProfile.id);
+  isFollowing = false;
+  btn.textContent = 'Seguir';
+  btn.classList.add('primary-action');
+ } else {
+  await db.from('follows').insert({ follower_id: currentUser.id, following_id: viewedProfile.id });
+  isFollowing = true;
+  btn.textContent = 'Siguiendo';
+  btn.classList.remove('primary-action');
+ }
+ loadPublicCounts(viewedProfile.id);
+
+ cachedFeedPosts = null;
+ await Promise.all([loadInitialPosts(), loadStoriesData()]);
+}
+
+async function loadPublicUserPosts(userId) {
+ const grid = document.getElementById('publicposts');
+ const { data: posts } = await db.from('posts').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+ renderPostsGrid(posts, grid, 'No hay publicaciones.');
+}
+
+async function loadFollowCounts() {
+ if (!currentUser) return;
+ const [followers, following] = await Promise.all([
+  db.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', currentUser.id),
+  db.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', currentUser.id)
+ ]);
+ document.getElementById('myfollowerscount').textContent = followers.count || 0;
+ document.getElementById('myfollowingcount').textContent = following.count || 0;
+}
+
+async function openFollowersModal(targetId = null) {
+ const userId = targetId || currentUser?.id;
+ if (!userId) return;
+ document.getElementById('followModalTitle').textContent = 'Seguidores';
+ document.getElementById('followListModal').classList.add('open');
+ const { data } = await db.from('follows').select('follower_id').eq('following_id', userId);
+ if (data) renderUsersInFollowModal(data.map(f => f.follower_id));
+}
+
+async function openFollowingModal(targetId = null) {
+ const userId = targetId || currentUser?.id;
+ if (!userId) return;
+ document.getElementById('followModalTitle').textContent = 'Siguiendo';
+ document.getElementById('followListModal').classList.add('open');
+ const { data } = await db.from('follows').select('following_id').eq('follower_id', userId);
+ if (data) renderUsersInFollowModal(data.map(f => f.following_id));
+}
+
+async function renderUsersInFollowModal(userIds) {
+ const container = document.getElementById('followListContainer');
+ const missing = userIds.filter(id => !profilesCache[id]);
+ if (missing.length > 0) {
+  const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
+  (profs || []).forEach(p => profilesCache[p.id] = p);
+ }
+ const fragment = document.createDocumentFragment();
+ userIds.forEach(id => {
+  const profile = profilesCache[id];
+  if (!profile) return;
+  const item = document.createElement('div');
+  item.className = 'public-user';
+  item.append(createAvatarNode(profile, false));
+  const info = document.createElement('div');
+  info.className = 'public-user-info';
+  info.innerHTML = `<strong>${profile.display_name || profile.username}</strong><small>@${profile.username}</small>`;
+  item.append(info);
+  item.onclick = () => { closeFollowListModal(); openPublicProfile(profile.id); };
+  fragment.append(item);
+ });
+ container.replaceChildren(fragment);
+}
+
+function closeFollowListModal() { document.getElementById('followListModal').classList.remove('open'); }
+
+/* ========================================================================= */
+/* 10. ACTIVIDAD Y NOTIFICACIONES                                            */
+/* ========================================================================= */
+async function loadActivity() {
+ const container = document.getElementById('activitylist');
+ if (!currentUser) { showAuthOverlay(); return; }
+
+ try {
+  const { data: ownPosts } = await db.from('posts').select('id').eq('user_id', currentUser.id);
+  const postIds = (ownPosts || []).map(p => p.id);
+
+  const [followsResult, likesResult, commentsResult] = await Promise.all([
+   db.from('follows').select('follower_id,created_at').eq('following_id', currentUser.id).order('created_at', { ascending: false }).limit(30),
+   postIds.length ? db.from('likes').select('user_id,post_id,created_at').in('post_id', postIds).order('created_at', { ascending: false }).limit(40) : Promise.resolve({ data: [] }),
+   postIds.length ? db.from('comments').select('id,user_id,post_id,content,created_at').in('post_id', postIds).order('created_at', { ascending: false }).limit(40) : Promise.resolve({ data: [] })
+  ]);
+
+  const events = [];
+  (followsResult.data || []).forEach(f => { if (f.follower_id !== currentUser.id) events.push({ type: 'follow', user_id: f.follower_id, created_at: f.created_at }); });
+  (likesResult.data || []).forEach(l => { if (l.user_id !== currentUser.id) events.push({ type: 'like', user_id: l.user_id, created_at: l.created_at }); });
+  (commentsResult.data || []).forEach(c => { if (c.user_id !== currentUser.id) events.push({ type: 'comment', user_id: c.user_id, content: c.content, created_at: c.created_at }); });
+
+  events.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  renderActivityDOM(events, container);
+ } catch (e) {
+  container.textContent = 'No se pudo cargar la actividad.';
+ }
+}
+
+function renderActivityDOM(events, container) {
+ if (!events.length) {
+  container.innerHTML = '<div class="activity-empty">Todavía no tenés actividad reciente.</div>';
+  return;
+ }
+
+ (async () => {
+  const missing = [...new Set(events.map(e => e.user_id).filter(Boolean))].filter(id => !profilesCache[id]);
+  if (missing.length > 0) {
+   const { data: newProfiles } = await db.from('profiles').select('id,username,display_name,avatar_url').in('id', missing);
+   (newProfiles || []).forEach(p => profilesCache[p.id] = p);
+  }
+
+  const fragment = document.createDocumentFragment();
+  events.forEach(event => {
+   const profile = profilesCache[event.user_id];
+   if (!profile) return;
+
+   const item = document.createElement('div');
+   item.className = 'activity-item';
+   item.append(createAvatarNode(profile, false));
+
+   const info = document.createElement('div');
+   info.className = 'activity-info';
+   const message = document.createElement('div');
+   const name = document.createElement('strong');
+   name.textContent = profile.display_name || profile.username;
+   message.append(name);
+
+   if (event.type === 'follow') message.append(document.createTextNode(' comenzó a seguirte.'));
+   else if (event.type === 'like') message.append(document.createTextNode(' le dio Me gusta a tu publicación.'));
+   else if (event.type === 'comment') message.append(document.createTextNode(' comentó tu publicación.'));
+
+   info.append(message);
+   if (event.type === 'comment') {
+    const cText = document.createElement('div');
+    cText.style.color = '#666666';
+    cText.style.marginTop = '3px';
+    cText.textContent = '“' + event.content + '”';
+    info.append(cText);
+   }
+
+   const date = document.createElement('div');
+   date.className = 'activity-date';
+   date.textContent = formatDate(event.created_at);
+   info.append(date);
+
+   item.append(info);
+   item.onclick = () => openPublicProfile(profile.id);
+   fragment.append(item);
+  });
+  container.replaceChildren(fragment);
+ })();
+}
+
+async function loadUserOwnActivity() {
+ const container = document.getElementById('userOwnActivityContainer');
+ if (!currentUser) return;
+ container.innerHTML = '<div class="activity-empty">Cargando tu historial...</div>';
+
+ try {
+  const [myLikes, myComments, myFollows] = await Promise.all([
+   db.from('likes').select('post_id, created_at').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(25),
+   db.from('comments').select('post_id, content, created_at').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(25),
+   db.from('follows').select('following_id, created_at').eq('follower_id', currentUser.id).order('created_at', { ascending: false }).limit(25)
+  ]);
+
+  const events = [];
+  (myLikes.data || []).forEach(l => events.push({ type: 'liked_post', post_id: l.post_id, created_at: l.created_at }));
+  (myComments.data || []).forEach(c => events.push({ type: 'commented_post', post_id: c.post_id, content: c.content, created_at: c.created_at }));
+  (myFollows.data || []).forEach(f => events.push({ type: 'followed_user', user_id: f.following_id, created_at: f.created_at }));
+
+  events.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+  if (!events.length) {
+   container.innerHTML = '<div class="activity-empty">Aún no realizaste interacciones en ÖG.</div>';
+   return;
+  }
+
+  const missingUserIds = [...new Set(events.map(e => e.user_id).filter(Boolean))].filter(id => !profilesCache[id]);
+  if (missingUserIds.length > 0) {
+   const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missingUserIds);
+   (profs || []).forEach(p => profilesCache[p.id] = p);
+  }
+
+  const fragment = document.createDocumentFragment();
+  events.forEach(ev => {
+   const row = document.createElement('div');
+   row.className = 'activity-item';
+
+   const info = document.createElement('div');
+   info.className = 'activity-info';
+
+   const text = document.createElement('div');
+   const date = document.createElement('div');
+   date.className = 'activity-date';
+   date.textContent = formatDate(ev.created_at);
+
+   if (ev.type === 'liked_post') {
+    text.innerHTML = '❤️ Le diste <strong>Me gusta</strong> a una publicación.';
+   } else if (ev.type === 'commented_post') {
+    text.innerHTML = `💬 Comentaste: <span style="color:#666666">“${ev.content}”</span>`;
+   } else if (ev.type === 'followed_user') {
+    const p = profilesCache[ev.user_id];
+    text.innerHTML = `👤 Empezaste a seguir a <strong>@${p?.username || 'usuario'}</strong>.`;
+   }
+
+   info.append(text, date);
+   row.append(info);
+   fragment.append(row);
+  });
+
+  container.replaceChildren(fragment);
+ } catch (e) {
+  container.innerHTML = '<div class="activity-empty">No se pudo cargar el historial.</div>';
+ }
+}
+
+/* ========================================================================= */
+/* 11. MENSAJERÍA DIRECTA Y SALA DE CHAT                                     */
+/* ========================================================================= */
+async function checkGlobalUnreadMessages() {
+ if (!currentUser) return;
+ const { data: parts } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
+ if (!parts || !parts.length) return;
+
+ for (const p of parts) {
+  const { data: latest } = await db.from('messages')
+   .select('created_at, sender_id')
+   .eq('conversation_id', p.conversation_id)
+   .order('created_at', { ascending: false })
+   .limit(1)
+   .maybeSingle();
+
+  if (latest && latest.sender_id !== currentUser.id) {
+   if (!p.last_read_at || new Date(latest.created_at) > new Date(p.last_read_at)) {
+    document.getElementById('navUnreadDot').classList.add('active');
+    return;
+   }
+  }
+ }
+ document.getElementById('navUnreadDot').classList.remove('active');
+}
+
+async function loadConversations() {
+ const container = document.getElementById('dmConversationsList');
+ if (!currentUser) return;
+
+ try {
+  const { data: myParts } = await db.from('conversation_participants').select('conversation_id, last_read_at').eq('user_id', currentUser.id);
+  if (!myParts || !myParts.length) {
+   container.innerHTML = '<div class="activity-empty">No tenés conversaciones activas.</div>';
+   return;
+  }
+
+  const convIds = myParts.map(p => p.conversation_id);
+  const { data: allParts } = await db.from('conversation_participants').select('conversation_id, user_id').in('conversation_id', convIds);
+
+  const convMap = {};
+  convIds.forEach(id => { convMap[id] = { otherUserId: null, last_read_at: myParts.find(p => p.conversation_id === id)?.last_read_at }; });
+  (allParts || []).forEach(p => { if (p.user_id !== currentUser.id && convMap[p.conversation_id]) convMap[p.conversation_id].otherUserId = p.user_id; });
+
+  const otherUserIds = [...new Set(Object.values(convMap).map(c => c.otherUserId).filter(Boolean))];
+  const missing = otherUserIds.filter(id => !profilesCache[id]);
+  if (missing.length > 0) {
+   const { data: profs } = await db.from('profiles').select('id, username, display_name, avatar_url').in('id', missing);
+   (profs || []).forEach(p => profilesCache[p.id] = p);
+  }
+
+  const conversationsList = await Promise.all(convIds.map(async convId => {
+   const otherId = convMap[convId].otherUserId;
+   const profile = profilesCache[otherId];
+   if (!profile) return null;
+
+   const { data: lastMsg } = await db.from('messages')
+    .select('content, created_at, sender_id')
+    .eq('conversation_id', convId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+   const isUnread = lastMsg && lastMsg.sender_id !== currentUser.id && (!convMap[convId].last_read_at || new Date(lastMsg.created_at) > new Date(convMap[convId].last_read_at));
+
+   return {
+    conversationId: convId,
+    profile,
+    lastMessage: lastMsg ? lastMsg.content : 'Conversación iniciada',
+    time: lastMsg ? formatDate(lastMsg.created_at) : '',
+    timestamp: lastMsg ? new Date(lastMsg.created_at).getTime() : 0,
+    isUnread
+   };
+  }));
+
+  const valid = conversationsList.filter(Boolean);
+  valid.sort((a, b) => b.timestamp - a.timestamp);
+  renderConversationsDOM(valid, container);
+ } catch (e) {
+  container.innerHTML = '<div class="activity-empty">Error al cargar conversaciones.</div>';
+ }
+}
+
+function renderConversationsDOM(conversationsList, container) {
+ if (!conversationsList.length) {
+  container.innerHTML = '<div class="activity-empty">No hay conversaciones recientes.</div>';
+  return;
+ }
+ const fragment = document.createDocumentFragment();
+
+ conversationsList.forEach(item => {
+  const row = document.createElement('div');
+  row.className = 'dm-conv-item';
+  row.onclick = () => openChatRoom(item.conversationId, item.profile);
+
+  const av = createAvatarNode(item.profile, false);
+  av.className += ' dm-conv-avatar';
+
+  const info = document.createElement('div');
+  info.className = 'dm-conv-info';
+  info.innerHTML = `<div class="dm-conv-name"><span>${item.profile.display_name || item.profile.username}</span><span class="dm-conv-time">${item.time}</span></div><div class="dm-conv-snippet">${item.lastMessage}</div>`;
+
+  if (item.isUnread) {
+   const dot = document.createElement('span');
+   dot.className = 'dm-unread-dot';
+   info.append(dot);
+  }
+  row.append(av, info);
+  fragment.append(row);
+ });
+ container.replaceChildren(fragment);
+}
+
+async function searchUsersForChat() {
+ clearTimeout(dmSearchTimer);
+ const val = document.getElementById('dmSearchInput').value.trim();
+ const resultBox = document.getElementById('dmSearchResults');
+ if (val.length < 2) { resultBox.replaceChildren(); return; }
+
+ dmSearchTimer = setTimeout(async () => {
+  const { data } = await db.from('profiles').select('id, username, display_name, avatar_url').ilike('username', '%' + val + '%').limit(10);
+  if (!data || !data.length) {
+   resultBox.innerHTML = '<p class="muted" style="text-align:center;padding:10px">No se encontraron usuarios.</p>';
+   return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  data.forEach(profile => {
+   if (profile.id === currentUser?.id) return;
+   profilesCache[profile.id] = profile;
+   const item = document.createElement('div');
+   item.className = 'public-user';
+   item.append(createAvatarNode(profile, false));
+   const info = document.createElement('div');
+   info.className = 'public-user-info';
+   info.innerHTML = `<strong>${profile.display_name || profile.username}</strong><small>@${profile.username}</small>`;
+   item.append(info);
+   item.onclick = () => openDirectChatWithUser(profile.id);
+   fragment.append(item);
+  });
+  resultBox.replaceChildren(fragment);
+ }, 200);
+}
+
+async function openDirectChatWithUser(recipientId) {
+ if (!currentUser || !recipientId) return;
+ const { data: convId } = await db.rpc('get_or_create_conversation', { user_a: currentUser.id, user_b: recipientId });
+ const profile = profilesCache[recipientId] || (await db.from('profiles').select('*').eq('id', recipientId).single()).data;
+ if (profile) {
+  profilesCache[recipientId] = profile;
+  openChatRoom(convId, profile);
+ }
+}
+
+async function openChatRoom(conversationId, recipientProfile) {
+ activeConversationId = conversationId;
+ activeRecipientProfile = recipientProfile;
+ cancelReply();
+
+ document.querySelectorAll('main>div').forEach(x => x.classList.remove('active'));
+ document.getElementById('chatRoomPage').classList.add('active');
+
+ const bottomNavBar = document.getElementById('bottomNavBar');
+ if (bottomNavBar) bottomNavBar.style.display = 'none';
+
+ document.getElementById('chatRoomTitle').textContent = recipientProfile.display_name || recipientProfile.username;
+
+ const headerAvatar = document.getElementById('chatRoomHeaderAvatar');
+ headerAvatar.replaceChildren();
+ if (recipientProfile.avatar_url) {
+  const img = document.createElement('img');
+  img.src = recipientProfile.avatar_url;
+  headerAvatar.append(img);
+ } else {
+  headerAvatar.textContent = '👤';
+ }
+ const dot = document.createElement('span');
+ dot.id = 'chatRoomOnlineDot';
+ dot.className = 'online-dot';
+ if (onlineUsersMap[recipientProfile.id]) dot.classList.add('active');
+ headerAvatar.append(dot);
+
+ document.getElementById('chatRoomStatusSub').textContent = onlineUsersMap[recipientProfile.id] ? 'En línea' : 'Desconectado';
+
+ await db.from('conversation_participants').update({ last_read_at: new Date().toISOString() }).eq('conversation_id', conversationId).eq('user_id', currentUser.id);
+ checkGlobalUnreadMessages();
+
+ const container = document.getElementById('chatMessagesContainer');
+ container.innerHTML = '<div class="activity-empty">Cargando mensajes...</div>';
+
+ const { data: msgs } = await db.from('messages').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true });
+ container.replaceChildren();
+ if (msgs && msgs.length) {
+  const fragment = document.createDocumentFragment();
+  msgs.forEach(m => fragment.append(buildChatMessageNode(m)));
+  container.replaceChildren(fragment);
+  scrollToBottomChat();
+ }
+}
+
+function buildChatMessageNode(msg) {
+ const isMine = msg.sender_id === currentUser.id;
+ const bubble = document.createElement('div');
+ bubble.className = `chat-bubble ${isMine ? 'sent' : 'received'}`;
+ bubble.onclick = () => triggerReplyToMessage(msg.id, msg.content);
+
+ if (msg.reply_to_snippet) {
+  const rep = document.createElement('div');
+  rep.className = 'chat-bubble-reply-preview';
+  rep.textContent = msg.reply_to_snippet;
+  bubble.append(rep);
+ }
+
+ const textDiv = document.createElement('div');
+ textDiv.textContent = msg.content;
+ bubble.append(textDiv);
+
+ const timeDiv = document.createElement('div');
+ timeDiv.className = 'chat-bubble-time';
+ timeDiv.textContent = new Date(msg.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+ bubble.append(timeDiv);
+
+ return bubble;
+}
+
+function appendChatMessageNode(msg) {
+ const container = document.getElementById('chatMessagesContainer');
+ container.append(buildChatMessageNode(msg));
+}
+
+function scrollToBottomChat() {
+ const container = document.getElementById('chatMessagesContainer');
+ container.scrollTop = container.scrollHeight;
+}
+
+function triggerReplyToMessage(msgId, content) {
+ replyingToMessageId = msgId;
+ replyingToSnippet = content.slice(0, 45) + (content.length > 45 ? '...' : '');
+ document.getElementById('replyingTextSnippet').textContent = replyingToSnippet;
+ document.getElementById('replyingBar').classList.add('active');
+ document.getElementById('chatMessageInput').focus();
+}
+
+function cancelReply() {
+ replyingToMessageId = null;
+ replyingToSnippet = null;
+ document.getElementById('replyingBar').classList.remove('active');
+}
+
+async function sendChatMessage() {
+ if (!activeConversationId || !currentUser) return;
+ const input = document.getElementById('chatMessageInput');
+ const text = input.value.trim();
+ if (!text) return;
+
+ input.value = '';
+ const payload = {
+  conversation_id: activeConversationId,
+  sender_id: currentUser.id,
+  content: text,
+  reply_to_id: replyingToMessageId,
+  reply_to_snippet: replyingToSnippet
+ };
+ cancelReply();
+
+ const { data: inserted } = await db.from('messages').insert(payload).select().single();
+ if (inserted) {
+  appendChatMessageNode(inserted);
+  scrollToBottomChat();
+  cachedConversationsList = null;
+ }
+}
+
+function openChatDetailsPage() {
+ if (!activeRecipientProfile) return;
+ document.querySelectorAll('main>div').forEach(x => x.classList.remove('active'));
+ document.getElementById('chatDetailsPage').classList.add('active');
+
+ const av = document.getElementById('chatDetailsAvatarContainer');
+ setAvatarContent(av, activeRecipientProfile.avatar_url, '👤');
+ document.getElementById('chatDetailsName').textContent = activeRecipientProfile.display_name || activeRecipientProfile.username;
+ document.getElementById('chatDetailsUsername').textContent = '@' + activeRecipientProfile.username;
+
+ const isOnline = onlineUsersMap[activeRecipientProfile.id];
+ const statusEl = document.getElementById('chatDetailsActivityStatus');
+ statusEl.textContent = isOnline ? 'En línea' : 'Desconectado';
+ statusEl.style.color = isOnline ? '#22c55e' : '#888888';
+}
+
+function toggleChatDetailsMenu() {
+ const dd = document.getElementById('chatDetailsDropdown');
+ dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+}
+
+function handleChatActionMenu(action) {
+ document.getElementById('chatDetailsDropdown').style.display = 'none';
+ if (action === 'block') alert('Usuario bloqueado.');
+ if (action === 'report') alert('Reporte enviado.');
+ if (action === 'restrict') alert('Cuenta restringida.');
+}
+
+function openChatRecipientProfile() {
+ if (activeRecipientProfile) openPublicProfile(activeRecipientProfile.id);
+}
+
+function triggerChatSearch() {
+ const query = prompt('Buscar mensaje en el chat:');
+ if (!query) return;
+ alert(`Buscando "${query}" en el historial...`);
+}
+
+function openMuteOptionsModal() { alert('Notificaciones del chat silenciadas.'); }
+
+function openChatSubSettings(type) {
+ document.querySelectorAll('main>div').forEach(x => x.classList.remove('active'));
+ document.getElementById('chatSubSettingsPage').classList.add('active');
+
+ const titleEl = document.getElementById('chatSubSettingsTitle');
+ const bodyEl = document.getElementById('chatSubSettingsBody');
+ bodyEl.replaceChildren();
+
+ if (type === 'privacy') {
+  titleEl.textContent = 'Privacidad y seguridad';
+  bodyEl.innerHTML = `<div class="settings-row"><div class="settings-row-info"><p class="settings-row-title">Confirmaciones de lectura</p><p class="settings-row-desc">Mostrar cuando leés los mensajes.</p></div><label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>`;
+ } else if (type === 'timer') {
+  titleEl.textContent = 'Mensajes temporales';
+  bodyEl.innerHTML = `<p class="muted">Los mensajes enviados desaparecerán automáticamente después del tiempo seleccionado.</p><button class="secondary" onclick="alert('Temporizador desactivado')">Desactivado</button><button class="secondary" onclick="alert('Configurado a 24 horas')">24 horas</button><button class="secondary" onclick="alert('Configurado a 7 días')">7 días</button>`;
+ } else if (type === 'nickname') {
+  titleEl.textContent = 'Apodos';
+  bodyEl.innerHTML = `<input class="field" id="nicknameInput" placeholder="Nuevo apodo"><button class="primary" onclick="alert('Apodo actualizado')">Guardar apodo</button>`;
+ } else if (type === 'style') {
+  titleEl.textContent = 'Personalizar estilo';
+  bodyEl.innerHTML = `<p class="muted">Tema actual: Minimalista Blanco</p><button class="secondary" onclick="alert('Tema azul clásico aplicado')">Azul Clásico</button><button class="secondary" onclick="alert('Tema monocromo aplicado')">Monocromo</button>`;
+ }
+}
+
+/* ========================================================================= */
+/* 12. INICIALIZACIÓN DE LA APLICACIÓN                                       */
+/* ========================================================================= */
+async function init() {
+ updatePwaInstallButtonsVisibility();
+ const { data } = await db.auth.getSession();
+ if (data.session?.user) {
+  await loadAccount(data.session.user);
+  hideSplashScreen();
+ } else {
+  hideSplashScreen();
+  showAuthOverlay();
+ }
+}
+
+db.auth.onAuthStateChange((event, session) => {
+ if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+  loadAccount(session.user);
+ } else if (event === 'SIGNED_OUT') {
+  currentUser = null;
+  showAuthOverlay();
+ }
+});
+
+init();
