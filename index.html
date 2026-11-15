@@ -4,13 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<title>Ög — Social</title>
+<meta name="application-name" content="ÖG">
+<meta name="mobile-web-app-capable" content="yes">
+<title>ÖG — Social</title>
 
 <!-- CONFIGURACIÓN PWA -->
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Ög">
+<meta name="apple-mobile-web-app-title" content="ÖG">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
 <style>
@@ -181,7 +186,7 @@ main > div.swipe-enter-left {
 
 #postDetailModal, #editProfileModal, #storyViewer, #cameraModal,
 #logoutConfirmModal, #followListModal, #highlightModal,
-#highlightViewer, #addToHighlightModal {
+#highlightViewer, #addToHighlightModal, #iosInstallModal {
  transition: opacity 0.25s cubic-bezier(0.1, 0.9, 0.2, 1), visibility 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
  opacity: 0;
  visibility: hidden;
@@ -190,7 +195,8 @@ main > div.swipe-enter-left {
 
 #postDetailModal.active, #editProfileModal.active, #storyViewer.active,
 #cameraModal.active, #logoutConfirmModal.active, #followListModal.open,
-#highlightModal.active, #highlightViewer.active, #addToHighlightModal.active {
+#highlightModal.active, #highlightViewer.active, #addToHighlightModal.active,
+#iosInstallModal.active {
  opacity: 1;
  visibility: visible;
  pointer-events: auto;
@@ -200,7 +206,8 @@ main > div.swipe-enter-left {
 #editProfileModal.active .edit-modal-card,
 #logoutConfirmModal.active .confirm-card,
 #highlightModal.active .highlight-modal-card,
-#addToHighlightModal.active .highlight-modal-card {
+#addToHighlightModal.active .highlight-modal-card,
+#iosInstallModal.active .highlight-modal-card {
  animation: fadeInScale 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
 }
 
@@ -1290,8 +1297,8 @@ nav button.active .nav-avatar-ring { border-color: var(--text-primary); border-w
 .edit-photo-circle { width: 82px; height: 82px; border-radius: 50%; overflow: hidden; background: var(--border-light); border: 2px solid var(--border-medium); display: grid; place-items: center; position: relative; }
 .edit-photo-circle img { width: 100%; height: 100%; object-fit: cover; }
 
-/* Modales de historias destacadas y cierre de sesión */
-#highlightModal, #addToHighlightModal, #logoutConfirmModal {
+/* Modales de historias destacadas, cierre de sesión e instalación iOS */
+#highlightModal, #addToHighlightModal, #logoutConfirmModal, #iosInstallModal {
  position: fixed;
  inset: 0;
  background: rgba(0, 0, 0, 0.4);
@@ -1304,6 +1311,7 @@ nav button.active .nav-avatar-ring { border-color: var(--text-primary); border-w
 }
 #highlightModal, #addToHighlightModal { z-index: 650; }
 #logoutConfirmModal { z-index: 700; }
+#iosInstallModal { z-index: 750; }
 
 .highlight-modal-card {
  background: var(--bg-main);
@@ -1390,6 +1398,8 @@ nav button.active .nav-avatar-ring { border-color: var(--text-primary); border-w
 .menu-list-chevron { width: 18px; height: 18px; color: var(--text-muted); }
 .menu-list-btn.danger { color: var(--accent-red); border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.04); margin-top: 12px; }
 .menu-list-btn.danger svg { color: var(--accent-red); }
+.menu-list-btn.pwa-install { color: var(--accent-blue); border-color: rgba(59, 130, 246, 0.28); background: rgba(59, 130, 246, 0.05); }
+.menu-list-btn.pwa-install svg { color: var(--accent-blue); }
 
 .settings-group { padding: 16px 0; border-bottom: 1px solid var(--border-light); }
 .settings-group-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin: 0 0 12px 0; }
@@ -1404,6 +1414,39 @@ nav button.active .nav-avatar-ring { border-color: var(--text-primary); border-w
 .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 2px; bottom: 2px; background: #ffffff; border-radius: 50%; transition: 0.2s; }
 input:checked + .toggle-slider { background: var(--accent-blue); }
 input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+/* Pasos de instalación iOS */
+.ios-install-steps {
+ display: flex;
+ flex-direction: column;
+ gap: 12px;
+ text-align: left;
+ margin: 4px 0;
+}
+.ios-step-row {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ background: var(--bg-subtle);
+ border: 1px solid var(--border-light);
+ padding: 10px 12px;
+ border-radius: 14px;
+ font-size: 13px;
+ color: var(--text-body);
+ line-height: 1.35;
+}
+.ios-step-badge {
+ width: 24px;
+ height: 24px;
+ border-radius: 50%;
+ background: var(--accent-blue);
+ color: #ffffff;
+ font-size: 12px;
+ font-weight: 700;
+ display: grid;
+ place-items: center;
+ flex-shrink: 0;
+}
 
 /* Listas de usuarios, actividad y drawer inferior */
 .public-user { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-light); cursor: pointer; }
@@ -1458,19 +1501,21 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
 <!-- ======================================================================= -->
 <div id="appSplashScreen">
  <div class="splash-logo-container">
-  <div class="splash-logo">Ög<span style="color:#3b82f6">.</span></div>
+  <div class="splash-logo">ÖG<span style="color:#3b82f6">.</span></div>
  </div>
 </div>
 
 <div id="authWelcomeOverlay">
  <div class="auth-brand-container">
-  <div class="auth-logo">Ög<span style="color:#3b82f6">.</span></div>
+  <div class="auth-logo">ÖG<span style="color:#3b82f6">.</span></div>
   <div class="auth-tagline">Regístrate para ver fotos, historias e interacciones de tus amigos.</div>
 
   <div class="auth-forms-container">
    <div id="authWelcomePanel" class="auth-panel active">
     <button class="primary" onclick="switchAuthSubView('signup')">Crear cuenta</button>
     <button class="secondary" onclick="switchAuthSubView('signin')">Iniciar sesión</button>
+    <button class="secondary" id="authInstallAndroidBtn" style="display:none;" onclick="triggerAndroidInstall()">Instalar ÖG</button>
+    <button class="secondary" id="authInstallIosBtn" style="display:none;" onclick="openIosInstallModal()">Cómo instalar ÖG</button>
    </div>
 
    <div id="authSignupPanel" class="auth-panel">
@@ -1491,7 +1536,7 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
    <p id="authOverlayStatus" class="status" style="margin-top:8px"></p>
   </div>
  </div>
- <div style="font-size:12px;color:#888888">Ög — Optimized Supabase Engine</div>
+ <div style="font-size:12px;color:#888888">ÖG — Optimized Supabase Engine</div>
 </div>
 
 <!-- ======================================================================= -->
@@ -1502,9 +1547,15 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
   <button class="icon" id="headerPlusBtn" onclick="showTab('create')" aria-label="Crear publicación" style="display:none;">
    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
+  <button class="icon" id="headerInstallAndroidBtn" onclick="triggerAndroidInstall()" aria-label="Instalar ÖG" title="Instalar ÖG" style="display:none;color:#3b82f6;">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  </button>
+  <button class="icon" id="headerInstallIosBtn" onclick="openIosInstallModal()" aria-label="Cómo instalar ÖG" title="Cómo instalar ÖG" style="display:none;color:#3b82f6;">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+  </button>
  </div>
  <div class="header-center-slot" id="headerLogoSlot" style="display:flex;">
-  <div class="logo">Ög<span style="color:#3b82f6">.</span></div>
+  <div class="logo">ÖG<span style="color:#3b82f6">.</span></div>
  </div>
  <div class="header-right-slot" id="header-default-icons">
   <button class="icon" onclick="openCameraModal()" aria-label="Cámara">
@@ -1660,7 +1711,7 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
     <span id="mypronouns" class="profile-pronouns-tag"></span>
    </h2>
    <p class="profile-username-tag" id="myusername">@usuario</p>
-   <p class="profile-bio-text" id="mybio">Bienvenido a Ög.</p>
+   <p class="profile-bio-text" id="mybio">Bienvenido a ÖG.</p>
    <div id="myWebsiteContainer" style="display:none;">
     <a href="#" id="myWebsiteLink" class="profile-website-link" target="_blank" rel="noopener noreferrer">
      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -1901,6 +1952,22 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
   <strong style="font-size:16px;color:#111111;">Menú</strong>
  </div>
  <div class="menu-section-content">
+  <button class="menu-list-btn pwa-install" id="menuInstallAndroidBtn" style="display:none;" onclick="triggerAndroidInstall()">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>Instalar ÖG</span>
+   </span>
+   <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <button class="menu-list-btn pwa-install" id="menuInstallIosBtn" style="display:none;" onclick="openIosInstallModal()">
+   <span class="menu-list-left">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    <span>Cómo instalar ÖG</span>
+   </span>
+   <svg class="menu-list-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
   <button class="menu-list-btn" onclick="openMenuSubPage('menuConfigPage')">
    <span class="menu-list-left">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -2281,10 +2348,36 @@ input:checked + .toggle-slider:before { transform: translateX(20px); }
  </div>
 </div>
 
+<!-- Modal Instrucciones Instalación iPhone (Safari) -->
+<div id="iosInstallModal" onclick="closeIosInstallModal()">
+ <div class="highlight-modal-card" onclick="event.stopPropagation()">
+  <div class="modal-header-row">
+   <strong style="font-size:16px;color:#111111;">Cómo instalar ÖG en iPhone</strong>
+   <button class="secondary modal-close-btn" onclick="closeIosInstallModal()">✕</button>
+  </div>
+  <p class="muted" style="margin:0;font-size:13px;line-height:1.4;">Instalá ÖG en tu pantalla de inicio para abrirla a pantalla completa como una app:</p>
+  <div class="ios-install-steps">
+   <div class="ios-step-row">
+    <span class="ios-step-badge">1</span>
+    <span>Abrí esta página desde <strong>Safari</strong> en tu iPhone.</span>
+   </div>
+   <div class="ios-step-row">
+    <span class="ios-step-badge">2</span>
+    <span>Tocá el ícono <strong>Compartir</strong> (cuadrado con flecha hacia arriba) en la barra inferior de Safari.</span>
+   </div>
+   <div class="ios-step-row">
+    <span class="ios-step-badge">3</span>
+    <span>Deslizá hacia abajo, seleccioná <strong>«Añadir a pantalla de inicio»</strong> y confirmá tocando <strong>«Añadir»</strong>.</span>
+   </div>
+  </div>
+  <button class="primary" onclick="closeIosInstallModal()">Entendido</button>
+ </div>
+</div>
+
 <!-- Modal Confirmar Cierre de Sesión -->
 <div id="logoutConfirmModal" onclick="closeLogoutConfirmation()">
  <div class="confirm-card" onclick="event.stopPropagation()">
-  <h3 style="margin:0 0 8px 0;font-size:18px;color:#111111;">¿Cerrar sesión en Ög?</h3>
+  <h3 style="margin:0 0 8px 0;font-size:18px;color:#111111;">¿Cerrar sesión en ÖG?</h3>
   <div style="display:flex;flex-direction:column;gap:10px;">
    <button class="danger-btn" onclick="executeConfirmedSignOut()">Sí, cerrar sesión</button>
    <button class="secondary" onclick="closeLogoutConfirmation()">Cancelar</button>
@@ -2426,6 +2519,90 @@ if (!visitorId) {
   return v.toString(16);
  });
  localStorage.setItem('og_visitor_uuid', visitorId);
+}
+
+/* ========================================================================= */
+/* 1B. GESTIÓN PWA (SERVICE WORKER, ANDROID INSTALL E IPHONE SAFARI)         */
+/* ========================================================================= */
+let deferredInstallPrompt = null;
+
+function isAppInStandaloneMode() {
+ return (
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.navigator.standalone === true ||
+  document.referrer.includes('android-app://')
+ );
+}
+
+function isIosDevice() {
+ const ua = window.navigator.userAgent.toLowerCase();
+ return /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function updatePwaInstallButtonsVisibility() {
+ const standalone = isAppInStandaloneMode();
+ const canInstallAndroid = !standalone && !!deferredInstallPrompt;
+ const canShowIosGuide = !standalone && isIosDevice();
+
+ const androidBtnIds = ['authInstallAndroidBtn', 'headerInstallAndroidBtn', 'menuInstallAndroidBtn'];
+ const iosBtnIds = ['authInstallIosBtn', 'headerInstallIosBtn', 'menuInstallIosBtn'];
+
+ androidBtnIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (id === 'headerInstallAndroidBtn') {
+   const isFeedActive = document.getElementById('feed')?.classList.contains('active');
+   el.style.display = (canInstallAndroid && isFeedActive) ? 'inline-flex' : 'none';
+  } else {
+   el.style.display = canInstallAndroid ? 'flex' : 'none';
+  }
+ });
+
+ iosBtnIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (id === 'headerInstallIosBtn') {
+   const isFeedActive = document.getElementById('feed')?.classList.contains('active');
+   el.style.display = (canShowIosGuide && isFeedActive) ? 'inline-flex' : 'none';
+  } else {
+   el.style.display = canShowIosGuide ? 'flex' : 'none';
+  }
+ });
+}
+
+window.addEventListener('beforeinstallprompt', event => {
+ event.preventDefault();
+ deferredInstallPrompt = event;
+ updatePwaInstallButtonsVisibility();
+});
+
+window.addEventListener('appinstalled', () => {
+ deferredInstallPrompt = null;
+ updatePwaInstallButtonsVisibility();
+});
+
+async function triggerAndroidInstall() {
+ if (!deferredInstallPrompt) return;
+ deferredInstallPrompt.prompt();
+ const { outcome } = await deferredInstallPrompt.userChoice;
+ if (outcome === 'accepted') {
+  deferredInstallPrompt = null;
+ }
+ updatePwaInstallButtonsVisibility();
+}
+
+function openIosInstallModal() {
+ document.getElementById('iosInstallModal')?.classList.add('active');
+}
+
+function closeIosInstallModal() {
+ document.getElementById('iosInstallModal')?.classList.remove('active');
+}
+
+if ('serviceWorker' in navigator) {
+ window.addEventListener('load', () => {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+ });
 }
 
 /* ========================================================================= */
@@ -2571,7 +2748,7 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 function isAnyModalOrSubViewOpen() {
- const modalIds = ['postDetailModal', 'editProfileModal', 'storyViewer', 'cameraModal', 'logoutConfirmModal', 'highlightModal', 'highlightViewer', 'addToHighlightModal'];
+ const modalIds = ['postDetailModal', 'editProfileModal', 'storyViewer', 'cameraModal', 'logoutConfirmModal', 'highlightModal', 'highlightViewer', 'addToHighlightModal', 'iosInstallModal'];
  for (const id of modalIds) {
   const el = document.getElementById(id);
   if (el && el.classList.contains('active')) return true;
@@ -2699,6 +2876,8 @@ function showTab(id, btn) {
   if (profileIcons) profileIcons.style.display = 'none';
  }
 
+ updatePwaInstallButtonsVisibility();
+
  if (id === 'notifications') loadActivity();
  if (id === 'explore') {
   loadExploreGrid();
@@ -2725,6 +2904,7 @@ function openMenuSection() {
  document.getElementById('headerPlusBtn').style.display = 'none';
  document.getElementById('header-default-icons').style.display = 'none';
  document.getElementById('header-profile-icons').style.display = 'none';
+ updatePwaInstallButtonsVisibility();
 }
 
 function closeMenuSection() {
@@ -2823,7 +3003,10 @@ function switchAuthSubView(viewName) {
  if (viewName === 'signin') document.getElementById('authSigninPanel').classList.add('active');
 }
 
-function showAuthOverlay() { document.getElementById('authWelcomeOverlay').classList.add('visible'); }
+function showAuthOverlay() {
+ document.getElementById('authWelcomeOverlay').classList.add('visible');
+ updatePwaInstallButtonsVisibility();
+}
 function hideAuthOverlay() { document.getElementById('authWelcomeOverlay').classList.remove('visible'); }
 
 function hideSplashScreen() {
@@ -2888,6 +3071,7 @@ async function loadAccount(user) {
  hideAuthOverlay();
  updateProfileUI();
  updateNavAvatarUI();
+ updatePwaInstallButtonsVisibility();
 
  await Promise.all([
   loadInitialPosts(),
@@ -4723,7 +4907,7 @@ async function loadUserOwnActivity() {
   events.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
   if (!events.length) {
-   container.innerHTML = '<div class="activity-empty">Aún no realizaste interacciones en Ög.</div>';
+   container.innerHTML = '<div class="activity-empty">Aún no realizaste interacciones en ÖG.</div>';
    return;
   }
 
@@ -4990,37 +5174,39 @@ async function loadChatMessages(conversationId) {
 
  container.replaceChildren();
  if (!messages || !messages.length) {
-  container.innerHTML = '<div class="activity-empty">No hay mensajes aún.</div>';
+  container.innerHTML = '<div class="activity-empty">¡Envía el primer saludo!</div>';
   return;
  }
-
- messages.forEach(msg => appendChatMessageNode(msg));
+ messages.forEach(m => appendChatMessageNode(m));
  scrollToBottomChat();
 }
 
 function appendChatMessageNode(msg) {
  const container = document.getElementById('chatMessagesContainer');
- const isMe = msg.sender_id === currentUser.id;
+ if (container.querySelector('.activity-empty')) container.replaceChildren();
+
+ const isMine = msg.sender_id === currentUser?.id;
  const bubble = document.createElement('div');
- bubble.className = `chat-bubble ${isMe ? 'sent' : 'received'}`;
- bubble.onclick = () => startReplyingTo(msg);
+ bubble.className = 'chat-bubble ' + (isMine ? 'sent' : 'received');
 
- if (msg.reply_to_snippet) {
-  const replyPrev = document.createElement('div');
-  replyPrev.className = 'chat-bubble-reply-preview';
-  replyPrev.textContent = msg.reply_to_snippet;
-  bubble.append(replyPrev);
- }
- bubble.innerHTML += `<div>${msg.content}</div><div class="chat-bubble-time">${formatDate(msg.created_at)}</div>`;
+ bubble.onclick = () => {
+  replyingToMessageId = msg.id;
+  replyingToSnippet = msg.content.slice(0, 35);
+  document.getElementById('replyingTextSnippet').textContent = replyingToSnippet;
+  document.getElementById('replyingBar').classList.add('active');
+  document.getElementById('chatMessageInput').focus();
+ };
+
+ const textNode = document.createElement('div');
+ textNode.textContent = msg.content;
+ bubble.append(textNode);
+
+ const timeNode = document.createElement('div');
+ timeNode.className = 'chat-bubble-time';
+ timeNode.textContent = formatDate(msg.created_at);
+ bubble.append(timeNode);
+
  container.append(bubble);
-}
-
-function startReplyingTo(msg) {
- replyingToMessageId = msg.id;
- replyingToSnippet = (msg.sender_id === currentUser.id ? 'Tú: ' : 'Usuario: ') + msg.content;
- document.getElementById('replyingTextSnippet').textContent = replyingToSnippet;
- document.getElementById('replyingBar').classList.add('active');
- document.getElementById('chatMessageInput').focus();
 }
 
 function cancelReply() {
@@ -5029,47 +5215,64 @@ function cancelReply() {
  document.getElementById('replyingBar').classList.remove('active');
 }
 
-async function sendChatMessage() {
- const input = document.getElementById('chatMessageInput');
- const text = input.value.trim();
- if (!text || !activeConversationId || !currentUser) return;
- input.value = '';
- const snippet = replyingToSnippet;
- const replyId = replyingToMessageId;
- cancelReply();
-
- const tempMsg = { conversation_id: activeConversationId, sender_id: currentUser.id, content: text, reply_to_snippet: snippet, created_at: new Date().toISOString() };
- appendChatMessageNode(tempMsg);
- scrollToBottomChat();
-
- await db.from('messages').insert({ conversation_id: activeConversationId, sender_id: currentUser.id, content: text, reply_to_id: replyId, reply_to_snippet: snippet });
-}
-
-async function markConversationAsRead(conversationId) {
- if (!currentUser) return;
- await db.from('conversation_participants').update({ last_read_at: new Date().toISOString() }).eq('conversation_id', conversationId).eq('user_id', currentUser.id);
- checkGlobalUnreadMessages();
-}
-
 function scrollToBottomChat() {
  const container = document.getElementById('chatMessagesContainer');
  container.scrollTop = container.scrollHeight;
 }
 
+async function sendChatMessage() {
+ if (!currentUser || !activeConversationId) return;
+ const input = document.getElementById('chatMessageInput');
+ const text = input.value.trim();
+ if (!text) return;
+
+ input.value = '';
+ const payload = { conversation_id: activeConversationId, sender_id: currentUser.id, content: text };
+ if (replyingToMessageId) payload.reply_to_id = replyingToMessageId;
+ cancelReply();
+
+ const { data: inserted } = await db.from('messages').insert(payload).select().single();
+ if (inserted) {
+  appendChatMessageNode(inserted);
+  scrollToBottomChat();
+  markConversationAsRead(activeConversationId);
+ }
+}
+
+async function markConversationAsRead(conversationId) {
+ if (!currentUser || !conversationId) return;
+ await db.from('conversation_participants').update({ last_read_at: new Date().toISOString() }).eq('conversation_id', conversationId).eq('user_id', currentUser.id);
+ checkGlobalUnreadMessages();
+}
+
 /* ========================================================================= */
 /* 12. INICIALIZACIÓN DE LA APLICACIÓN                                       */
 /* ========================================================================= */
-window.addEventListener('DOMContentLoaded', async () => {
- try {
-  const { data: { session } } = await db.auth.getSession();
-  if (session?.user) await loadAccount(session.user);
-  else showAuthOverlay();
- } catch (e) {
+async function init() {
+ updatePwaInstallButtonsVisibility();
+ const { data: { session } } = await db.auth.getSession();
+
+ if (session?.user) {
+  await loadAccount(session.user);
+ } else {
   showAuthOverlay();
- } finally {
-  setTimeout(() => hideSplashScreen(), 200);
+ }
+ hideSplashScreen();
+}
+
+db.auth.onAuthStateChange(async (event, session) => {
+ if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+  await loadAccount(session.user);
+ } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+  currentUser = session.user;
+ } else if (event === 'SIGNED_OUT') {
+  currentUser = null;
+  myProfile = null;
+  showAuthOverlay();
  }
 });
+
+init();
 </script>
 </body>
 </html>
